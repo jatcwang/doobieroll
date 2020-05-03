@@ -55,42 +55,41 @@ object Func {
     val accumT2s = mutable.ArrayBuffer.empty[T2]
     val accumT3s = mutable.ArrayBuffer.empty[T3]
 
-    rows.foreach { case (dt1, dt2, dt3) =>
+    rows.foreach {
+      case (dt1, dt2, dt3) =>
+        val curId1 = dt1.getId
+        val curId2 = dt2.getId
 
-      val curId1 = dt1.getId
-      val curId2 = dt2.getId
+        def setThings() = {
+          lastId1 = curId1
+          lastId2 = curId2
 
-      def setThings() = {
-        lastId1 = curId1
-        lastId2 = curId2
+          lastDt1 = dt1
+          lastDt2 = dt2
+        }
 
-        lastDt1 = dt1
-        lastDt2 = dt2
-      }
+        if (lastId1 == null) {
+          setThings()
+        }
 
-      if (lastId1 == null) {
+        if (dt1.getId != lastId1) {
+          val newT2 = lastDt2.mkNoChildren.withChild(accumT3s.toList)
+          val allT2s = (accumT2s :+ newT2).toList
+          accumT1s += lastDt1.mkNoChildren.withChild(allT2s)
+
+          accumT2s.clear()
+          accumT3s.clear()
+        } else if (dt2.getId != lastId2) {
+          val newT2 = lastDt2.mkNoChildren.withChild(accumT3s.toList)
+
+          accumT2s += newT2
+
+          accumT3s.clear()
+        }
+
+        accumT3s += dt3.mkNoChildren
+
         setThings()
-      }
-
-      if (dt1.getId != lastId1) {
-        val newT2 = lastDt2.mkNoChildren.withChild(accumT3s.toList)
-        val allT2s = (accumT2s :+ newT2).toList
-        accumT1s += lastDt1.mkNoChildren.withChild(allT2s)
-
-        accumT2s.clear()
-        accumT3s.clear()
-      }
-      else if (dt2.getId != lastId2) {
-        val newT2 = lastDt2.mkNoChildren.withChild(accumT3s.toList)
-
-        accumT2s += newT2
-
-        accumT3s.clear()
-      }
-
-      accumT3s += dt3.mkNoChildren
-
-      setThings()
     }
 
     // Final wrap up
@@ -163,30 +162,4 @@ object Func {
 
   }
 
-  def normalizeCompanies(companies: List[Company]): List[Company] = {
-    companies.map { c =>
-      c.copy(
-        departments = c.departments.map { d =>
-          d.copy(
-            employees = d.employees.sortBy(_.id)
-          )
-        }.sortBy(_.id)
-      )
-    }.sortBy(_.id)
-  }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

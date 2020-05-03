@@ -2,27 +2,14 @@ package example
 
 import java.util.UUID
 
-import zio.test._
-import zio.test.Assertion._
-import zio.test.Gen
-import zio.random.Random
-import zio.test.magnolia.DeriveGen
-import Func._
 import example.model.db.{DbCompany, DbDepartment, DbEmployee}
-import example.model.{Company, Department, Employee, db}
+import example.model.{db, Company, Department, Employee}
+import zio.test.Assertion._
+import zio.test._
+import TestModelHelpers._
 
 object HelloSpec extends DefaultRunnableSpec {
-  implicit val genNelEmployee: DeriveGen[List[Employee]] = {
-    val g = DeriveGen[Employee]
-    DeriveGen.instance(Gen.listOfBounded(1, 10)(g))
-  }
-  implicit val genNelDepartment: DeriveGen[List[Department]] = {
-    val g = DeriveGen[Department]
-    DeriveGen.instance(Gen.listOfBounded(1, 10)(g))
-  }
-  implicit val genCompany: Gen[Random with Sized, Company] = DeriveGen[Company]
-
-  def spec = suite("HelloWorldSpec")(
+  override def spec = suite("HelloWorldSpec")(
     test("LOL") {
       val example: List[(DbCompany, DbDepartment, DbEmployee)] = List(
         (c1db, d1db, e1db),
@@ -81,59 +68,55 @@ object HelloSpec extends DefaultRunnableSpec {
         ),
       )
 
-      assert(Func.normalizeCompanies(res))(equalTo(companies))
+      assert(normalizeCompanies(res))(equalTo(companies))
     },
-//    testM("assmebleOrdered works") {
-//      check(Gen.listOf(genCompany)) {
-//        origCompanies =>
-//          val rows = origCompanies.flatMap(companyToDbRows).sortBy {
-//            case (t1, t2, t3) => (t1.id, t2.id, t3.id)
-//          }
-//
-//          val result = Func.assembleOrdered[
-//            Company,
-//            Department,
-//            Employee,
-//            DbCompany,
-//            DbDepartment,
-//            DbEmployee,
-//            UUID,
-//            UUID,
-//            UUID,
-//          ](rows)
-//
-//          assert(normalizeCompanies(result))(
-//            equalTo(normalizeCompanies(origCompanies)),
-//          )
-//
-//      }
-//    },
-//    testM("con conversion works") {
-//      checkNM(50)(Gen.listOf(genCompany)) {
-//        companies =>
-//          zio.random
-//            .shuffle(
-//              companies.flatMap(companyToDbRows),
-//            )
-//            .map { rows =>
-//              val orig: List[Company] = Func.assembleUnordered[
-//                Company,
-//                Department,
-//                Employee,
-//                DbCompany,
-//                DbDepartment,
-//                DbEmployee,
-//                UUID,
-//                UUID,
-//                UUID,
-//              ](rows)
-//
-//              assert(Func.normalizeCompanies(orig))(
-//                equalTo(Func.normalizeCompanies(orig)),
-//              )
-//            }
-//      }
-//    },
+    testM("assmebleOrdered works") {
+      check(Gen.listOf(genCompany)) { origCompanies =>
+        val rows = origCompanies.flatMap(companyToDbRows).sortBy {
+          case (t1, t2, t3) => (t1.id, t2.id, t3.id)
+        }
+
+        val result = Func.assembleOrdered[
+          Company,
+          Department,
+          Employee,
+          DbCompany,
+          DbDepartment,
+          DbEmployee,
+          UUID,
+          UUID,
+          UUID,
+        ](rows)
+
+        assert(normalizeCompanies(result))(
+          equalTo(normalizeCompanies(origCompanies)),
+        )
+
+      }
+    },
+    testM("con conversion works") {
+      checkNM(50)(Gen.listOf(genCompany)) { companies =>
+        zio.random
+          .shuffle(
+            companies.flatMap(companyToDbRows),
+          )
+          .map { rows =>
+            val orig: List[Company] = Func.assembleUnordered[
+              Company,
+              Department,
+              Employee,
+              DbCompany,
+              DbDepartment,
+              DbEmployee,
+              UUID,
+              UUID,
+              UUID,
+            ](rows)
+
+            assert(normalizeCompanies(orig))(equalTo(normalizeCompanies(orig)))
+          }
+      }
+    },
   )
 
   private def companyToDbRows(
