@@ -7,7 +7,7 @@ import zio.test._
 object AllSpec extends DefaultRunnableSpec {
   override def spec: ZSpec[TestEnvironment, Nothing] =
     suite("AllSpec")(
-      HelloSpec.spec,
       TableColumnsSpec.spec,
+      BetterSpec.spec,
     )
 }

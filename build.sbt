@@ -26,6 +26,9 @@ lazy val commonSettings = Seq(
   version := "0.1.0",
   scalaVersion := scala213,
   crossScalaVersions := Seq(scala213, scala212),
+  scalacOptions ++= Seq(
+    "-Ywarn-macros:after"
+  ),
   scalacOptions --= {
     if (sys.env.get("CI").isDefined) {
       Seq.empty

@@ -13,7 +13,7 @@ import TestModelHelpers._
 
 object BetterSpec extends DefaultRunnableSpec {
 
-  override def spec: ZSpec[TestEnvironment, Any] =
+  override def spec: ZSpec[TestEnvironment, Nothing] =
     suite("BetterSpec")(
       test("go") {
         val result = Better.assembleUnordered(companyP)(dbRowsHList).sequence
