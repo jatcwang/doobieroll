@@ -1,12 +1,11 @@
 package example
 
-import example.model.db.{DbCompany, DbDepartment, DbEmployee}
-import example.model.{Company, Department, Employee, db}
 import shapeless.{::, HNil}
 import shapeless.Generic.Aux
 import zio.random.Random
 import zio.test.{Gen, Sized}
 import zio.test.magnolia.DeriveGen
+import model._
 
 object TestModelHelpers {
   private implicit val genNelEmployee: DeriveGen[Vector[Employee]] = {
@@ -39,15 +38,15 @@ object TestModelHelpers {
     val rows =
       mutable.ArrayBuffer.empty[Tuple3[DbCompany, DbDepartment, DbEmployee]]
 
-    val dbCompany = db.DbCompany(c.id, c.name)
+    val dbCompany = DbCompany(c.id, c.name)
     c.departments.foreach { d =>
       val dbDepartment =
-        db.DbDepartment(id = d.id, companyId = c.id, name = d.name)
+        DbDepartment(id = d.id, companyId = c.id, name = d.name)
       d.employees.foreach { e =>
         rows += Tuple3(
           dbCompany,
           dbDepartment,
-          db.DbEmployee(id = e.id, departmentId = d.id, name = e.name),
+          DbEmployee(id = e.id, departmentId = d.id, name = e.name),
         )
       }
     }

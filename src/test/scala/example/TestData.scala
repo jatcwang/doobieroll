@@ -2,10 +2,9 @@ package example
 
 import java.util.UUID
 
-import example.model.db
-import example.model.db.{DbCompany, DbDepartment, DbEmployee}
 import shapeless.{::, HNil}
 import TestModelHelpers._
+import model._
 
 object TestData {
 
@@ -19,15 +18,15 @@ object TestData {
   val e2 = UUID.fromString("00000000-0000-0000-0000-000000000002")
   val e3 = UUID.fromString("00000000-0000-0000-0000-000000000003")
 
-  val c1db = db.DbCompany(c1, "Comp1")
-  val c2db = db.DbCompany(c2, "Comp2")
+  val c1db = DbCompany(c1, "Comp1")
+  val c2db = DbCompany(c2, "Comp2")
 
-  val d1db = db.DbDepartment(d1, c1, "Dep1")
-  val d2db = db.DbDepartment(d2, c2, "Dep2")
+  val d1db = DbDepartment(d1, c1, "Dep1")
+  val d2db = DbDepartment(d2, c2, "Dep2")
 
-  val e1db = db.DbEmployee(e1, d1, "Emp1")
-  val e2db = db.DbEmployee(e2, d1, "Emp2")
-  val e3db = db.DbEmployee(e3, d2, "Emp3")
+  val e1db = DbEmployee(e1, d1, "Emp1")
+  val e2db = DbEmployee(e2, d1, "Emp2")
+  val e3db = DbEmployee(e3, d2, "Emp3")
 
   val dbRows: Vector[(DbCompany, DbDepartment, DbEmployee)] = Vector(
     (c1db, d1db, e1db),

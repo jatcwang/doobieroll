@@ -1,13 +1,8 @@
-Object Relational Utility for Scala
-
-Conversion from Tuple3[DbParent, DbChild, DbGrandchild] => Parent
-
-where Parent is
-
-case class Parent(
-  id: ParentId
-  children: List[Children]
-)
+# Object Relational Utility for Scala
 
 
+## TODO
 
+- Option
+- Arbitrary amount of children for a parent type
+- Test / document deduplicating behaviour (when there are two children types)

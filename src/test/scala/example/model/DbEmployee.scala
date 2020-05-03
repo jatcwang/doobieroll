@@ -1,4 +1,4 @@
-package example.model.db
+package example.model
 
 import java.util.UUID
 

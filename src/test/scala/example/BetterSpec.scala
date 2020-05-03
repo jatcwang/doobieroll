@@ -10,6 +10,7 @@ import zio.test.Assertion._
 import shapeless.{test => _, _}
 import TestData._
 import TestModelHelpers._
+import model._
 
 object BetterSpec extends DefaultRunnableSpec {
 
@@ -39,8 +40,6 @@ object BetterSpec extends DefaultRunnableSpec {
     )
 
   import Better._
-  import model._
-  import model.db._
   import Atom._
 
   val companyDef: ParentDef[Company, UUID, DbCompany] =
