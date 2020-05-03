@@ -7,7 +7,7 @@ import db._
 final case class Department(
   id: UUID,
   name: String,
-  employees: List[Employee],
+  employees: Vector[Employee],
 )
 
 object Department {
@@ -17,7 +17,7 @@ object Department {
         Department(
           dt.id,
           dt.name,
-          employees = List.empty,
+          employees = Vector.empty,
         )
 
       override def getId(dt: DbDepartment): UUID = dt.id

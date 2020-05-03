@@ -14,7 +14,7 @@ object Func {
   }
 
   implicit class AddChildOps[T](val t: T) extends AnyVal {
-    def withChild[C](children: List[C])(implicit addChild: AddChild[T, C]): T =
+    def withChild[C](children: Vector[C])(implicit addChild: AddChild[T, C]): T =
       addChild.withChildren(t, children)
   }
 
@@ -28,11 +28,11 @@ object Func {
   }
 
   trait AddChild[T, C] {
-    def withChildren(t: T, c: List[C]): T
+    def withChildren(t: T, c: Vector[C]): T
   }
 
   def assembleOrdered[T1, T2, T3, Dt1, Dt2, Dt3, Id1, Id2, Id3](
-    rows: List[Tuple3[Dt1, Dt2, Dt3]]
+    rows: Vector[Tuple3[Dt1, Dt2, Dt3]]
   )(
     implicit
     dbConv1: DbConv[T1, Dt1, Id1],
@@ -40,10 +40,10 @@ object Func {
     dbConv3: DbConv[T3, Dt3, Id3],
     addChild12: AddChild[T1, T2],
     addChild23: AddChild[T2, T3],
-  ): List[T1] = {
+  ): Vector[T1] = {
 
     if (rows.isEmpty)
-      return List.empty
+      return Vector.empty
 
     var lastId1: Id1 = null.asInstanceOf[Id1]
     var lastId2: Id2 = null.asInstanceOf[Id2]
@@ -73,14 +73,14 @@ object Func {
         }
 
         if (dt1.getId != lastId1) {
-          val newT2 = lastDt2.mkNoChildren.withChild(accumT3s.toList)
+          val newT2 = lastDt2.mkNoChildren.withChild(accumT3s.toVector)
           val allT2s = (accumT2s :+ newT2).toList
-          accumT1s += lastDt1.mkNoChildren.withChild(allT2s)
+          accumT1s += lastDt1.mkNoChildren.withChild(allT2s.toVector)
 
           accumT2s.clear()
           accumT3s.clear()
         } else if (dt2.getId != lastId2) {
-          val newT2 = lastDt2.mkNoChildren.withChild(accumT3s.toList)
+          val newT2 = lastDt2.mkNoChildren.withChild(accumT3s.toVector)
 
           accumT2s += newT2
 
@@ -94,17 +94,17 @@ object Func {
 
     // Final wrap up
 
-    val thisT2 = lastDt2.mkNoChildren.withChild(accumT3s.toList)
+    val thisT2 = lastDt2.mkNoChildren.withChild(accumT3s.toVector)
     val restT2s = accumT2s :+ thisT2
-    val thisT1 = lastDt1.mkNoChildren.withChild(restT2s.toList)
+    val thisT1 = lastDt1.mkNoChildren.withChild(restT2s.toVector)
 
     accumT1s += thisT1
 
-    accumT1s.toList
+    accumT1s.toVector
   }
 
   def assembleUnordered[T1, T2, T3, Dt1, Dt2, Dt3, Id1, Id2, Id3](
-    rows: List[Tuple3[Dt1, Dt2, Dt3]],
+    rows: Vector[Tuple3[Dt1, Dt2, Dt3]],
   )(
     implicit
     dbConv1: DbConv[T1, Dt1, Id1],
@@ -112,7 +112,7 @@ object Func {
     dbConv3: DbConv[T3, Dt3, Id3],
     addChild12: AddChild[T1, T2],
     addChild23: AddChild[T2, T3],
-  ): List[T1] = {
+  ): Vector[T1] = {
     val t1s = mutable.Map.empty[Id1, T1]
     val t2s = mutable.Map.empty[Id2, T2]
     val t3s = mutable.Map.empty[Id3, T3] // T3 has no child
@@ -147,18 +147,18 @@ object Func {
 
     t2s.mapValuesInPlace {
       case (id, t2) =>
-        val children = lookup23.get(id).map { t3s(_) }.toList
+        val children = lookup23.get(id).map { t3s(_) }.toVector
         t2.withChild(children)
     }
 
     t1s
       .mapValuesInPlace {
         case (id, t1) =>
-          val children = lookup12.get(id).map(t2s(_)).toList
+          val children = lookup12.get(id).map(t2s(_)).toVector
           t1.withChild(children)
       }
       .values
-      .toList
+      .toVector
 
   }
 

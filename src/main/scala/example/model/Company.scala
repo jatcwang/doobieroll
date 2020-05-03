@@ -8,7 +8,7 @@ import example.model.db.DbCompany
 final case class Company(
   id: UUID,
   name: String,
-  departments: List[Department],
+  departments: Vector[Department],
 )
 
 object Company {
@@ -18,7 +18,7 @@ object Company {
         Company(
           dt.id,
           dt.name,
-          departments = List.empty,
+          departments = Vector.empty,
         )
 
       override def getId(dt: DbCompany): UUID =

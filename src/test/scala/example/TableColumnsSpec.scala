@@ -30,7 +30,6 @@ object TableColumnsSpec extends DefaultRunnableSpec {
     test(
       "'prefixed' (withParen = true) returns list of field all prefixed, surrounded by parenthesis",
     ) {
-      TestClass.columns
       assertEqual(
         TestClass.columns.prefixed("pre", withParen = true),
         "(pre.a,pre.str_field,pre.snake_case,pre.pascal_case)",

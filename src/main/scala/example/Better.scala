@@ -1,8 +1,9 @@
 package example
 
 import shapeless._
+import shapeless.ops.hlist._
 
-import scala.collection.{MapView, mutable}
+import scala.collection.{mutable, MapView}
 import cats.implicits._
 
 object Better {
@@ -10,16 +11,14 @@ object Better {
   // Error type when a Db type to domain type conversion failed
   case class EE(msg: String)
 
-  sealed trait DbDesc[A, Dbs] {}
-
-  object DbDesc {}
-
   trait ParentDef[A, IdType, ThisDb] {
     def name: String
     def getId(dbs: ThisDb): IdType
   }
 
-  trait Parent1[A, Dbs] extends DbDesc[A, Dbs] {
+  sealed trait DbDesc[A, Dbs] {}
+
+  trait Parent1[A, Dbs <: HList] extends DbDesc[A, Dbs] {
     type Id
     type ThisDb
     type Child
@@ -33,9 +32,72 @@ object Better {
     def construct(thisDb: ThisDb, c1: Vector[Child]): Either[EE, A]
   }
 
+  object DbDesc {
+    implicit class DbDescOps[A, Dbs](val dbDesc: DbDesc[A, Dbs]) extends AnyVal {
+      def contramapDbs[NewDbs <: HList](extractCDb: NewDbs => Dbs): DbDesc[A, NewDbs] = {
+        dbDesc match {
+          case parent: Parent1[A, Dbs] =>
+            new Parent1[A, NewDbs] {
+              override type Id = parent.Id
+              override type ThisDb = parent.ThisDb
+              override type Child = parent.Child
+
+              override def name: String = parent.name
+
+              override def getThisDb(dbs: NewDbs): ThisDb = parent.getThisDb(extractCDb(dbs))
+
+              override def c1DbDesc: DbDesc[Child, NewDbs] =
+                parent.c1DbDesc.contramapDbs(extractCDb)
+
+              override def getId(cols: NewDbs): parent.Id = parent.getId(extractCDb(cols))
+
+              override def getIdFromThisDb(t: ThisDb): Id = parent.getIdFromThisDb(t)
+
+              override def construct(
+                thisDb: ThisDb,
+                c1: Vector[Child]
+              ): Either[EE, A] =
+                parent.construct(thisDb, c1)
+            }
+
+          case atom: Atom[A, Dbs] =>
+            new Atom[A, NewDbs] {
+              override def name: String = atom.name
+              override def construct(db: NewDbs): Either[EE, A] =
+                atom.construct(extractCDb(db))
+            }
+        }
+      }
+    }
+  }
+
   object Parent1 {
     type Aux[A0, Dbs0 <: HList, C0] = Parent1[A0, Dbs0] {
       type Child = C0
+    }
+
+    implicit class Parent1Ops[C, CDb <: HList](val child1: Parent1[C, CDb]) extends AnyVal {
+      def forParent[A, Idd, Adb](
+        parentDef: ParentDef[A, Idd, Adb],
+        // FIXME: here
+        constructA: (Adb, Vector[C]) => Either[EE, A]
+      ): Parent1[A, Adb :: CDb] = new Parent1[A, Adb :: CDb] {
+        override type Id = Idd
+        override type ThisDb = Adb
+        override type Child = C
+
+        override val name: String = parentDef.name
+
+        override def getThisDb(dbs: Adb :: CDb): ThisDb = dbs.head
+
+        override val c1DbDesc: DbDesc[Child, Adb :: CDb] = child1.contramapDbs[Adb :: CDb](_.tail)
+
+        override def getId(cols: Adb :: CDb): Id = parentDef.getId(cols.head)
+
+        override def getIdFromThisDb(t: Adb): Id = parentDef.getId(t)
+
+        override def construct(thisDb: Adb, c1: Vector[C]): Either[EE, A] = constructA(thisDb, c1)
+      }
     }
   }
 
@@ -86,15 +148,17 @@ object Better {
   }
 
   def go[A, Dbs <: HList](
-    rows: Vector[Dbs]
-  )(implicit dbDesc: Parent1[A, Dbs]): Vector[Either[EE, A]] = {
+    dbDesc: Parent1[A, Dbs]
+  )(
+    rows: Vector[Dbs],
+  ): Vector[Either[EE, A]] = {
 
     val accum = Accum.mkEmpty()
 
     val processors: Vector[Dbs => Unit] = mkRecorderFuncForParent(
       getParentIdOpt = None,
       parentCatKey = "",
-      dbDesc
+      dbDesc = dbDesc
     ).map(f => f(accum)) // bind all functions to our accumulator
 
     rows.foreach { row =>
@@ -107,7 +171,7 @@ object Better {
     )
   }
 
-  private def constructItTop[A, Dbs](
+  private def constructItTop[A, Dbs <: HList](
     accum: Accum,
     dbDesc: Parent1[A, Dbs]
   ): Vector[Either[EE, A]] = {
@@ -117,15 +181,17 @@ object Better {
       dbDesc.c1DbDesc
     )
 
-    accum.getTopLevel[dbDesc.ThisDb].map { thisDb =>
+    accum
+      .getTopLevel[dbDesc.ThisDb]
+      .map { thisDb =>
+        val childrenE = childLookup.getOrElse(dbDesc.getIdFromThisDb(thisDb), Vector.empty).sequence
 
-      val childrenE = childLookup.getOrElse(dbDesc.getIdFromThisDb(thisDb), Vector.empty).sequence
+        childrenE.flatMap { children =>
+          dbDesc.construct(thisDb, children)
+        }
 
-      childrenE.flatMap { children =>
-        dbDesc.construct(thisDb, children)
       }
-
-    }.toVector
+      .toVector
 
   }
 
@@ -134,7 +200,7 @@ object Better {
     accum: Accum,
     dbDesc: DbDesc[A, Dbs]
   ): MapView[Any, Vector[Either[EE, A]]] =
-        dbDesc match {
+    dbDesc match {
       case thisDbDesc: Parent1[A, Dbs] => {
         val catKey = s"$parentCatKey.${thisDbDesc.name}"
         val childLookupById = constructIt(
@@ -143,17 +209,19 @@ object Better {
           thisDbDesc.c1DbDesc
         )
 
-        accum.getRawIterator(catKey).foreach { case (parentId, thisRaw) =>
-          val thisDb = thisRaw.asInstanceOf[thisDbDesc.ThisDb]
-          val id = thisDbDesc.getIdFromThisDb(thisDb)
+        accum.getRawIterator(catKey).foreach {
+          case (parentId, thisRaw) =>
+            val thisDb = thisRaw.asInstanceOf[thisDbDesc.ThisDb]
+            val id = thisDbDesc.getIdFromThisDb(thisDb)
 
-          val childrenE: Either[EE, Vector[thisDbDesc.Child]] = childLookupById.getOrElse(id, Vector.empty).sequence
+            val childrenE: Either[EE, Vector[thisDbDesc.Child]] =
+              childLookupById.getOrElse(id, Vector.empty).sequence
 
-          val constructResult = childrenE.flatMap { children =>
-            thisDbDesc.construct(thisDb, children)
-          }
+            val constructResult = childrenE.flatMap { children =>
+              thisDbDesc.construct(thisDb, children)
+            }
 
-          accum.addConverted(catKey, parentId, constructResult)
+            accum.addConverted(catKey, parentId, constructResult)
 
         }
 
@@ -238,9 +306,8 @@ object Better {
     def addToTopLevel(a: Any): Unit =
       topLevelDbItem += a
 
-    def getTopLevel[A]: Iterator[A] = {
+    def getTopLevel[A]: Iterator[A] =
       topLevelDbItem.iterator.asInstanceOf[Iterator[A]]
-    }
 
     def addConverted(
       catKey: String,
@@ -257,7 +324,8 @@ object Better {
     def getConvertedLookupView[ValueType](
       catKey: String,
     ): MapView[Any, Vector[Either[EE, ValueType]]] = {
-      val idMap = convertedLookup.getOrElse(catKey, sys.error(s"ConvertedLookup for ${catKey} doesn't exist"))
+      val idMap =
+        convertedLookup.getOrElse(catKey, sys.error(s"ConvertedLookup for $catKey doesn't exist"))
       idMap.sets.view.mapValues(_.toVector.asInstanceOf[Vector[Either[EE, ValueType]]])
     }
 
@@ -279,7 +347,6 @@ object Better {
       val idMap = rawLookup.getOrElse(catKey, sys.error(s"getRaw for $catKey not found"))
       idMap.iterator
     }
-
 
   }
 

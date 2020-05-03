@@ -16,7 +16,7 @@ object TestModelHelpers {
   }
   implicit val genCompany: Gen[Random with Sized, Company] = DeriveGen[Company]
 
-  def normalizeCompanies(companies: List[Company]): List[Company] = {
+  def normalizeCompanies(companies: Vector[Company]): Vector[Company] = {
     companies.map { c =>
       c.copy(
         departments = c.departments.map { d =>

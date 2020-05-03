@@ -13,6 +13,6 @@ object RunMig {
       )
       .load()
 
-    f.migrate()
+    val _ = f.migrate()
   }
 }
