@@ -1,7 +1,6 @@
 package example
 
 import shapeless._
-import shapeless.ops.hlist._
 
 import scala.collection.{mutable, MapView}
 import cats.implicits._
@@ -34,35 +33,35 @@ object Better {
 
   object DbDesc {
     implicit class DbDescOps[A, Dbs](val dbDesc: DbDesc[A, Dbs]) extends AnyVal {
-      def contramapDbs[NewDbs <: HList](extractCDb: NewDbs => Dbs): DbDesc[A, NewDbs] = {
+      def contramapDbs[NewDbs <: HList](parentName: String, extractCDb: NewDbs => Dbs): DbDesc[A, NewDbs] = {
         dbDesc match {
-          case parent: Parent1[A, Dbs] =>
+          case desc: Parent1[A, Dbs] =>
             new Parent1[A, NewDbs] {
-              override type Id = parent.Id
-              override type ThisDb = parent.ThisDb
-              override type Child = parent.Child
+              override type Id = desc.Id
+              override type ThisDb = desc.ThisDb
+              override type Child = desc.Child
 
-              override def name: String = parent.name
+              override val name: String = parentName + "." + desc.name
 
-              override def getThisDb(dbs: NewDbs): ThisDb = parent.getThisDb(extractCDb(dbs))
+              override def getThisDb(dbs: NewDbs): ThisDb = desc.getThisDb(extractCDb(dbs))
 
               override def c1DbDesc: DbDesc[Child, NewDbs] =
-                parent.c1DbDesc.contramapDbs(extractCDb)
+                desc.c1DbDesc.contramapDbs(parentName, extractCDb)
 
-              override def getId(cols: NewDbs): parent.Id = parent.getId(extractCDb(cols))
+              override def getId(cols: NewDbs): desc.Id = desc.getId(extractCDb(cols))
 
-              override def getIdFromThisDb(t: ThisDb): Id = parent.getIdFromThisDb(t)
+              override def getIdFromThisDb(t: ThisDb): Id = desc.getIdFromThisDb(t)
 
               override def construct(
                 thisDb: ThisDb,
                 c1: Vector[Child]
               ): Either[EE, A] =
-                parent.construct(thisDb, c1)
+                desc.construct(thisDb, c1)
             }
 
           case atom: Atom[A, Dbs] =>
             new Atom[A, NewDbs] {
-              override def name: String = atom.name
+              override val name: String = parentName + "." + atom.name
               override def construct(db: NewDbs): Either[EE, A] =
                 atom.construct(extractCDb(db))
             }
@@ -79,18 +78,17 @@ object Better {
     implicit class Parent1Ops[C, CDb <: HList](val child1: Parent1[C, CDb]) extends AnyVal {
       def forParent[A, Idd, Adb](
         parentDef: ParentDef[A, Idd, Adb],
-        // FIXME: here
         constructA: (Adb, Vector[C]) => Either[EE, A]
       ): Parent1[A, Adb :: CDb] = new Parent1[A, Adb :: CDb] {
         override type Id = Idd
         override type ThisDb = Adb
         override type Child = C
 
-        override val name: String = parentDef.name
+        override val name: String = parentDef.name + "." + child1.name
 
         override def getThisDb(dbs: Adb :: CDb): ThisDb = dbs.head
 
-        override val c1DbDesc: DbDesc[Child, Adb :: CDb] = child1.contramapDbs[Adb :: CDb](_.tail)
+        override val c1DbDesc: DbDesc[Child, Adb :: CDb] = child1.contramapDbs[Adb :: CDb](parentDef.name, _.tail)
 
         override def getId(cols: Adb :: CDb): Id = parentDef.getId(cols.head)
 
@@ -119,15 +117,14 @@ object Better {
           override type ThisDb = ADb
           override type Child = C
 
-          // FIXME: test if changing this to val improves performance
-          override def name: String = parentDef.name
+          override val name: String = parentDef.name + "." + atom.name
 
           override def getThisDb(dbs: ADb :: CDb :: HNil): ThisDb = dbs.head
 
           override def c1DbDesc: DbDesc[C, ADb :: CDb :: HNil] =
             new Atom[C, ADb :: CDb :: HNil] {
-              // FIXME: we should be able to construct the namespaced name here
-              override def name: String = atom.name
+
+              override val name: String = parentDef.name + "." + atom.name
 
               override def construct(db: ADb :: CDb :: HNil): Either[EE, C] =
                 atom.construct(db.tail.head)
@@ -147,17 +144,18 @@ object Better {
 
   }
 
-  def go[A, Dbs <: HList](
+  def assembleUnordered[A, Dbs <: HList](
     dbDesc: Parent1[A, Dbs]
   )(
-    rows: Vector[Dbs],
+    rows: Vector[Dbs]
   ): Vector[Either[EE, A]] = {
+
+    if (rows.isEmpty) return Vector.empty
 
     val accum = Accum.mkEmpty()
 
     val processors: Vector[Dbs => Unit] = mkRecorderFuncForParent(
       getParentIdOpt = None,
-      parentCatKey = "",
       dbDesc = dbDesc
     ).map(f => f(accum)) // bind all functions to our accumulator
 
@@ -176,7 +174,6 @@ object Better {
     dbDesc: Parent1[A, Dbs]
   ): Vector[Either[EE, A]] = {
     val childLookup = constructIt(
-      dbDesc.name,
       accum,
       dbDesc.c1DbDesc
     )
@@ -196,20 +193,17 @@ object Better {
   }
 
   private def constructIt[A, Dbs](
-    parentCatKey: String,
     accum: Accum,
     dbDesc: DbDesc[A, Dbs]
   ): MapView[Any, Vector[Either[EE, A]]] =
     dbDesc match {
       case thisDbDesc: Parent1[A, Dbs] => {
-        val catKey = s"$parentCatKey.${thisDbDesc.name}"
         val childLookupById = constructIt(
-          catKey,
           accum,
           thisDbDesc.c1DbDesc
         )
 
-        accum.getRawIterator(catKey).foreach {
+        accum.getRawIterator(thisDbDesc.name).foreach {
           case (parentId, thisRaw) =>
             val thisDb = thisRaw.asInstanceOf[thisDbDesc.ThisDb]
             val id = thisDbDesc.getIdFromThisDb(thisDb)
@@ -221,43 +215,37 @@ object Better {
               thisDbDesc.construct(thisDb, children)
             }
 
-            accum.addConverted(catKey, parentId, constructResult)
+            accum.addConverted(thisDbDesc.name, parentId, constructResult)
 
         }
 
-        accum.getConvertedLookupView[A](catKey)
+        accum.getConvertedLookupView[A](thisDbDesc.name)
       }
       case thisDbDesc: Atom[A, Dbs] => {
-        val catKey = s"$parentCatKey.${thisDbDesc.name}"
-        accum.getConvertedLookupView[A](catKey)
+        accum.getConvertedLookupView[A](thisDbDesc.name)
       }
     }
 
   private def mkRecordFuncForAtom[A, Dbs <: HList](
-    parentCatKey: String,
     getParentId: Dbs => Any,
     dbDesc: Atom[A, Dbs]
   ): (Accum) => Dbs => Unit = {
-    val catKey = s"$parentCatKey.${dbDesc.name}"
     def f(accum: Accum)(row: Dbs): Unit =
-      accum.addConverted(catKey, getParentId(row), dbDesc.construct(row))
+      accum.addConverted(dbDesc.name, getParentId(row), dbDesc.construct(row))
 
     f
   }
 
   private def mkRecorderFuncForParent[A, Dbs <: HList](
     getParentIdOpt: Option[Dbs => Any],
-    parentCatKey: String,
     dbDesc: Parent1[A, Dbs]
   ): Vector[Accum => Dbs => Unit] = {
-    val catKey = s"$parentCatKey.${dbDesc.name}"
-
     val f = getParentIdOpt match {
       case Some(getParentId) =>
         (accum: Accum) =>
           (row: Dbs) => {
             accum.addRaw(
-              catKey,
+              dbDesc.name,
               getParentId(row),
               dbDesc.getThisDb(row)
             )
@@ -266,6 +254,7 @@ object Better {
         (accum: Accum) =>
           (row: Dbs) => {
             accum.addToTopLevel(
+              dbDesc.getId(row),
               dbDesc.getThisDb(row)
             )
           }
@@ -276,14 +265,12 @@ object Better {
     val otherFuncs = dbDesc.c1DbDesc match {
       case parent: Parent1[_, Dbs] =>
         mkRecorderFuncForParent(
-          parentCatKey = catKey,
           getParentIdOpt = Some(getParentIdForChild),
           dbDesc = parent
         )
       case atom: Atom[_, Dbs] =>
         Vector(
           mkRecordFuncForAtom(
-            parentCatKey = catKey,
             getParentId = getParentIdForChild,
             dbDesc = atom
           )
@@ -299,15 +286,15 @@ object Better {
   type LookupByCatKey[A] = mutable.Map[String, mutable.MultiDict[Any, A]]
 
   private class Accum private (
-    topLevelDbItem: mutable.ArrayBuffer[Any],
+    topLevelDbItem: mutable.Map[Any, Any],
     rawLookup: LookupByCatKey[Any], // For storing raw parent DB values because all child isn't availble yet
     convertedLookup: LookupByCatKey[Either[EE, Any]] // For storing converted values
   ) {
-    def addToTopLevel(a: Any): Unit =
-      topLevelDbItem += a
+    def addToTopLevel(k: Any, v: Any): Unit =
+      topLevelDbItem.update(k, v)
 
     def getTopLevel[A]: Iterator[A] =
-      topLevelDbItem.iterator.asInstanceOf[Iterator[A]]
+      topLevelDbItem.iterator.map(_._2).asInstanceOf[Iterator[A]]
 
     def addConverted(
       catKey: String,
@@ -352,7 +339,7 @@ object Better {
 
   private object Accum {
     def mkEmpty(): Accum = new Accum(
-      topLevelDbItem = mutable.ArrayBuffer.empty[Any],
+      topLevelDbItem = mutable.Map.empty[Any, Any],
       rawLookup = mutable.Map.empty[String, AnyKeyMultiDict[Any]],
       convertedLookup = mutable.Map.empty[String, AnyKeyMultiDict[Either[EE, Any]]] // FIXME: probably don't want to use multidict for this, as we sometimes don't want to get rid of duplicates
     )

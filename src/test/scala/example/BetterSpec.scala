@@ -2,25 +2,41 @@ package example
 
 import java.util.UUID
 
+import cats.implicits._
 import zio.test.{DefaultRunnableSpec, ZSpec}
 import zio.test.environment.TestEnvironment
 import zio.test._
+import zio.test.Assertion._
 import shapeless.{test => _, _}
 import TestData._
-import example.model.db.{DbCompany, DbDepartment, DbEmployee}
+import TestModelHelpers._
 
 object BetterSpec extends DefaultRunnableSpec {
 
-  override def spec: ZSpec[TestEnvironment, Any] = suite("BetterSpec") {
-    test("go") {
-      val res = dbRows.map(r => implicitly[Generic.Aux[Tuple3[DbCompany, DbDepartment, DbEmployee], DbCompany :: DbDepartment ::  DbEmployee :: HNil]].to(r))
-      val result = Better.go(companyP)(res)
+  override def spec: ZSpec[TestEnvironment, Any] =
+    suite("BetterSpec")(
+      test("go") {
+        val result = Better.assembleUnordered(companyP)(dbRowsHList).sequence
 
-      pprint.pprintln(result)
+        val Right(companies) = result
 
-      zio.test.assertCompletes
-    }
-  }
+        assert(normalizeCompanies(companies))(equalTo(expectedCompanies))
+
+      },
+      testM("con conversion works") {
+        checkNM(50)(Gen.listOf(genCompany).map(_.toVector)) { original =>
+          zio.random
+            .shuffle(
+              original.flatMap(companyToDbRows).toList,
+            )
+            .map(_.toVector)
+            .map { rows =>
+              val Right(result) = Better.assembleUnordered(companyP)(rows.map(dbRowsToHlist)).sequence
+              assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
+            }
+        }
+      }
+    )
 
   import Better._
   import model._
@@ -57,19 +73,23 @@ object BetterSpec extends DefaultRunnableSpec {
         Department(
           id = dbDepartment.id,
           name = dbDepartment.name,
-          employees = employees.toVector
+          employees = employees
         )
       )
   )
 
-  val companyP: Parent1[Company, DbCompany :: DbDepartment :: DbEmployee :: HNil] = departmentP.forParent(companyDef, (dbCompany: DbCompany, departments: Vector[Department]) => {
-    Right(
-      Company(
-        id = dbCompany.id,
-        name = dbCompany.name,
-        departments = departments.toVector
-      )
+  val companyP: Parent1[Company, DbCompany :: DbDepartment :: DbEmployee :: HNil] =
+    departmentP.forParent(
+      companyDef,
+      (dbCompany: DbCompany, departments: Vector[Department]) => {
+        Right(
+          Company(
+            id = dbCompany.id,
+            name = dbCompany.name,
+            departments = departments
+          )
+        )
+      }
     )
-  })
 
 }

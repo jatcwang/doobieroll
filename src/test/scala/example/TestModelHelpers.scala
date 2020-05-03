@@ -1,18 +1,21 @@
 package example
 
-import example.model.{Company, Department, Employee}
+import example.model.db.{DbCompany, DbDepartment, DbEmployee}
+import example.model.{Company, Department, Employee, db}
+import shapeless.{::, HNil}
+import shapeless.Generic.Aux
 import zio.random.Random
 import zio.test.{Gen, Sized}
 import zio.test.magnolia.DeriveGen
 
 object TestModelHelpers {
-  implicit val genNelEmployee: DeriveGen[List[Employee]] = {
+  private implicit val genNelEmployee: DeriveGen[Vector[Employee]] = {
     val g = DeriveGen[Employee]
-    DeriveGen.instance(Gen.listOfBounded(1, 10)(g))
+    DeriveGen.instance(Gen.vectorOfBounded(1, 10)(g))
   }
-  implicit val genNelDepartment: DeriveGen[List[Department]] = {
+  private implicit val genNelDepartment: DeriveGen[Vector[Department]] = {
     val g = DeriveGen[Department]
-    DeriveGen.instance(Gen.listOfBounded(1, 10)(g))
+    DeriveGen.instance(Gen.vectorOfBounded(1, 10)(g))
   }
   implicit val genCompany: Gen[Random with Sized, Company] = DeriveGen[Company]
 
@@ -27,6 +30,35 @@ object TestModelHelpers {
       )
     }.sortBy(_.id)
   }
+
+  def companyToDbRows(
+    c: Company,
+  ): Vector[Tuple3[DbCompany, DbDepartment, DbEmployee]] = {
+    import scala.collection.mutable
+
+    val rows =
+      mutable.ArrayBuffer.empty[Tuple3[DbCompany, DbDepartment, DbEmployee]]
+
+    val dbCompany = db.DbCompany(c.id, c.name)
+    c.departments.foreach { d =>
+      val dbDepartment =
+        db.DbDepartment(id = d.id, companyId = c.id, name = d.name)
+      d.employees.foreach { e =>
+        rows += Tuple3(
+          dbCompany,
+          dbDepartment,
+          db.DbEmployee(id = e.id, departmentId = d.id, name = e.name),
+        )
+      }
+    }
+
+    rows.toVector
+  }
+
+  def dbRowsToHlist(row: (DbCompany, DbDepartment, DbEmployee)): DbCompany :: DbDepartment :: DbEmployee :: HNil = implicitly[Aux[
+    Tuple3[DbCompany, DbDepartment, DbEmployee],
+    DbCompany :: DbDepartment :: DbEmployee :: HNil
+  ]].to(row)
 
 
 }

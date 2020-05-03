@@ -2,12 +2,12 @@ package example
 
 import java.util.UUID
 
+import example.TestData._
+import example.TestModelHelpers._
 import example.model.db.{DbCompany, DbDepartment, DbEmployee}
-import example.model.{db, Company, Department, Employee}
+import example.model.{Company, Department, Employee}
 import zio.test.Assertion._
 import zio.test._
-import TestModelHelpers._
-import TestData._
 
 object HelloSpec extends DefaultRunnableSpec {
   override def spec = suite("HelloWorldSpec")(
@@ -76,29 +76,5 @@ object HelloSpec extends DefaultRunnableSpec {
       }
     },
   )
-
-  private def companyToDbRows(
-    c: Company,
-  ): Vector[Tuple3[DbCompany, DbDepartment, DbEmployee]] = {
-    import scala.collection.mutable
-
-    val rows =
-      mutable.ArrayBuffer.empty[Tuple3[DbCompany, DbDepartment, DbEmployee]]
-
-    val dbCompany = db.DbCompany(c.id, c.name)
-    c.departments.foreach { d =>
-      val dbDepartment =
-        db.DbDepartment(id = d.id, companyId = c.id, name = d.name)
-      d.employees.foreach { e =>
-        rows += Tuple3(
-          dbCompany,
-          dbDepartment,
-          db.DbEmployee(id = e.id, departmentId = d.id, name = e.name),
-        )
-      }
-    }
-
-    rows.toVector
-  }
 
 }

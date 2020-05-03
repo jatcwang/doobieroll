@@ -4,6 +4,8 @@ import java.util.UUID
 
 import example.model.db
 import example.model.db.{DbCompany, DbDepartment, DbEmployee}
+import shapeless.{::, HNil}
+import TestModelHelpers._
 
 object TestData {
 
@@ -32,6 +34,10 @@ object TestData {
     (c1db, d1db, e2db),
     (c2db, d2db, e3db),
   )
+
+  val dbRowsHList: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] = {
+    dbRows.map(dbRowsToHlist)
+  }
 
   val expectedCompanies = Vector(
     model.Company(
