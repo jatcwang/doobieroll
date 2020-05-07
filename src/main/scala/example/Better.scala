@@ -1,7 +1,6 @@
 package example
 
-import shapeless._
-import shapeless.ops.hlist._
+import shapeless.{Id => _, _}
 
 import scala.collection.{mutable, MapView}
 import cats.implicits._
@@ -149,40 +148,6 @@ object Better {
 
   }
 
-  trait VisLeaf[Dbs <: HList] {
-    def recordAsChild(accum: Accum, catKey: String, parentId: Any, d: Dbs): Unit
-  }
-
-  trait Vis[Dbs <: HList]  extends VisLeaf[Dbs] {
-    def recordAsTopLevel(accum: Accum, d: Dbs): Unit
-  }
-
-  def mkVisAtom[A, Dbs <: HList](
-    dbDesc: Atom[A, Dbs]
-  ): VisLeaf[Dbs] = new VisLeaf[Dbs] {
-    override def recordAsChild(accum: Accum, catKey: String, parentId: Any, d: Dbs): Unit = {
-      accum.addConverted(catKey, parentId, dbDesc.construct(d))
-    }
-  }
-
-  def mkVisParent[A, Id, ADb, CDb <: HList](
-    parentDef: ParentDef[A, Id, ADb],
-    visChild: VisLeaf[CDb]
-  ): Vis[ADb :: CDb] = new Vis[ADb :: CDb]{
-    override def recordAsChild(accum: Accum, catKey: String, parentId: Any, d: ADb :: CDb): Unit = {
-      val adb :: cdb = d
-      accum.addRaw(catKey, parentId, adb)
-      val newCatKey = s"$catKey.0"
-      val id = parentDef.getId(adb)
-      visChild.recordAsChild(accum, newCatKey, parentId = id, cdb)
-    }
-
-    override def recordAsTopLevel(accum: Accum, d: ADb :: CDb): Unit = {
-      val adb = d.head
-      accum.addToTopLevel(parentDef.getId(adb), adb)
-    }
-  }
-
   def assembleUnordered[A, Dbs <: HList](
     dbDesc: Parent1[A, Dbs]
   )(
@@ -325,7 +290,7 @@ object Better {
   def mkEmptyIdMap[A](): mutable.MultiDict[Any, A] = mutable.MultiDict.empty[Any, A]
   type LookupByCatKey[A] = mutable.Map[String, mutable.MultiDict[Any, A]]
 
-  private class Accum private (
+  class Accum private (
     topLevelDbItem: mutable.Map[Any, Any],
     rawLookup: LookupByCatKey[Any], // For storing raw parent DB values because all child isn't availble yet
     convertedLookup: LookupByCatKey[Either[EE, Any]] // For storing converted values
@@ -377,7 +342,7 @@ object Better {
 
   }
 
-  private object Accum {
+  object Accum {
     def mkEmpty(): Accum = new Accum(
       topLevelDbItem = mutable.Map.empty[Any, Any],
       rawLookup = mutable.Map.empty[String, AnyKeyMultiDict[Any]],
