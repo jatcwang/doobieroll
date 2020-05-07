@@ -1,6 +1,7 @@
 package example
 
 import shapeless._
+import shapeless.ops.hlist._
 
 import scala.collection.{mutable, MapView}
 import cats.implicits._
@@ -33,7 +34,10 @@ object Better {
 
   object DbDesc {
     implicit class DbDescOps[A, Dbs](val dbDesc: DbDesc[A, Dbs]) extends AnyVal {
-      def contramapDbs[NewDbs <: HList](parentName: String, extractCDb: NewDbs => Dbs): DbDesc[A, NewDbs] = {
+      def contramapDbs[NewDbs <: HList](
+        parentName: String,
+        extractCDb: NewDbs => Dbs
+      ): DbDesc[A, NewDbs] = {
         dbDesc match {
           case desc: Parent1[A, Dbs] =>
             new Parent1[A, NewDbs] {
@@ -88,7 +92,8 @@ object Better {
 
         override def getThisDb(dbs: Adb :: CDb): ThisDb = dbs.head
 
-        override val c1DbDesc: DbDesc[Child, Adb :: CDb] = child1.contramapDbs[Adb :: CDb](parentDef.name, _.tail)
+        override val c1DbDesc: DbDesc[Child, Adb :: CDb] =
+          child1.contramapDbs[Adb :: CDb](parentDef.name, _.tail)
 
         override def getId(cols: Adb :: CDb): Id = parentDef.getId(cols.head)
 
@@ -144,6 +149,40 @@ object Better {
 
   }
 
+  trait VisLeaf[Dbs <: HList] {
+    def recordAsChild(accum: Accum, catKey: String, parentId: Any, d: Dbs): Unit
+  }
+
+  trait Vis[Dbs <: HList]  extends VisLeaf[Dbs] {
+    def recordAsTopLevel(accum: Accum, d: Dbs): Unit
+  }
+
+  def mkVisAtom[A, Dbs <: HList](
+    dbDesc: Atom[A, Dbs]
+  ): VisLeaf[Dbs] = new VisLeaf[Dbs] {
+    override def recordAsChild(accum: Accum, catKey: String, parentId: Any, d: Dbs): Unit = {
+      accum.addConverted(catKey, parentId, dbDesc.construct(d))
+    }
+  }
+
+  def mkVisParent[A, Id, ADb, CDb <: HList](
+    parentDef: ParentDef[A, Id, ADb],
+    visChild: VisLeaf[CDb]
+  ): Vis[ADb :: CDb] = new Vis[ADb :: CDb]{
+    override def recordAsChild(accum: Accum, catKey: String, parentId: Any, d: ADb :: CDb): Unit = {
+      val adb :: cdb = d
+      accum.addRaw(catKey, parentId, adb)
+      val newCatKey = s"$catKey.0"
+      val id = parentDef.getId(adb)
+      visChild.recordAsChild(accum, newCatKey, parentId = id, cdb)
+    }
+
+    override def recordAsTopLevel(accum: Accum, d: ADb :: CDb): Unit = {
+      val adb = d.head
+      accum.addToTopLevel(parentDef.getId(adb), adb)
+    }
+  }
+
   def assembleUnordered[A, Dbs <: HList](
     dbDesc: Parent1[A, Dbs]
   )(
@@ -154,14 +193,15 @@ object Better {
 
     val accum = Accum.mkEmpty()
 
-    val processors: Vector[Dbs => Unit] = mkRecorderFuncForParent(
-      getParentIdOpt = None,
-      dbDesc = dbDesc
-    ).map(f => f(accum)) // bind all functions to our accumulator
-
-    rows.foreach { row =>
-      processors.foreach(f => f(row))
-    }
+    // FIXME:
+//    val processors: Vector[Dbs => Unit] = mkRecorderFuncForParent(
+//      getParentIdOpt = None,
+//      dbDesc = dbDesc
+//    ).map(f => f(accum)) // bind all functions to our accumulator
+//
+//    rows.foreach { row =>
+//      processors.foreach(f => f(row))
+//    }
 
     constructItTop(
       accum,
@@ -225,61 +265,61 @@ object Better {
         accum.getConvertedLookupView[A](thisDbDesc.name)
       }
     }
-
-  private def mkRecordFuncForAtom[A, Dbs <: HList](
-    getParentId: Dbs => Any,
-    dbDesc: Atom[A, Dbs]
-  ): (Accum) => Dbs => Unit = {
-    def f(accum: Accum)(row: Dbs): Unit =
-      accum.addConverted(dbDesc.name, getParentId(row), dbDesc.construct(row))
-
-    f
-  }
-
-  private def mkRecorderFuncForParent[A, Dbs <: HList](
-    getParentIdOpt: Option[Dbs => Any],
-    dbDesc: Parent1[A, Dbs]
-  ): Vector[Accum => Dbs => Unit] = {
-    val f = getParentIdOpt match {
-      case Some(getParentId) =>
-        (accum: Accum) =>
-          (row: Dbs) => {
-            accum.addRaw(
-              dbDesc.name,
-              getParentId(row),
-              dbDesc.getThisDb(row)
-            )
-          }
-      case None =>
-        (accum: Accum) =>
-          (row: Dbs) => {
-            accum.addToTopLevel(
-              dbDesc.getId(row),
-              dbDesc.getThisDb(row)
-            )
-          }
-    }
-
-    val getParentIdForChild: Dbs => Any = (row: Dbs) => dbDesc.getId(row)
-
-    val otherFuncs = dbDesc.c1DbDesc match {
-      case parent: Parent1[_, Dbs] =>
-        mkRecorderFuncForParent(
-          getParentIdOpt = Some(getParentIdForChild),
-          dbDesc = parent
-        )
-      case atom: Atom[_, Dbs] =>
-        Vector(
-          mkRecordFuncForAtom(
-            getParentId = getParentIdForChild,
-            dbDesc = atom
-          )
-        )
-    }
-
-    f +: otherFuncs
-
-  }
+// FIXME:
+//  private def mkRecordFuncForAtom[A, Dbs <: HList](
+//    getParentId: Dbs => Any,
+//    dbDesc: Atom[A, Dbs]
+//  ): (Accum) => Dbs => Unit = {
+//    def f(accum: Accum)(row: Dbs): Unit =
+//      accum.addConverted(dbDesc.name, getParentId(row), dbDesc.construct(row))
+//
+//    f
+//  }
+//
+//  private def mkRecorderFuncForParent[A, Dbs <: HList](
+//    getParentIdOpt: Option[Dbs => Any],
+//    dbDesc: Parent1[A, Dbs]
+//  ): Vector[Accum => Dbs => Unit] = {
+//    val f = getParentIdOpt match {
+//      case Some(getParentId) =>
+//        (accum: Accum) =>
+//          (row: Dbs) => {
+//            accum.addRaw(
+//              dbDesc.name,
+//              getParentId(row),
+//              dbDesc.getThisDb(row)
+//            )
+//          }
+//      case None =>
+//        (accum: Accum) =>
+//          (row: Dbs) => {
+//            accum.addToTopLevel(
+//              dbDesc.getId(row),
+//              dbDesc.getThisDb(row)
+//            )
+//          }
+//    }
+//
+//    val getParentIdForChild: Dbs => Any = (row: Dbs) => dbDesc.getId(row)
+//
+//    val otherFuncs = dbDesc.c1DbDesc match {
+//      case parent: Parent1[_, Dbs] =>
+//        mkRecorderFuncForParent(
+//          getParentIdOpt = Some(getParentIdForChild),
+//          dbDesc = parent
+//        )
+//      case atom: Atom[_, Dbs] =>
+//        Vector(
+//          mkRecordFuncForAtom(
+//            getParentId = getParentIdForChild,
+//            dbDesc = atom
+//          )
+//        )
+//    }
+//
+//    f +: otherFuncs
+//
+//  }
 
   type AnyKeyMultiDict[A] = mutable.MultiDict[Any, A]
   def mkEmptyIdMap[A](): mutable.MultiDict[Any, A] = mutable.MultiDict.empty[Any, A]
