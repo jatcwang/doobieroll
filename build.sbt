@@ -1,6 +1,8 @@
 val zioVersion = "1.0.0-RC18-2"
 
-lazy val root = Project("root", file("."))
+val circeVersion = "0.13.0"
+
+lazy val core = Project("core", file("modules/core"))
   .settings(commonSettings)
   .settings(
     name := "Scala Starter",
@@ -9,15 +11,42 @@ lazy val root = Project("root", file("."))
       "org.scala-lang.modules" %% "scala-collection-contrib" % "0.2.1",
       "com.chuusai" %% "shapeless" % "2.3.3",
       // FIXME:
-      "com.lihaoyi" %% "pprint" % "0.5.9",
+      "com.lihaoyi" %% "pprint" % "0.5.9" % Test,
       "org.scalatest" %% "scalatest" % "3.1.1" % Test,
       "com.softwaremill.diffx" %% "diffx-scalatest" % "0.3.28" % Test,
-      "org.flywaydb" % "flyway-core" % "6.3.2" % Test,
       "org.postgresql" % "postgresql" % "42.2.11" % Test,
-      "dev.zio" %% "zio-test" % zioVersion % Test,
-      "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
-      "dev.zio" %% "zio-test-magnolia" % zioVersion % Test,
     ),
+  )
+
+lazy val coretest = Project("coretest", file("modules/coretest"))
+  .dependsOn(core)
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.flywaydb" % "flyway-core" % "6.3.2",
+      "dev.zio" %% "zio-test" % zioVersion,
+      "dev.zio" %% "zio-test-sbt" % zioVersion,
+      "dev.zio" %% "zio-test-magnolia" % zioVersion,
+    )
+  )
+
+lazy val bench = Project("bench", file("modules/bench"))
+  .dependsOn(core, coretest)
+  .enablePlugins(JmhPlugin)
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++= Seq(
+      "io.circe" %% "circe-core" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion,
+      "io.circe" %% "circe-generic" % circeVersion,
+    )
+  )
+
+lazy val root = project
+  .in(new File("."))
+  .aggregate(bench, core, coretest)
+  .settings(
+    publish / skip := true
   )
 
 val scala213 = "2.13.2"
@@ -30,7 +59,7 @@ lazy val commonSettings = Seq(
     "-Ywarn-macros:after"
   ),
   scalacOptions --= {
-    if (sys.env.get("CI").isDefined) {
+    if (sys.env.contains("CI")) {
       Seq.empty
     } else {
       Seq("-Xfatal-warnings")
