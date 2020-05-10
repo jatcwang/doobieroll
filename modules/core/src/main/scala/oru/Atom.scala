@@ -1,24 +1,13 @@
 package oru
 
-sealed trait Mker[A, Dbs] {
-  type Child
-}
-
-object Mker {
-  type Aux[A, Dbs, Child0] = Mker[A, Dbs] {
-    type Child = Child0
-  }
-}
-
 /** An atomic group of database columns that converts to a single result type*/
-trait Atom[A, ADb] extends Mker[A, ADb] {
-  final override type Child = Nothing
+trait Atom[A, ADb] {
 
   def construct(db: ADb): Either[EE, A]
 }
 
-trait Par[A, ADb] extends Mker[A, ADb]{
-  override type Child
+trait Par[A, ADb] {
+  type Child
   type Id
 
   def getId(adb: ADb): Id
