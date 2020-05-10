@@ -1,6 +1,5 @@
-package oru
+package example.model
 
-import example.model.{DbCompany, DbDepartment, DbEmployee}
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 import shapeless._

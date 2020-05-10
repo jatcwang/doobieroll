@@ -25,7 +25,7 @@ object BetterSpec extends DefaultRunnableSpec {
 
       },
       testM("con conversion works") {
-        checkNM(50)(Gen.listOf(genCompany).map(_.toVector)) { original =>
+        checkNM(50)(Gen.listOf(genNonEmptyCompany).map(_.toVector)) { original =>
           zio.random
             .shuffle(
               original.flatMap(companyToDbRows).toList,

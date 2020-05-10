@@ -22,14 +22,61 @@ object Awesome {
   trait ParVis[A, Dbs <: HList] extends Vis[A, Dbs] {
     def recordTopLevel(dbs: Dbs): Unit
     def assembleTopLevel(): Vector[Either[EE, A]]
+
   }
 
-  trait MkVis[A, Dbs <: HList] {
+  trait MkVis[A, Dbs <: HList] { self =>
     def mkVis(accum: Aqum, catKey: String): Vis[A, Dbs]
+
+    def optional[ADb, RestDb <: HList](
+      implicit ev: (ADb :: RestDb) =:= Dbs
+    ): MkVis[A, Option[ADb] :: RestDb] = {
+      new MkVis[A, Option[ADb] :: RestDb] {
+        override def mkVis(accum: Aqum, catKey: String): Vis[A, Option[ADb] :: RestDb] = {
+          new Vis[A, Option[ADb] :: RestDb] {
+            val underlying: Vis[A, Dbs] = self.mkVis(accum, catKey)
+
+            override def recordAsChild(parentId: Any, dbs: Option[ADb] :: RestDb): Unit =
+              dbs.head.foreach { adb =>
+                underlying.recordAsChild(parentId, ev.apply(adb :: dbs.tail))
+              }
+
+            override def assemble(): MapView[Any, Vector[Either[EE, A]]] = underlying.assemble()
+          }
+        }
+      }
+    }
   }
 
-  trait MkParVis[A, Dbs <: HList] extends MkVis[A, Dbs] {
+  trait MkParVis[A, Dbs <: HList] extends MkVis[A, Dbs] { self =>
     override def mkVis(accum: Aqum, catKey: String): ParVis[A, Dbs]
+
+    final override def optional[ADb, RestDb <: HList](
+      implicit ev: (ADb :: RestDb) =:= Dbs
+    ): MkParVis[A, Option[ADb] :: RestDb] = {
+      new MkParVis[A, Option[ADb] :: RestDb] {
+        override def mkVis(accum: Aqum, catKey: String): ParVis[A, Option[ADb] :: RestDb] =
+          new ParVis[A, Option[ADb] :: RestDb] {
+            val underlying: ParVis[A, Dbs] = self.mkVis(accum, catKey)
+
+            override def recordTopLevel(dbs: Option[ADb] :: RestDb): Unit =
+              dbs.head.foreach { adb =>
+                underlying.recordTopLevel(ev.apply(adb :: dbs.tail))
+              }
+
+            override def assembleTopLevel(): Vector[Either[EE, A]] =
+              underlying.assembleTopLevel()
+
+            override def recordAsChild(parentId: Any, dbs: Option[ADb] :: RestDb): Unit =
+              dbs.head.foreach { adb =>
+                underlying.recordAsChild(parentId, ev.apply(adb :: dbs.tail))
+              }
+
+            override def assemble(): MapView[Any, Vector[Either[EE, A]]] =
+              underlying.assemble()
+          }
+      }
+    }
   }
 
   def mkVisAtom[A, Dbs <: HList](
@@ -172,7 +219,7 @@ object Awesome {
     def getRawLookup(
       catKey: String
     ): mutable.MultiDict[Any, Any] =
-      rawLookup.getOrElse(catKey, sys.error(s"getRaw for $catKey not found"))
+      rawLookup.getOrElseUpdate(catKey, mutable.MultiDict.empty[Any, Any])
 
   }
 

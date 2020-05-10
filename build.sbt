@@ -24,6 +24,9 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
   .settings(
     libraryDependencies ++= Seq(
       "org.flywaydb" % "flyway-core" % "6.3.2",
+      "io.circe" %% "circe-core" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion,
+      "io.circe" %% "circe-generic" % circeVersion,
       "dev.zio" %% "zio-test" % zioVersion,
       "dev.zio" %% "zio-test-sbt" % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
@@ -36,9 +39,6 @@ lazy val bench = Project("bench", file("modules/bench"))
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "io.circe" %% "circe-core" % circeVersion,
-      "io.circe" %% "circe-parser" % circeVersion,
-      "io.circe" %% "circe-generic" % circeVersion,
     )
   )
 

@@ -2,17 +2,18 @@ package oru
 import java.io.{File, PrintWriter}
 
 import example.TestModelHelpers._
+import example.model.Wrapper
 import io.circe.syntax._
 import zio._
 
 object GenerateTestData extends App {
 
   override def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] =
-    genCompany
+    genNonEmptyCompany
       .map { c =>
         companyToDbRows(c).map { case (c, d, e) => Wrapper(c, d, e) }
       }
-      .runCollectN(350)
+      .runCollectN(35)
       .map(_.flatten)
       .provideLayer(zio.test.environment.testEnvironment)
       .map { c =>
