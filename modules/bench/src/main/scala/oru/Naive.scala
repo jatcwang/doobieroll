@@ -2,11 +2,10 @@ package oru
 
 import example.model._
 import cats.implicits._
-import example.Awesome.EE
 import shapeless._
 
 object Naive {
-  def assembleUnordered(
+  def assembleUngrouped(
     rows: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil]
   ): Vector[Either[EE, Company]] =
     rows

@@ -2,7 +2,7 @@ package example.model
 
 import java.util.UUID
 
-import example.Awesome.EE
+import oru.EE
 
 final case class Department(
   id: UUID,

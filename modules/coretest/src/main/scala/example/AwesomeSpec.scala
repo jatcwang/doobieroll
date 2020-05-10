@@ -1,11 +1,10 @@
 package example
 
 import cats.implicits._
-import example.Awesome.EE
 import example.TestData._
 import example.TestModelHelpers._
 import example.model._
-import oru.{Atom, Par}
+import oru.{Atom, EE, Par, UngroupedAssembler}
 import shapeless.{test => _, _}
 import zio.test.Assertion._
 import zio.test.environment.TestEnvironment
@@ -17,7 +16,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
   override def spec: ZSpec[TestEnvironment, Nothing] =
     suite("AwesomeSpec")(
       test("go") {
-        val result = Awesome.assembleUnordered(dbRowsHList).sequence
+        val result = UngroupedAssembler.assembleUngrouped(dbRowsHList).sequence
 
         val Right(companies) = result
 
@@ -32,7 +31,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
             )
             .map(_.toVector)
             .map { rows =>
-              val Right(result) = Awesome.assembleUnordered(rows).sequence
+              val Right(result) = UngroupedAssembler.assembleUngrouped(rows).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
@@ -45,7 +44,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
             )
             .map(_.toVector)
             .map { rows =>
-              val Right(result) = Awesome.assembleUnordered(rows).sequence
+              val Right(result) = UngroupedAssembler.assembleUngrouped(rows).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }

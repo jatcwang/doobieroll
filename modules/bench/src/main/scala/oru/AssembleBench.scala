@@ -3,7 +3,6 @@ package oru
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
-import example.Awesome
 import example.TestModelHelpers._
 import example.model.{DbCompany, DbDepartment, DbEmployee, Wrapper}
 import io.circe.parser._
@@ -36,19 +35,19 @@ class AssembleBench {
   import example.AwesomeSpec.ExampleModelInstances._
 
   @Benchmark
-  def awesome10k(blackhole: Blackhole): Unit =
-    blackhole.consume(Awesome.assembleUnordered(hlist10K))
+  def ungrouped10k(blackhole: Blackhole): Unit =
+    blackhole.consume(UngroupedAssembler.assembleUngrouped(hlist10K))
 
   @Benchmark
-  def awesome1k(blackhole: Blackhole): Unit =
-    blackhole.consume(Awesome.assembleUnordered(hlist1K))
+  def ungrouped1k(blackhole: Blackhole): Unit =
+    blackhole.consume(UngroupedAssembler.assembleUngrouped(hlist1K))
 
   @Benchmark
-  def awesomeOpt1k(blackhole: Blackhole): Unit =
-    blackhole.consume(Awesome.assembleUnordered(optHList1k))
+  def ungroupedOpt1k(blackhole: Blackhole): Unit =
+    blackhole.consume(UngroupedAssembler.assembleUngrouped(optHList1k))
 
   @Benchmark
   def naive10k(blackhole: Blackhole): Unit =
-    blackhole.consume(Naive.assembleUnordered(hlist10K))
+    blackhole.consume(Naive.assembleUngrouped(hlist10K))
 
 }

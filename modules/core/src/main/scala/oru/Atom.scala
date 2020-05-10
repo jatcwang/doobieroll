@@ -1,7 +1,5 @@
 package oru
 
-import example.Awesome.EE
-
 sealed trait Mker[A, Dbs] {
   type Child
 }
