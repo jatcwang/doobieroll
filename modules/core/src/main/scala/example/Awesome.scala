@@ -88,12 +88,13 @@ object Awesome {
   ): MkVis[A, Dbs] = new MkVis[A, Dbs] {
 
     override def mkVis(accum: Aqum, catKey: String): Vis[A, Dbs] = new Vis[A, Dbs] {
+      val thisRawLookup = accum.getRawLookup[Dbs](catKey)
+
       override def recordAsChild(parentId: Any, d: Dbs): Unit =
-        accum.addRaw(catKey, parentId, d)
+        thisRawLookup.addOne(parentId -> d)
 
       override def assemble(): collection.MapView[Any, Vector[Either[EE, A]]] =
-        accum
-          .getRawLookup(catKey)
+        thisRawLookup
           .sets
           .view
           .mapValues(valueSet => valueSet.toVector.map(v => dbDesc.construct(v.asInstanceOf[Dbs])))
@@ -113,9 +114,11 @@ object Awesome {
         val childCatKey = s"$catKey.0"
         val visChild = mkVisChild.mkVis(accum, childCatKey)
 
+        val thisRawLookup: mutable.MultiDict[Any, ADb] = accum.getRawLookup[ADb](catKey)
+
         override def recordAsChild(parentId: Any, d: ADb :: CDb): Unit = {
           val adb :: cdb = d
-          accum.addRaw(catKey, parentId, adb)
+          thisRawLookup.addOne(parentId -> adb)
           val id = idAtom.getId(adb)
           visChild.recordAsChild(parentId = id, cdb)
         }
@@ -128,14 +131,13 @@ object Awesome {
         }
 
         override def assemble(): collection.MapView[Any, Vector[Either[EE, A]]] = {
-          accum.getRawLookup(catKey).sets.view.mapValues { valueSet =>
+          thisRawLookup.sets.view.mapValues { valueSet =>
             val childValues = visChild.assemble()
             valueSet.toVector.map { v =>
-              val rawAdb = v.asInstanceOf[ADb]
-              val thisId = idAtom.getId(rawAdb)
+              val thisId = idAtom.getId(v)
               for {
                 thisChildren <- childValues.getOrElse(thisId, Vector.empty).sequence
-                a <- constructWithChild(rawAdb, thisChildren)
+                a <- constructWithChild(v, thisChildren)
               } yield a
             }
           }
@@ -152,29 +154,6 @@ object Awesome {
           }
         }.toVector
       }
-
-  }
-
-  def optVis[A, ADb, CDb <: HList](
-    previs: MkVis[A, ADb :: CDb]
-  ): MkVis[A, Option[ADb] :: CDb] = new MkVis[A, Option[ADb] :: CDb] {
-    override def mkVis(accum: Aqum, catKey: String): Vis[A, Option[ADb] :: CDb] = {
-
-      val underlying = previs.mkVis(accum, catKey)
-
-      new Vis[A, Option[ADb] :: CDb] {
-        override def recordAsChild(
-          parentId: Any,
-          d: Option[ADb] :: CDb
-        ): Unit =
-          d.head.foreach { adb =>
-            underlying.recordAsChild(parentId, adb :: d.tail)
-          }
-
-        override def assemble(): MapView[Any, Vector[Either[EE, A]]] =
-          underlying.assemble()
-      }
-    }
 
   }
 
@@ -220,10 +199,10 @@ object Awesome {
       idMap.addOne(id -> value)
     }
 
-    def getRawLookup(
+    def getRawLookup[A](
       catKey: String
-    ): mutable.MultiDict[Any, Any] =
-      rawLookup.getOrElseUpdate(catKey, mutable.MultiDict.empty[Any, Any])
+    ): mutable.MultiDict[Any, A] =
+      rawLookup.getOrElseUpdate(catKey, mutable.MultiDict.empty[Any, Any]).asInstanceOf[mutable.MultiDict[Any, A]]
 
   }
 

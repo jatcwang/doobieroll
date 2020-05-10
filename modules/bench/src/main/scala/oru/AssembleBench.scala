@@ -34,9 +34,9 @@ class AssembleBench {
   val hlist1K: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] = wrappers10K.map(_.asHList).take(1000)
   val optHList1k: Vector[DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil] = optHList10k.take(1000)
 
-//  @Benchmark
-//  def awesome10k(blackhole: Blackhole): Unit =
-//    blackhole.consume(Awesome.assembleUnordered(hlist10K, AwesomeSpec.companyMkVis))
+  @Benchmark
+  def awesome10k(blackhole: Blackhole): Unit =
+    blackhole.consume(Awesome.assembleUnordered(hlist10K, AwesomeSpec.companyMkVis))
 
   @Benchmark
   def awesome1k(blackhole: Blackhole): Unit =
@@ -46,8 +46,8 @@ class AssembleBench {
   def awesomeOpt1k(blackhole: Blackhole): Unit =
     blackhole.consume(Awesome.assembleUnordered(optHList1k, AwesomeSpec.optCompanyMkVis))
 
-//  @Benchmark
-//  def naive(blackhole: Blackhole): Unit =
-//    blackhole.consume(Naive.assembleUnordered(hlist10K))
+  @Benchmark
+  def naive10k(blackhole: Blackhole): Unit =
+    blackhole.consume(Naive.assembleUnordered(hlist10K))
 
 }
