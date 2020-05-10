@@ -56,15 +56,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
 
   val employeeAtom: Atom[Employee, DbEmployee :: HNil] = new Atom[Employee, DbEmployee :: HNil] {
     override def name: String = "employee"
-    override def construct(h: DbEmployee :: HNil): Either[EE, Employee] = {
-      val db = h.head
-      Right(
-        Employee(
-          db.id,
-          db.name
-        )
-      )
-    }
+    override def construct(h: DbEmployee :: HNil): Either[EE, Employee] = Employee.fromDb(h.head)
   }
 
   val departmentIdAtom: IdAtom[Department, UUID, DbDepartment] =
@@ -80,14 +72,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
     Awesome.mkVisParent(
       departmentIdAtom,
       Awesome.mkVisAtom(employeeAtom),
-      constructWithChild = (dbDepartment: DbDepartment, employees: Vector[Employee]) =>
-        Right(
-          Department(
-            id = dbDepartment.id,
-            name = dbDepartment.name,
-            employees = employees
-          )
-        )
+      constructWithChild = Department.fromDb
     )
 
   val optDepartmentMkVis: MkParVis[Department, Option[DbDepartment] :: Option[DbEmployee] :: HNil] =
@@ -95,14 +80,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
       .mkVisParent(
         departmentIdAtom,
         Awesome.mkVisAtom(employeeAtom).optional,
-        constructWithChild = (dbDepartment: DbDepartment, employees: Vector[Employee]) =>
-          Right(
-            Department(
-              id = dbDepartment.id,
-              name = dbDepartment.name,
-              employees = employees
-            )
-          )
+        constructWithChild = Department.fromDb
       )
       .optional
 
