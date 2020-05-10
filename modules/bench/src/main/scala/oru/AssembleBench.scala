@@ -1,16 +1,15 @@
 package oru
 
-// Must not be in default package
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
+import example.Awesome
+import example.TestModelHelpers._
 import example.model.{DbCompany, DbDepartment, DbEmployee, Wrapper}
-import example.{Awesome, AwesomeSpec}
 import io.circe.parser._
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 import shapeless._
-import example.TestModelHelpers._
 
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.SECONDS)
@@ -34,17 +33,19 @@ class AssembleBench {
   val hlist1K: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] = wrappers10K.map(_.asHList).take(1000)
   val optHList1k: Vector[DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil] = optHList10k.take(1000)
 
+  import example.AwesomeSpec.ExampleModelInstances._
+
   @Benchmark
   def awesome10k(blackhole: Blackhole): Unit =
-    blackhole.consume(Awesome.assembleUnordered(hlist10K, AwesomeSpec.companyMkVis))
+    blackhole.consume(Awesome.assembleUnordered(hlist10K))
 
   @Benchmark
   def awesome1k(blackhole: Blackhole): Unit =
-    blackhole.consume(Awesome.assembleUnordered(hlist1K, AwesomeSpec.companyMkVis))
+    blackhole.consume(Awesome.assembleUnordered(hlist1K))
 
   @Benchmark
   def awesomeOpt1k(blackhole: Blackhole): Unit =
-    blackhole.consume(Awesome.assembleUnordered(optHList1k, AwesomeSpec.optCompanyMkVis))
+    blackhole.consume(Awesome.assembleUnordered(optHList1k))
 
   @Benchmark
   def naive10k(blackhole: Blackhole): Unit =

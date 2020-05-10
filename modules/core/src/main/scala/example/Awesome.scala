@@ -1,8 +1,8 @@
 package example
 
-import shapeless.{::, HList}
+import shapeless.{::, HList, HNil}
 import cats.implicits._
-import oru.Atom
+import oru.{Atom, Par}
 
 import scala.collection.{MapView, mutable}
 
@@ -39,6 +39,86 @@ object Awesome {
           }
         }
       }
+    }
+  }
+
+  object MkVis {
+
+    implicit def forParent[A, ADb, C, RestDb <: HList](
+      implicit mker: Par.Aux[A, ADb, C],
+      mkVisChild: MkVis[C, RestDb]
+    ): MkParVis[A, ADb :: RestDb] = new MkParVis[A, ADb :: RestDb] {
+
+      override def mkVis(accum: Accum, catKey: String): ParVis[A, ADb :: RestDb] =
+        new ParVis[A, ADb :: RestDb] {
+
+          val childCatKey = s"$catKey.0"
+          val visChild = mkVisChild.mkVis(accum, childCatKey)
+
+          val thisRawLookup: mutable.MultiDict[Any, ADb] = accum.getRawLookup[ADb](catKey)
+
+          override def recordAsChild(parentId: Any, d: ADb :: RestDb): Unit = {
+            val adb :: cdb = d
+            thisRawLookup.addOne(parentId -> adb)
+            val id = mker.getId(adb)
+            visChild.recordAsChild(parentId = id, cdb)
+          }
+
+          override def recordTopLevel(dbs: ADb :: RestDb): Unit = {
+            val adb :: cdb = dbs
+            val thisId = mker.getId(adb)
+            accum.addToTopLevel(thisId, adb)
+            visChild.recordAsChild(parentId = thisId, cdb)
+          }
+
+          override def assemble(): collection.MapView[Any, Vector[Either[EE, A]]] = {
+            thisRawLookup.sets.view.mapValues { valueSet =>
+              val childValues = visChild.assemble()
+              valueSet.toVector.map { v =>
+                val thisId = mker.getId(v)
+                for {
+                  thisChildren <- childValues.getOrElse(thisId, Vector.empty).sequence
+                  a <- mker.constructWithChild(v, thisChildren)
+                } yield a
+              }
+            }
+          }
+
+          override def assembleTopLevel(): Vector[Either[EE, A]] = {
+            accum.getTopLevel[ADb].map { adb =>
+              val childValues = visChild.assemble()
+              val thisId = mker.getId(adb)
+              for {
+                thisChildren <- childValues.getOrElse(thisId, Vector.empty).sequence
+                a <- mker.constructWithChild(adb, thisChildren)
+              } yield a
+            }
+          }.toVector
+        }
+    }
+
+    implicit def forAtom[A, ADb](implicit atom: Atom[A, ADb :: HNil]): MkVis[A, ADb :: HNil] = {
+      new MkVis[A, ADb :: HNil] {
+        override def mkVis(accum: Accum, catKey: String): Vis[A, ADb :: HNil] = new Vis[A, ADb :: HNil] {
+          val thisRawLookup = accum.getRawLookup[ADb](catKey)
+
+          override def recordAsChild(parentId: Any, d: ADb :: HNil): Unit =
+            thisRawLookup.addOne(parentId -> d.head)
+
+          override def assemble(): collection.MapView[Any, Vector[Either[EE, A]]] =
+            thisRawLookup.sets.view
+              .mapValues(valueSet => valueSet.toVector.map(v => atom.construct(v :: HNil)))
+        }
+
+      }
+    }
+
+    implicit def optionalMkVis[A, ADb, RestDb <: HList](implicit mkvis: MkVis[A, ADb :: RestDb]): MkVis[A, Option[ADb] :: RestDb] = {
+      mkvis.optional
+    }
+
+    implicit def optionalParMkVis[A, ADb, RestDb <: HList](implicit mkvis: MkParVis[A, ADb :: RestDb]): MkParVis[A, Option[ADb] :: RestDb] = {
+      mkvis.optional
     }
   }
 
@@ -149,8 +229,7 @@ object Awesome {
 
   def assembleUnordered[A, Dbs <: HList](
     rows: Vector[Dbs],
-    mkParVis: MkParVis[A, Dbs]
-  ): Vector[Either[EE, A]] = {
+  )(implicit mkParVis: MkParVis[A, Dbs]): Vector[Either[EE, A]] = {
     if (rows.isEmpty) return Vector.empty
     val accum = Accum.mkEmpty()
     val catKey = "t"

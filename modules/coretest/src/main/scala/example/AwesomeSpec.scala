@@ -1,21 +1,23 @@
 package example
 
 import cats.implicits._
+import example.Awesome.EE
 import example.TestData._
 import example.TestModelHelpers._
 import example.model._
-import oru.Atom
+import oru.{Atom, Par}
 import shapeless.{test => _, _}
 import zio.test.Assertion._
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, _}
 
 object AwesomeSpec extends DefaultRunnableSpec {
+  import ExampleModelInstances._
 
   override def spec: ZSpec[TestEnvironment, Nothing] =
     suite("AwesomeSpec")(
       test("go") {
-        val result = Awesome.assembleUnordered(dbRowsHList, companyMkVis).sequence
+        val result = Awesome.assembleUnordered(dbRowsHList).sequence
 
         val Right(companies) = result
 
@@ -30,7 +32,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
             )
             .map(_.toVector)
             .map { rows =>
-              val Right(result) = Awesome.assembleUnordered(rows, companyMkVis).sequence
+              val Right(result) = Awesome.assembleUnordered(rows).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
@@ -43,49 +45,21 @@ object AwesomeSpec extends DefaultRunnableSpec {
             )
             .map(_.toVector)
             .map { rows =>
-              val Right(result) = Awesome.assembleUnordered(rows, optCompanyMkVis).sequence
+              val Right(result) = Awesome.assembleUnordered(rows).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
       }
     )
 
-  import Awesome._
+  object ExampleModelInstances {
+    implicit val employeeAtom: Atom[Employee, DbEmployee :: HNil] = new Atom[Employee, DbEmployee :: HNil] {
+      override def construct(h: DbEmployee :: HNil): Either[EE, Employee] = Employee.fromDb(h.head)
+    }
 
-  val employeeAtom: Atom[Employee, DbEmployee :: HNil] = new Atom[Employee, DbEmployee :: HNil] {
-    override def construct(h: DbEmployee :: HNil): Either[EE, Employee] = Employee.fromDb(h.head)
-  }
+    implicit val departmentPar: Par.Aux[Department, DbDepartment, Employee] = Par.make((d: DbDepartment) => d.id, Department.fromDb)
 
-  val departmentMkVis: MkParVis[Department, DbDepartment :: DbEmployee :: HNil] =
-    Awesome.mkVisParent(
-      _.id,
-      Awesome.mkVisAtom(employeeAtom),
-      constructWithChild = Department.fromDb
-    )
-
-  val optDepartmentMkVis: MkParVis[Department, Option[DbDepartment] :: Option[DbEmployee] :: HNil] =
-    Awesome
-      .mkVisParent(
-        (d: DbDepartment) => d.id,
-        Awesome.mkVisAtom(employeeAtom).optional,
-        constructWithChild = Department.fromDb
-      )
-      .optional
-
-  val companyMkVis: MkParVis[Company, DbCompany :: DbDepartment :: DbEmployee :: HNil] =
-    Awesome.mkVisParent(
-      getId = _.id,
-      mkVisChild = departmentMkVis,
-      constructWithChild = Company.fromDb
-    )
-
-  val optCompanyMkVis
-    : MkParVis[Company, DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil] = {
-    Awesome.mkVisParent(
-      getId = _.id,
-      mkVisChild = optDepartmentMkVis,
-      constructWithChild = Company.fromDb
-    )
+    implicit val companyPar: Par.Aux[Company, DbCompany, Department] = Par.make((d: DbCompany) => d.id, Company.fromDb)
   }
 
 }
