@@ -2,7 +2,7 @@ package example.model
 
 import java.util.UUID
 
-import example.Better.EE
+import example.Awesome.EE
 
 final case class Company(
   id: UUID,

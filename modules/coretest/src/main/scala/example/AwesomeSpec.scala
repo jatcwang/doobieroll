@@ -52,7 +52,6 @@ object AwesomeSpec extends DefaultRunnableSpec {
     )
 
   import Awesome._
-  import Better.{Atom, EE}
 
   val employeeAtom: Atom[Employee, DbEmployee :: HNil] = new Atom[Employee, DbEmployee :: HNil] {
     override def name: String = "employee"

@@ -2,7 +2,7 @@ package oru
 
 import example.model._
 import cats.implicits._
-import example.Better.EE
+import example.Awesome.EE
 import shapeless._
 
 object Naive {

@@ -1,12 +1,16 @@
 package example
 
-import example.Better.{mkEmptyIdMap, AnyKeyMultiDict, Atom, EE, LookupByCatKey}
 import shapeless.{::, HList}
 import cats.implicits._
 
 import scala.collection.{mutable, MapView}
 
 object Awesome {
+
+  trait Atom[A, Dbs] {
+    def name: String
+    def construct(db: Dbs): Either[EE, A]
+  }
 
   // A is for type inference
   trait IdAtom[A, Id, Adb] {
@@ -222,6 +226,13 @@ object Awesome {
       rawLookup.getOrElseUpdate(catKey, mutable.MultiDict.empty[Any, Any])
 
   }
+
+  // Error type when a Db type to domain type conversion failed
+  case class EE(msg: String)
+
+  type AnyKeyMultiDict[A] = mutable.MultiDict[Any, A]
+  def mkEmptyIdMap[A](): mutable.MultiDict[Any, A] = mutable.MultiDict.empty[Any, A]
+  type LookupByCatKey[A] = mutable.Map[String, mutable.MultiDict[Any, A]]
 
   object Aqum {
     def mkEmpty(): Aqum = new Aqum(
