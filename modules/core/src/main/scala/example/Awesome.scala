@@ -2,20 +2,11 @@ package example
 
 import shapeless.{::, HList}
 import cats.implicits._
+import oru.Atom
 
-import scala.collection.{mutable, MapView}
+import scala.collection.{MapView, mutable}
 
 object Awesome {
-
-  trait Atom[A, Dbs] {
-    def name: String
-    def construct(db: Dbs): Either[EE, A]
-  }
-
-  // A is for type inference
-  trait IdAtom[A, Id, Adb] {
-    def getId(adb: Adb): Id
-  }
 
   trait Vis[A, Dbs <: HList] {
     def recordAsChild(parentId: Any, d: Dbs): Unit
@@ -26,17 +17,16 @@ object Awesome {
   trait ParVis[A, Dbs <: HList] extends Vis[A, Dbs] {
     def recordTopLevel(dbs: Dbs): Unit
     def assembleTopLevel(): Vector[Either[EE, A]]
-
   }
 
   trait MkVis[A, Dbs <: HList] { self =>
-    def mkVis(accum: Aqum, catKey: String): Vis[A, Dbs]
+    def mkVis(accum: Accum, catKey: String): Vis[A, Dbs]
 
     def optional[ADb, RestDb <: HList](
       implicit ev: (ADb :: RestDb) =:= Dbs
     ): MkVis[A, Option[ADb] :: RestDb] = {
       new MkVis[A, Option[ADb] :: RestDb] {
-        override def mkVis(accum: Aqum, catKey: String): Vis[A, Option[ADb] :: RestDb] = {
+        override def mkVis(accum: Accum, catKey: String): Vis[A, Option[ADb] :: RestDb] = {
           new Vis[A, Option[ADb] :: RestDb] {
             val underlying: Vis[A, Dbs] = self.mkVis(accum, catKey)
 
@@ -53,13 +43,13 @@ object Awesome {
   }
 
   trait MkParVis[A, Dbs <: HList] extends MkVis[A, Dbs] { self =>
-    override def mkVis(accum: Aqum, catKey: String): ParVis[A, Dbs]
+    override def mkVis(accum: Accum, catKey: String): ParVis[A, Dbs]
 
     final override def optional[ADb, RestDb <: HList](
       implicit ev: (ADb :: RestDb) =:= Dbs
     ): MkParVis[A, Option[ADb] :: RestDb] = {
       new MkParVis[A, Option[ADb] :: RestDb] {
-        override def mkVis(accum: Aqum, catKey: String): ParVis[A, Option[ADb] :: RestDb] =
+        override def mkVis(accum: Accum, catKey: String): ParVis[A, Option[ADb] :: RestDb] =
           new ParVis[A, Option[ADb] :: RestDb] {
             val underlying: ParVis[A, Dbs] = self.mkVis(accum, catKey)
 
@@ -87,7 +77,7 @@ object Awesome {
     dbDesc: Atom[A, Dbs]
   ): MkVis[A, Dbs] = new MkVis[A, Dbs] {
 
-    override def mkVis(accum: Aqum, catKey: String): Vis[A, Dbs] = new Vis[A, Dbs] {
+    override def mkVis(accum: Accum, catKey: String): Vis[A, Dbs] = new Vis[A, Dbs] {
       val thisRawLookup = accum.getRawLookup[Dbs](catKey)
 
       override def recordAsChild(parentId: Any, d: Dbs): Unit =
@@ -103,12 +93,12 @@ object Awesome {
   }
 
   def mkVisParent[A, Id, ADb, C, CDb <: HList](
-    idAtom: IdAtom[A, Id, ADb],
+    getId: ADb => Id,
     mkVisChild: MkVis[C, CDb],
     constructWithChild: (ADb, Vector[C]) => Either[EE, A]
   ): MkParVis[A, ADb :: CDb] = new MkParVis[A, ADb :: CDb] {
 
-    override def mkVis(accum: Aqum, catKey: String): ParVis[A, ADb :: CDb] =
+    override def mkVis(accum: Accum, catKey: String): ParVis[A, ADb :: CDb] =
       new ParVis[A, ADb :: CDb] {
 
         val childCatKey = s"$catKey.0"
@@ -119,13 +109,13 @@ object Awesome {
         override def recordAsChild(parentId: Any, d: ADb :: CDb): Unit = {
           val adb :: cdb = d
           thisRawLookup.addOne(parentId -> adb)
-          val id = idAtom.getId(adb)
+          val id = getId(adb)
           visChild.recordAsChild(parentId = id, cdb)
         }
 
         override def recordTopLevel(dbs: ADb :: CDb): Unit = {
           val adb :: cdb = dbs
-          val thisId = idAtom.getId(adb)
+          val thisId = getId(adb)
           accum.addToTopLevel(thisId, adb)
           visChild.recordAsChild(parentId = thisId, cdb)
         }
@@ -134,7 +124,7 @@ object Awesome {
           thisRawLookup.sets.view.mapValues { valueSet =>
             val childValues = visChild.assemble()
             valueSet.toVector.map { v =>
-              val thisId = idAtom.getId(v)
+              val thisId = getId(v)
               for {
                 thisChildren <- childValues.getOrElse(thisId, Vector.empty).sequence
                 a <- constructWithChild(v, thisChildren)
@@ -146,7 +136,7 @@ object Awesome {
         override def assembleTopLevel(): Vector[Either[EE, A]] = {
           accum.getTopLevel[ADb].map { adb =>
             val childValues = visChild.assemble()
-            val thisId = idAtom.getId(adb)
+            val thisId = getId(adb)
             for {
               thisChildren <- childValues.getOrElse(thisId, Vector.empty).sequence
               a <- constructWithChild(adb, thisChildren)
@@ -162,7 +152,7 @@ object Awesome {
     mkParVis: MkParVis[A, Dbs]
   ): Vector[Either[EE, A]] = {
     if (rows.isEmpty) return Vector.empty
-    val accum = Aqum.mkEmpty()
+    val accum = Accum.mkEmpty()
     val catKey = "t"
 
     val parVis = mkParVis.mkVis(accum, catKey)
@@ -174,9 +164,7 @@ object Awesome {
     parVis.assembleTopLevel()
   }
 
-  // FIXME: need optParVis
-
-  class Aqum private (
+  class Accum private (
     topLevelDbItem: mutable.Map[Any, Any],
     // For storing raw parent DB values because all child isn't availble yet
     rawLookup: LookupByCatKey[Any],
@@ -186,18 +174,6 @@ object Awesome {
 
     def getTopLevel[A]: Iterator[A] =
       topLevelDbItem.iterator.map(_._2).asInstanceOf[Iterator[A]]
-
-    def addRaw(
-      catKey: String,
-      id: Any,
-      value: Any
-    ): Unit = {
-      val idMap = rawLookup.getOrElseUpdate(
-        catKey,
-        mkEmptyIdMap()
-      )
-      idMap.addOne(id -> value)
-    }
 
     def getRawLookup[A](
       catKey: String
@@ -213,8 +189,8 @@ object Awesome {
   def mkEmptyIdMap[A](): mutable.MultiDict[Any, A] = mutable.MultiDict.empty[Any, A]
   type LookupByCatKey[A] = mutable.Map[String, mutable.MultiDict[Any, A]]
 
-  object Aqum {
-    def mkEmpty(): Aqum = new Aqum(
+  object Accum {
+    def mkEmpty(): Accum = new Accum(
       topLevelDbItem = mutable.Map.empty[Any, Any],
       rawLookup = mutable.Map.empty[String, AnyKeyMultiDict[Any]]
     )

@@ -1,11 +1,10 @@
 package example
 
-import java.util.UUID
-
 import cats.implicits._
 import example.TestData._
 import example.TestModelHelpers._
 import example.model._
+import oru.Atom
 import shapeless.{test => _, _}
 import zio.test.Assertion._
 import zio.test.environment.TestEnvironment
@@ -54,22 +53,12 @@ object AwesomeSpec extends DefaultRunnableSpec {
   import Awesome._
 
   val employeeAtom: Atom[Employee, DbEmployee :: HNil] = new Atom[Employee, DbEmployee :: HNil] {
-    override def name: String = "employee"
     override def construct(h: DbEmployee :: HNil): Either[EE, Employee] = Employee.fromDb(h.head)
-  }
-
-  val departmentIdAtom: IdAtom[Department, UUID, DbDepartment] =
-    new IdAtom[Department, UUID, DbDepartment] {
-      override def getId(adb: DbDepartment): UUID = adb.id
-    }
-
-  val companyIdAtom: IdAtom[Company, UUID, DbCompany] = new IdAtom[Company, UUID, DbCompany] {
-    override def getId(adb: DbCompany): UUID = adb.id
   }
 
   val departmentMkVis: MkParVis[Department, DbDepartment :: DbEmployee :: HNil] =
     Awesome.mkVisParent(
-      departmentIdAtom,
+      _.id,
       Awesome.mkVisAtom(employeeAtom),
       constructWithChild = Department.fromDb
     )
@@ -77,7 +66,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
   val optDepartmentMkVis: MkParVis[Department, Option[DbDepartment] :: Option[DbEmployee] :: HNil] =
     Awesome
       .mkVisParent(
-        departmentIdAtom,
+        (d: DbDepartment) => d.id,
         Awesome.mkVisAtom(employeeAtom).optional,
         constructWithChild = Department.fromDb
       )
@@ -85,7 +74,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
 
   val companyMkVis: MkParVis[Company, DbCompany :: DbDepartment :: DbEmployee :: HNil] =
     Awesome.mkVisParent(
-      idAtom = companyIdAtom,
+      getId = _.id,
       mkVisChild = departmentMkVis,
       constructWithChild = Company.fromDb
     )
@@ -93,7 +82,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
   val optCompanyMkVis
     : MkParVis[Company, DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil] = {
     Awesome.mkVisParent(
-      idAtom = companyIdAtom,
+      getId = _.id,
       mkVisChild = optDepartmentMkVis,
       constructWithChild = Company.fromDb
     )
