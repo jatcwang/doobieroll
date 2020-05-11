@@ -17,6 +17,7 @@ object TestData {
   val e1 = UUID.fromString("00000000-0000-0000-0000-000000000001")
   val e2 = UUID.fromString("00000000-0000-0000-0000-000000000002")
   val e3 = UUID.fromString("00000000-0000-0000-0000-000000000003")
+  val e4 = UUID.fromString("00000000-0000-0000-0000-000000000004")
 
   val c1db = DbCompany(c1, "Comp1")
   val c2db = DbCompany(c2, "Comp2")
@@ -35,7 +36,7 @@ object TestData {
   )
 
   val dbRowsHList: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] = {
-    dbRows.map(dbRowsToHlist)
+    dbRows.map(dbRowToHlist)
   }
 
   val expectedCompanies = Vector(
@@ -77,5 +78,57 @@ object TestData {
     ),
   )
 
+  val expectedCompaniesWithSomeEmptyChildren = Vector(
+    Company(
+      c1,
+      "Comp1",
+      departments = Vector(
+        Department(
+          d1,
+          "Dep1",
+          employees = Vector(
+            Employee(
+              e1,
+              "Emp1",
+            ),
+            Employee(
+              e2,
+              "Emp2",
+            ),
+          ),
+        ),
+      ),
+    ),
+    Company(
+      c2,
+      "Comp2",
+      departments = Vector(),
+    ),
+    model.Company(
+      c3,
+      "Comp3",
+      departments = Vector(
+        Department(
+          d2,
+          name = "Dep2",
+          employees = Vector()
+        ),
+        Department(
+          d3,
+          name = "Dep3",
+          employees = Vector(
+            Employee(
+              e3,
+              name = "E3"
+            ),
+            Employee(
+              e4,
+              name = "E4"
+            )
+          )
+        )
+      )
+    )
+  )
 
 }

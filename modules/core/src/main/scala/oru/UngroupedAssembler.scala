@@ -27,8 +27,8 @@ trait UngroupedAssembler[A, Dbs <: HList] { self =>
           val (size, underlying) = self.makeVisitor(accum, catKey, idx)
 
           override def recordAsChild(parentId: Any, dbs: ArraySeq[Any]): Unit =
-            dbs(size).asInstanceOf[Option[ADb]].foreach { _ =>
-              underlying.recordAsChild(parentId, dbs)
+            dbs(idx).asInstanceOf[Option[ADb]].foreach { adb =>
+              underlying.recordAsChild(parentId, dbs.updated(idx, adb))
             }
 
           override def assemble(): MapView[Any, Vector[Either[EE, A]]] = underlying.assemble()
@@ -143,16 +143,16 @@ object UngroupedAssembler {
             val (size, underlying) = self.makeVisitor(accum, catKey, idx)
 
             override def recordTopLevel(dbs: ArraySeq[Any]): Unit =
-              dbs(idx).asInstanceOf[Option[ADb]].foreach { _ =>
-                underlying.recordTopLevel(dbs)
+              dbs(idx).asInstanceOf[Option[ADb]].foreach { adb =>
+                underlying.recordTopLevel(dbs.updated(idx, adb))
               }
 
             override def assembleTopLevel(): Vector[Either[EE, A]] =
               underlying.assembleTopLevel()
 
             override def recordAsChild(parentId: Any, dbs: ArraySeq[Any]): Unit =
-              dbs(idx).asInstanceOf[Option[ADb]].foreach { _ =>
-                underlying.recordAsChild(parentId, dbs)
+              dbs(idx).asInstanceOf[Option[ADb]].foreach { adb =>
+                underlying.recordAsChild(parentId, dbs.updated(idx, adb))
               }
 
             override def assemble(): MapView[Any, Vector[Either[EE, A]]] =

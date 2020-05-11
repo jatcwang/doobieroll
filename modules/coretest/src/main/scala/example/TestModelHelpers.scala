@@ -111,7 +111,7 @@ object TestModelHelpers {
     rows.toVector
   }
 
-  def dbRowsToHlist(
+  def dbRowToHlist(
     row: (DbCompany, DbDepartment, DbEmployee)
   ): DbCompany :: DbDepartment :: DbEmployee :: HNil =
     implicitly[Aux[
@@ -119,7 +119,7 @@ object TestModelHelpers {
       DbCompany :: DbDepartment :: DbEmployee :: HNil
     ]].to(row)
 
-  def dbRowsToOptHlist(
+  def dbRowToOptHlist(
     row: (DbCompany, Option[DbDepartment], Option[DbEmployee])
   ): DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil =
     implicitly[Aux[

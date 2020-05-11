@@ -25,8 +25,6 @@ class AssembleBench {
   }
 
   val hlist10K: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] = wrappers10K.map(_.asHList)
-  val tuple10K: Vector[(DbCompany, DbDepartment, DbEmployee)] = wrappers10K.map(a => (a.c, a.d, a.e))
-
   val optHList10k: Vector[DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil] = wrappers10K.map(wrapperToOptHList)
 
   val hlist1K: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] = wrappers10K.map(_.asHList).take(1000)
@@ -37,6 +35,10 @@ class AssembleBench {
   @Benchmark
   def ungrouped10k(blackhole: Blackhole): Unit =
     blackhole.consume(UngroupedAssembler.assembleUngrouped(hlist10K))
+
+  @Benchmark
+  def ungroupedOpt10k(blackhole: Blackhole): Unit =
+    blackhole.consume(UngroupedAssembler.assembleUngrouped(optHList10k))
 
   @Benchmark
   def ungrouped1k(blackhole: Blackhole): Unit =

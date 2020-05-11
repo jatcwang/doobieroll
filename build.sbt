@@ -10,10 +10,6 @@ lazy val core = Project("core", file("modules/core"))
       "org.typelevel" %% "cats-core" % "2.1.1",
       "org.scala-lang.modules" %% "scala-collection-contrib" % "0.2.1",
       "com.chuusai" %% "shapeless" % "2.3.3",
-      // FIXME:
-      "com.lihaoyi" %% "pprint" % "0.5.9" % Test,
-      "org.scalatest" %% "scalatest" % "3.1.1" % Test,
-      "com.softwaremill.diffx" %% "diffx-scalatest" % "0.3.28" % Test,
       "org.postgresql" % "postgresql" % "42.2.11" % Test,
     ),
   )
@@ -23,6 +19,8 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
+      // FIXME:
+      "com.lihaoyi" %% "pprint" % "0.5.9",
       "org.flywaydb" % "flyway-core" % "6.3.2",
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,

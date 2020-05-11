@@ -15,7 +15,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
 
   override def spec: ZSpec[TestEnvironment, Nothing] =
     suite("AwesomeSpec")(
-      test("go") {
+      test("all non-nullable columns") {
         val result = UngroupedAssembler.assembleUngrouped(dbRowsHList).sequence
 
         val Right(companies) = result
@@ -23,11 +23,17 @@ object AwesomeSpec extends DefaultRunnableSpec {
         assert(normalizeCompanies(companies))(equalTo(expectedCompanies))
 
       },
+      test("nullable children columns") {
+        val dbRows = expectedCompaniesWithSomeEmptyChildren.flatMap(companyToOptDbRows)
+        val result = UngroupedAssembler.assembleUngrouped(dbRows.map(dbRowToOptHlist))
+        val Right(companies) = result.sequence
+        assert(normalizeCompanies(companies))(equalTo(expectedCompaniesWithSomeEmptyChildren))
+      },
       testM("Property: Roundtrip conversion from List[Company] <=> Db rows") {
         checkM(Gen.listOf(genNonEmptyCompany).map(_.toVector)) { original =>
           zio.random
             .shuffle(
-              original.flatMap(companyToDbRows).map(dbRowsToHlist).toList,
+              original.flatMap(companyToDbRows).map(dbRowToHlist).toList,
             )
             .map(_.toVector)
             .map { rows =>
@@ -36,11 +42,13 @@ object AwesomeSpec extends DefaultRunnableSpec {
             }
         }
       },
-      testM("Property: Roundtrip conversion from List[Company] <=> Db rows (with potentially empty department/employee list)") {
+      testM(
+        "Property: Roundtrip conversion from List[Company] <=> Db rows (with potentially empty department/employee list)"
+      ) {
         checkM(Gen.listOf(genCompany).map(_.toVector)) { original =>
           zio.random
             .shuffle(
-              original.flatMap(companyToOptDbRows).map(dbRowsToOptHlist).toList,
+              original.flatMap(companyToOptDbRows).map(dbRowToOptHlist).toList,
             )
             .map(_.toVector)
             .map { rows =>
@@ -52,13 +60,17 @@ object AwesomeSpec extends DefaultRunnableSpec {
     )
 
   object ExampleModelInstances {
-    implicit val employeeAtom: Atom[Employee, DbEmployee :: HNil] = new Atom[Employee, DbEmployee :: HNil] {
-      override def construct(h: DbEmployee :: HNil): Either[EE, Employee] = Employee.fromDb(h.head)
-    }
+    implicit val employeeAtom: Atom[Employee, DbEmployee :: HNil] =
+      new Atom[Employee, DbEmployee :: HNil] {
+        override def construct(h: DbEmployee :: HNil): Either[EE, Employee] =
+          Employee.fromDb(h.head)
+      }
 
-    implicit val departmentPar: Par.Aux[Department, DbDepartment, Employee] = Par.make((d: DbDepartment) => d.id, Department.fromDb)
+    implicit val departmentPar: Par.Aux[Department, DbDepartment, Employee] =
+      Par.make((d: DbDepartment) => d.id, Department.fromDb)
 
-    implicit val companyPar: Par.Aux[Company, DbCompany, Department] = Par.make((d: DbCompany) => d.id, Company.fromDb)
+    implicit val companyPar: Par.Aux[Company, DbCompany, Department] =
+      Par.make((d: DbCompany) => d.id, Company.fromDb)
   }
 
 }
