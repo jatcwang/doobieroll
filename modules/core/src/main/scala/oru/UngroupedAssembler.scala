@@ -2,35 +2,38 @@ package oru
 
 import cats.implicits._
 import oru.impl.{Accum, UngroupedParentVisitor, UngroupedVisitor}
-import shapeless.ops.hlist.{Length, ToTraversable}
+import shapeless.ops.hlist.Length
 import shapeless.ops.nat.ToInt
-import shapeless.{::, HList, HNil, Nat, Witness}
+import shapeless.{::, HList, HNil, Nat}
 
 import scala.collection.immutable.ArraySeq
 import scala.collection.{MapView, mutable}
 
 trait UngroupedAssembler[A, Dbs <: HList] { self =>
-  private[oru] def makeVisitor(accum: Accum, catKey: String, idx: Int): UngroupedVisitor[A, Dbs]
+  // Given an offset index, returns the visitor instance which has been bound to the state accumulator,
+  // as well as the size of input this visitor consumes
+  private[oru] def makeVisitor(accum: Accum, catKey: String, idx: Int): (Int, UngroupedVisitor[A, Dbs])
 
   def optional[ADb, RestDb <: HList](
     implicit ev: (ADb :: RestDb) =:= Dbs
   ): UngroupedAssembler[A, Option[ADb] :: RestDb] = {
     new UngroupedAssembler[A, Option[ADb] :: RestDb] {
-      override def makeVisitor(
+      private[oru] override def makeVisitor(
         accum: Accum,
         catKey: String,
         idx: Int
-      ): UngroupedVisitor[A, Option[ADb] :: RestDb] = {
-        new UngroupedVisitor[A, Option[ADb] :: RestDb] {
-          val underlying: UngroupedVisitor[A, Dbs] = self.makeVisitor(accum, catKey, idx)
+      ): (Int, UngroupedVisitor[A, Option[ADb] :: RestDb]) = {
+        val v = new UngroupedVisitor[A, Option[ADb] :: RestDb] {
+          val (size, underlying) = self.makeVisitor(accum, catKey, idx)
 
           override def recordAsChild(parentId: Any, dbs: ArraySeq[Any]): Unit =
-            dbs(idx).asInstanceOf[Option[ADb]].foreach { _ =>
+            dbs(size).asInstanceOf[Option[ADb]].foreach { _ =>
               underlying.recordAsChild(parentId, dbs)
             }
 
           override def assemble(): MapView[Any, Vector[Either[EE, A]]] = underlying.assemble()
         }
+        (v.size, v)
       }
     }
   }
@@ -43,11 +46,11 @@ object UngroupedAssembler {
     childUnorderedAssembler: UngroupedAssembler[C, RestDb]
   ): UnorderedParentAssembler[A, ADb :: RestDb] = new UnorderedParentAssembler[A, ADb :: RestDb] {
 
-    override def makeVisitor(accum: Accum, catKey: String, idx: Int): UngroupedParentVisitor[A, ADb :: RestDb] =
-      new UngroupedParentVisitor[A, ADb :: RestDb] {
+    private[oru] override def makeVisitor(accum: Accum, catKey: String, idx: Int): (Int, UngroupedParentVisitor[A, ADb :: RestDb]) = {
+      val v = new UngroupedParentVisitor[A, ADb :: RestDb] {
 
         val childCatKey = s"$catKey.0"
-        val visChild = childUnorderedAssembler.makeVisitor(accum, childCatKey, idx + 1)
+        val (childSize, visChild) = childUnorderedAssembler.makeVisitor(accum, childCatKey, idx + 1)
 
         val thisRawLookup: mutable.MultiDict[Any, ADb] = accum.getRawLookup[ADb](catKey)
 
@@ -89,14 +92,17 @@ object UngroupedAssembler {
           }
         }.toVector
       }
+
+      ((v.childSize + 1) -> v)
+    }
   }
 
   implicit def forAtom[A, ADb](
     implicit atom: Atom[A, ADb :: HNil]
   ): UngroupedAssembler[A, ADb :: HNil] = {
     new UngroupedAssembler[A, ADb :: HNil] {
-      override def makeVisitor(accum: Accum, catKey: String, idx: Int): UngroupedVisitor[A, ADb :: HNil] =
-        new UngroupedVisitor[A, ADb :: HNil] {
+      private[oru] override def makeVisitor(accum: Accum, catKey: String, idx: Int): (Int, UngroupedVisitor[A, ADb :: HNil]) = {
+        val v = new UngroupedVisitor[A, ADb :: HNil] {
           val thisRawLookup = accum.getRawLookup[ADb](catKey)
 
           override def recordAsChild(parentId: Any, d: ArraySeq[Any]): Unit =
@@ -106,7 +112,8 @@ object UngroupedAssembler {
             thisRawLookup.sets.view
               .mapValues(valueSet => valueSet.toVector.map(v => atom.construct(v :: HNil)))
         }
-
+        1 -> v
+      }
     }
   }
 
@@ -121,22 +128,22 @@ object UngroupedAssembler {
     mkvis.optional
 
   trait UnorderedParentAssembler[A, Dbs <: HList] extends UngroupedAssembler[A, Dbs] { self =>
-    private[oru] override def makeVisitor(accum: Accum, catKey: String, idx: Int): UngroupedParentVisitor[A, Dbs]
+    private[oru] override def makeVisitor(accum: Accum, catKey: String, idx: Int): (Int, UngroupedParentVisitor[A, Dbs])
 
     final override def optional[ADb, RestDb <: HList](
       implicit ev: (ADb :: RestDb) =:= Dbs
     ): UnorderedParentAssembler[A, Option[ADb] :: RestDb] = {
       new UnorderedParentAssembler[A, Option[ADb] :: RestDb] {
-        override def makeVisitor(
+        private[oru] override def makeVisitor(
           accum: Accum,
           catKey: String,
           idx: Int
-        ): UngroupedParentVisitor[A, Option[ADb] :: RestDb] =
-          new UngroupedParentVisitor[A, Option[ADb] :: RestDb] {
-            val underlying: UngroupedParentVisitor[A, Dbs] = self.makeVisitor(accum, catKey, idx)
+        ): (Int, UngroupedParentVisitor[A, Option[ADb] :: RestDb]) = {
+          val v = new UngroupedParentVisitor[A, Option[ADb] :: RestDb] {
+            val (size, underlying) = self.makeVisitor(accum, catKey, idx)
 
             override def recordTopLevel(dbs: ArraySeq[Any]): Unit =
-              dbs(idx).asInstanceOf[Option[ADb]].foreach { adb =>
+              dbs(idx).asInstanceOf[Option[ADb]].foreach { _ =>
                 underlying.recordTopLevel(dbs)
               }
 
@@ -144,24 +151,25 @@ object UngroupedAssembler {
               underlying.assembleTopLevel()
 
             override def recordAsChild(parentId: Any, dbs: ArraySeq[Any]): Unit =
-              dbs(idx).asInstanceOf[Option[ADb]].foreach { adb =>
+              dbs(idx).asInstanceOf[Option[ADb]].foreach { _ =>
                 underlying.recordAsChild(parentId, dbs)
               }
 
             override def assemble(): MapView[Any, Vector[Either[EE, A]]] =
               underlying.assemble()
           }
+          v.size -> v
+        }
       }
     }
   }
-
-  import shapeless.ops.hlist.ToArray
   def hlistToArraySeq[Dbs <: HList, N <: Nat](
     h: Dbs
   )(
     implicit length: Length.Aux[Dbs, N],
     toInt: ToInt[N]
   ): ArraySeq[Any] = {
+    val _ = length
 
     val arr = new Array[Any](toInt())
 
@@ -190,7 +198,7 @@ object UngroupedAssembler {
     val accum = Accum.mkEmpty()
     val catKey = "t"
 
-    val parVis = ungroupedParentAssembler.makeVisitor(accum, catKey, 0)
+    val (_, parVis) = ungroupedParentAssembler.makeVisitor(accum, catKey, 0)
 
     rows.foreach { dbs =>
       parVis.recordTopLevel(hlistToArraySeq(dbs))
