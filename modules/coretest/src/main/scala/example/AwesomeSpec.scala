@@ -67,11 +67,19 @@ object AwesomeSpec extends DefaultRunnableSpec {
           Employee.fromDb(h.head)
       }
 
+    implicit val invoiceAtom: Atom[Invoice, DbInvoice :: HNil] =
+      new Atom[Invoice, DbInvoice :: HNil] {
+        override def construct(db: DbInvoice :: HNil): Either[EE, Invoice] = Invoice.fromDb(db.head)
+      }
+
     implicit val departmentPar: Aux[Department, DbDepartment, Employee :: HNil, Vector[Employee] :: HNil] =
       Par.make((d: DbDepartment) => d.id, Department.fromDb)
 
     implicit val companyPar: Aux[Company, DbCompany, Department :: HNil, Vector[Department] :: HNil] =
       Par.make((d: DbCompany) => d.id, Company.fromDb)
+
+    implicit val bigCompanyPar: Aux[BigCompany, DbCompany, Department :: Invoice :: HNil, Vector[Department] :: Vector[Invoice] :: HNil] =
+      Par.make2((d: DbCompany) => d.id, BigCompany.fromDb)
   }
 
 }

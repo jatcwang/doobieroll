@@ -40,4 +40,24 @@ object Par {
         constructWithChild0(adb, children.head)
     }
   }
+
+  def make2[A, ADb, Child0, Child1, Id0](
+    getId: ADb => Id0,
+    constructWithChild: (ADb, Vector[Child0], Vector[Child1]) => Either[EE, A]
+  ): Par.Aux[A, ADb, Child0 :: Child1 :: HNil, Vector[Child0] :: Vector[Child1] :: HNil] = {
+    val getId0 = getId
+    val constructWithChild0 = constructWithChild
+    new Par[A, ADb] {
+      override type Child = Child0 :: Child1 :: HNil
+      override type ChildVecs = Vector[Child0] :: Vector[Child1] :: HNil
+      override type Id = Id0
+
+      override def getId(adb: ADb): Id = getId0(adb)
+
+      override def constructWithChild(adb: ADb, children: Vector[Child0] :: Vector[Child1] :: HNil): Either[EE, A] = {
+        val child0 :: child1 :: HNil = children
+        constructWithChild0(adb, child0, child1)
+      }
+    }
+  }
 }
