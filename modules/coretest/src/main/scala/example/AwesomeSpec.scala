@@ -4,6 +4,7 @@ import cats.implicits._
 import example.TestData._
 import example.TestModelHelpers._
 import example.model._
+import oru.Par.Aux
 import oru.{Atom, EE, Par, UngroupedAssembler}
 import shapeless.{test => _, _}
 import zio.test.Assertion._
@@ -66,10 +67,10 @@ object AwesomeSpec extends DefaultRunnableSpec {
           Employee.fromDb(h.head)
       }
 
-    implicit val departmentPar: Par.Aux[Department, DbDepartment, Employee] =
+    implicit val departmentPar: Aux[Department, DbDepartment, Employee :: HNil, Vector[Employee] :: HNil] =
       Par.make((d: DbDepartment) => d.id, Department.fromDb)
 
-    implicit val companyPar: Par.Aux[Company, DbCompany, Department] =
+    implicit val companyPar: Aux[Company, DbCompany, Department :: HNil, Vector[Department] :: HNil] =
       Par.make((d: DbCompany) => d.id, Company.fromDb)
   }
 

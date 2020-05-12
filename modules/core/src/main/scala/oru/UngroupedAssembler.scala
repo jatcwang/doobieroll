@@ -28,6 +28,7 @@ trait UngroupedAssembler[A, Dbs <: HList] { self =>
 
           override def recordAsChild(parentId: Any, dbs: ArraySeq[Any]): Unit =
             dbs(idx).asInstanceOf[Option[ADb]].foreach { adb =>
+            // FIXME: mutation :(
               underlying.recordAsChild(parentId, dbs.updated(idx, adb))
             }
 
@@ -42,7 +43,7 @@ trait UngroupedAssembler[A, Dbs <: HList] { self =>
 
 object UngroupedAssembler {
   implicit def forParent[A, ADb, C, RestDb <: HList](
-    implicit mker: Par.Aux[A, ADb, C],
+    implicit mker: Par.Aux[A, ADb, C :: HNil, Vector[C] :: HNil],
     childUnorderedAssembler: UngroupedAssembler[C, RestDb]
   ): UnorderedParentAssembler[A, ADb :: RestDb] = new UnorderedParentAssembler[A, ADb :: RestDb] {
 
@@ -75,7 +76,7 @@ object UngroupedAssembler {
               val thisId = mker.getId(v)
               for {
                 thisChildren <- childValues.getOrElse(thisId, Vector.empty).sequence
-                a <- mker.constructWithChild(v, thisChildren)
+                a <- mker.constructWithChild(v, thisChildren :: HNil)
               } yield a
             }
           }
@@ -87,7 +88,7 @@ object UngroupedAssembler {
             val thisId = mker.getId(adb)
             for {
               thisChildren <- childValues.getOrElse(thisId, Vector.empty).sequence
-              a <- mker.constructWithChild(adb, thisChildren)
+              a <- mker.constructWithChild(adb, thisChildren :: HNil)
             } yield a
           }
         }.toVector
