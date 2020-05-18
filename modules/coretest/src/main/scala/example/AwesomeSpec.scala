@@ -14,9 +14,17 @@ import zio.test.{DefaultRunnableSpec, ZSpec, _}
 object AwesomeSpec extends DefaultRunnableSpec {
   import ExampleModelInstances._
 
+  import UngroupedAssembler._
+  implicitly[Par.Aux[Company, DbCompany, Department :: HNil, Vector[Department] :: HNil]]
+  // FIXME: here not sure why diverging implicit expansion
+  //  caused by toOptionalParentAssembler?
+  import Has._
+  implicitly[Has[Department :: Employee :: HNil, DbDepartment :: Employee :: HNil]](hasH[Department, Employee :: HNil, DbDepartment :: HNil, DbEmployee :: HNil, DbDepartment :: DbEmployee :: HNil])
+//  forParent[Company, DbCompany, Department :: HNil, DbDepartment :: HNil, Vector[Department] :: HNil]
+
   override def spec: ZSpec[TestEnvironment, Nothing] =
     suite("AwesomeSpec")(
-      test("all non-nullable columns") {
+      /*test("all non-nullable columns") {
         val result = UngroupedAssembler.assembleUngrouped(dbRowsHList).sequence
 
         val Right(companies) = result
@@ -57,7 +65,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
-      }
+      }*/
     )
 
   object ExampleModelInstances {
