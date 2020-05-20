@@ -42,29 +42,6 @@ trait UngroupedAssembler[A, Dbs <: HList] { self =>
 
 object UngroupedAssembler extends LowerPrioUngroupedAssemblerInstances {
 
-  def forAtom[A, ADb](
-    implicit atom: Atom[A, ADb :: HNil]
-  ): UngroupedAssembler[A, ADb :: HNil] = {
-    new UngroupedAssembler[A, ADb :: HNil] {
-      override private[oru] def makeVisitor(
-        accum: Accum,
-        idx: Int
-      ): (Int, UngroupedVisitor[A, ADb :: HNil]) = {
-        val v = new UngroupedVisitor[A, ADb :: HNil] {
-          val thisRawLookup = accum.getRawLookup[ADb](idx)
-
-          override def recordAsChild(parentId: Any, d: ArraySeq[Any]): Unit =
-            thisRawLookup.addOne(parentId -> d(idx).asInstanceOf[ADb])
-
-          override def assemble(): collection.MapView[Any, Vector[Either[EE, A]]] =
-            thisRawLookup.sets.view
-              .mapValues(valueSet => valueSet.toVector.map(v => atom.construct(v :: HNil)))
-        }
-        1 -> v
-      }
-    }
-  }
-
   trait UngroupedParentAssembler[A, Dbs <: HList] extends UngroupedAssembler[A, Dbs] { self =>
     override private[oru] def makeVisitor(
       accum: Accum,

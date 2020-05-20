@@ -7,19 +7,41 @@ import shapeless._
 
 import scala.annotation.tailrec
 import scala.collection.immutable.ArraySeq
-import scala.collection.{MapView, mutable}
+import scala.collection.{mutable, MapView}
 import cats.implicits._
 
 trait UnorderedExtensions {
   import UnorderedExtensions._
 
   implicit class AtomExtension[A, ADb](atom: Atom[A, ADb :: HNil]) {
-    def asUnordered: UngroupedAssembler[A, ADb :: HNil] = UngroupedAssembler.forAtom(atom)
+    def asUnordered: UngroupedAssembler[A, ADb :: HNil] = {
+      new UngroupedAssembler[A, ADb :: HNil] {
+        override private[oru] def makeVisitor(
+          accum: Accum,
+          idx: Int
+        ): (Int, UngroupedVisitor[A, ADb :: HNil]) = {
+          val v = new UngroupedVisitor[A, ADb :: HNil] {
+            val thisRawLookup = accum.getRawLookup[ADb](idx)
+
+            override def recordAsChild(parentId: Any, d: ArraySeq[Any]): Unit =
+              thisRawLookup.addOne(parentId -> d(idx).asInstanceOf[ADb])
+
+            override def assemble(): collection.MapView[Any, Vector[Either[EE, A]]] =
+              thisRawLookup.sets.view
+                .mapValues(valueSet => valueSet.toVector.map(v => atom.construct(v :: HNil)))
+          }
+          idx -> v
+        }
+      }
+
+    }
   }
 
   implicit class ParentExtension[A, ADb, Cs <: HList](par: Par.Aux[A, ADb, Cs]) {
 
-    def asUnordered[C0, C0Dbs <: HList](c0Assembler: UngroupedAssembler[C0, C0Dbs]): UngroupedParentAssembler[A, ADb :: C0Dbs] = {
+    def asUnordered[C0, C0Dbs <: HList](
+      c0Assembler: UngroupedAssembler[C0, C0Dbs]
+    ): UngroupedParentAssembler[A, ADb :: C0Dbs] = {
       new UngroupedParentAssembler[A, ADb :: C0Dbs] {
 
         override private[oru] def makeVisitor(
@@ -30,7 +52,8 @@ trait UnorderedExtensions {
 
             val assemblers = c0Assembler :: HNil
             private val childStartIdx: Int = idx + 1
-            val (lastIdx, visitors) = convertToVisitor(Vector.empty, accum, childStartIdx, assemblers)
+            val (lastIdx, visitors) =
+              convertToVisitor(Vector.empty, accum, childStartIdx, assemblers)
 
             val thisRawLookup: mutable.MultiDict[Any, ADb] = accum.getRawLookup[ADb](idx)
 
@@ -70,11 +93,8 @@ trait UnorderedExtensions {
                 val childValues: Vector[MapView[Any, Vector[Either[EE, Any]]]] =
                   visitors.map(v => v.assemble())
                 val thisId = par.getId(adb)
-                val childValuesEither = childValues.map(childLookupByParent =>
-                  childLookupByParent.getOrElse(thisId, Vector.empty)
-                )
-                println(childValues)
-                println(childValuesEither)
+                val childValuesEither = childValues
+                  .map(childLookupByParent => childLookupByParent.getOrElse(thisId, Vector.empty))
                 for {
                   successChildren <- gogo(accum = Vector.empty, childValuesEither)
                   a <- par.constructWithChild(adb, seqToHList[par.ChildVecs](successChildren))
@@ -92,14 +112,14 @@ trait UnorderedExtensions {
 
 private[oru] object UnorderedExtensions {
 
-   def convertToVisitor[HL <: HList, AnyDbs <: HList](
+  def convertToVisitor[HL <: HList, AnyDbs <: HList](
     accumVisitors: Vector[UngroupedVisitor[Any, AnyDbs]],
     accum: Accum,
     startIdx: Int,
     assemblers: HL
   ): (Int, Vector[UngroupedVisitor[Any, AnyDbs]]) = {
     assemblers match {
-      case HNil => (startIdx, Vector.empty)
+      case HNil => (startIdx, accumVisitors)
       case i :: rest => {
         val (nextStartIdx, vis) = i
           .asInstanceOf[UngroupedAssembler[Any, AnyDbs]]
@@ -116,8 +136,8 @@ private[oru] object UnorderedExtensions {
 
     @tailrec def impl(acc: HList, rest: Vector[Any]): HL =
       rest match {
-        case Vector() => acc.asInstanceOf[HL]
-        case i +: rest    => impl(i :: acc, rest)
+        case Vector()  => acc.asInstanceOf[HL]
+        case i +: rest => impl(i :: acc, rest)
       }
 
     // Reverse so we can use ::
@@ -137,6 +157,5 @@ private[oru] object UnorderedExtensions {
         }
     }
   }
-
 
 }
