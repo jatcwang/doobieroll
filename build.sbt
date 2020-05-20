@@ -63,4 +63,6 @@ lazy val commonSettings = Seq(
       Seq("-Xfatal-warnings")
     }
   },
+  // FIXME:
+//addCompilerPlugin("io.tryp" % "splain" % "0.5.6" cross CrossVersion.patch)
 )

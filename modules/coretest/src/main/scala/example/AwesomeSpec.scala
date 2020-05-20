@@ -4,7 +4,6 @@ import cats.implicits._
 import example.TestData._
 import example.TestModelHelpers._
 import example.model._
-import oru.Par.Aux
 import oru.{Atom, EE, Par, UngroupedAssembler}
 import shapeless.{test => _, _}
 import zio.test.Assertion._
@@ -14,18 +13,10 @@ import zio.test.{DefaultRunnableSpec, ZSpec, _}
 object AwesomeSpec extends DefaultRunnableSpec {
   import ExampleModelInstances._
 
-  import UngroupedAssembler._
-  implicitly[Par.Aux[Company, DbCompany, Department :: HNil, Vector[Department] :: HNil]]
-  // FIXME: here not sure why diverging implicit expansion
-  //  caused by toOptionalParentAssembler?
-  import Has._
-  implicitly[Has[Department :: Employee :: HNil, DbDepartment :: Employee :: HNil]](hasH[Department, Employee :: HNil, DbDepartment :: HNil, DbEmployee :: HNil, DbDepartment :: DbEmployee :: HNil])
-//  forParent[Company, DbCompany, Department :: HNil, DbDepartment :: HNil, Vector[Department] :: HNil]
-
   override def spec: ZSpec[TestEnvironment, Nothing] =
     suite("AwesomeSpec")(
-      /*test("all non-nullable columns") {
-        val result = UngroupedAssembler.assembleUngrouped(dbRowsHList).sequence
+      test("all non-nullable columns") {
+        val result = UngroupedAssembler.assembleUngrouped(dbRowsHList)(companyAssembler).sequence
 
         val Right(companies) = result
 
@@ -34,7 +25,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
       },
       test("nullable children columns") {
         val dbRows = expectedCompaniesWithSomeEmptyChildren.flatMap(companyToOptDbRows)
-        val result = UngroupedAssembler.assembleUngrouped(dbRows.map(dbRowToOptHlist))
+        val result = UngroupedAssembler.assembleUngrouped(dbRows.map(dbRowToOptHlist))(companyOptAssembler)
         val Right(companies) = result.sequence
         assert(normalizeCompanies(companies))(equalTo(expectedCompaniesWithSomeEmptyChildren))
       },
@@ -46,7 +37,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
             )
             .map(_.toVector)
             .map { rows =>
-              val Right(result) = UngroupedAssembler.assembleUngrouped(rows).sequence
+              val Right(result) = UngroupedAssembler.assembleUngrouped(rows)(companyAssembler).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
@@ -61,11 +52,11 @@ object AwesomeSpec extends DefaultRunnableSpec {
             )
             .map(_.toVector)
             .map { rows =>
-              val Right(result) = UngroupedAssembler.assembleUngrouped(rows).sequence
+              val Right(result) = UngroupedAssembler.assembleUngrouped(rows)(companyOptAssembler).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
-      }*/
+      }
     )
 
   object ExampleModelInstances {
@@ -80,14 +71,21 @@ object AwesomeSpec extends DefaultRunnableSpec {
         override def construct(db: DbInvoice :: HNil): Either[EE, Invoice] = Invoice.fromDb(db.head)
       }
 
-    implicit val departmentPar: Aux[Department, DbDepartment, Employee :: HNil, Vector[Employee] :: HNil] =
+    implicit val departmentPar: Par.Aux[Department, DbDepartment, Employee :: HNil] =
       Par.make((d: DbDepartment) => d.id, Department.fromDb)
 
-    implicit val companyPar: Aux[Company, DbCompany, Department :: HNil, Vector[Department] :: HNil] =
+    implicit val companyPar: Par.Aux[Company, DbCompany, Department :: HNil] =
       Par.make((d: DbCompany) => d.id, Company.fromDb)
 
-    implicit val bigCompanyPar: Aux[BigCompany, DbCompany, Department :: Invoice :: HNil, Vector[Department] :: Vector[Invoice] :: HNil] =
+    implicit val bigCompanyPar: Par.Aux[BigCompany, DbCompany, Department :: Invoice :: HNil] =
       Par.make2((d: DbCompany) => d.id, BigCompany.fromDb)
+
+    import oru.syntax._
+
+    implicit val employeeAssembler: UngroupedAssembler[Employee, DbEmployee :: HNil] = employeeAtom.asUnordered
+    implicit val departmentAssembler = departmentPar.asUnordered(employeeAssembler)
+    implicit val companyAssembler = companyPar.asUnordered(departmentAssembler)
+    implicit val companyOptAssembler = companyPar.asUnordered(departmentPar.asUnordered(employeeAssembler.optional).optional)
   }
 
 }

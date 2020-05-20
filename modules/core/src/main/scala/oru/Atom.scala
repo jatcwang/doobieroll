@@ -8,6 +8,7 @@ trait Atom[A, ADb] {
   def construct(db: ADb): Either[EE, A]
 }
 
+// FIXME: can we get rid of childvecs?
 trait Par[A, ADb] {
   type Child <: HList
   type ChildVecs <: HList
@@ -18,15 +19,14 @@ trait Par[A, ADb] {
 }
 
 object Par {
-  type Aux[A, ADb, Child0 <: HList, ChildVecs0 <: HList] = Par[A, ADb] {
+  type Aux[A, ADb, Child0 <: HList] = Par[A, ADb] {
     type Child = Child0
-    type ChildVecs = ChildVecs0
   }
 
   def make[A, ADb, Child0, Id0](
     getId: ADb => Id0,
     constructWithChild: (ADb, Vector[Child0]) => Either[EE, A]
-  ): Par.Aux[A, ADb, Child0 :: HNil, Vector[Child0] :: HNil] = {
+  ): Par.Aux[A, ADb, Child0 :: HNil] = {
     val getId0 = getId
     val constructWithChild0 = constructWithChild
     new Par[A, ADb] {
@@ -44,7 +44,7 @@ object Par {
   def make2[A, ADb, Child0, Child1, Id0](
     getId: ADb => Id0,
     constructWithChild: (ADb, Vector[Child0], Vector[Child1]) => Either[EE, A]
-  ): Par.Aux[A, ADb, Child0 :: Child1 :: HNil, Vector[Child0] :: Vector[Child1] :: HNil] = {
+  ): Par.Aux[A, ADb, Child0 :: Child1 :: HNil] = {
     val getId0 = getId
     val constructWithChild0 = constructWithChild
     new Par[A, ADb] {
