@@ -60,6 +60,8 @@ object AwesomeSpec extends DefaultRunnableSpec {
     )
 
   object ExampleModelInstances {
+    import oru.syntax._
+
     implicit val employeeAtom: Atom[Employee, DbEmployee :: HNil] =
       new Atom[Employee, DbEmployee :: HNil] {
         override def construct(h: DbEmployee :: HNil): Either[EE, Employee] =
@@ -79,8 +81,6 @@ object AwesomeSpec extends DefaultRunnableSpec {
 
     implicit val bigCompanyPar: Par.Aux[BigCompany, DbCompany, Department :: Invoice :: HNil] =
       Par.make2((d: DbCompany) => d.id, BigCompany.fromDb)
-
-    import oru.syntax._
 
     implicit val employeeAssembler: UngroupedAssembler[Employee, DbEmployee :: HNil] = employeeAtom.asUnordered
     implicit val departmentAssembler = departmentPar.asUnordered(employeeAssembler)

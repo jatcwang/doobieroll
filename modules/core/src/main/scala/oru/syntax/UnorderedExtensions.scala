@@ -10,6 +10,7 @@ import scala.collection.immutable.ArraySeq
 import scala.collection.{mutable, MapView}
 import cats.implicits._
 
+// FIXME: fix reflexive calls
 trait UnorderedExtensions {
   import UnorderedExtensions._
 
@@ -37,100 +38,107 @@ trait UnorderedExtensions {
     }
   }
 
+  import shapeless.ops.hlist._
+  import shapeless._
+
+  type Flattener[HL <: HList, Out <: HList] = FlatMapper.Aux[HListIdentity.type, HL, Out]
+
+  object HListIdentity extends Poly1 {
+    implicit def caseHList[HL <: HList] = at[HL](identity)
+  }
+
+  private def mkParentUngrouped[A, ADb, CDbs <: HList, CDbsFlattened <: HList](
+    par: Par[A, ADb],
+    assemblers: Vector[UngroupedAssembler[Any, HList]],
+    flattener: Flattener[CDbs, CDbsFlattened]
+  ): UngroupedParentAssembler[A, ADb :: CDbsFlattened] = {
+    val _ = flattener // unused. For type inference only
+
+    new UngroupedParentAssembler[A, ADb :: CDbsFlattened] {
+
+      override private[oru] def makeVisitor(
+        accum: Accum,
+        idx: Int
+      ): (Int, UngroupedParentVisitor[A, ADb :: CDbsFlattened]) = {
+        val v = new UngroupedParentVisitor[A, ADb :: CDbsFlattened] {
+
+          val (lastIdx, visitors) =
+            assemblers.foldLeft((idx + 1, Vector.empty[UngroupedVisitor[A, ADb :: CDbsFlattened]])) {
+              case ((currIdx, visitorsAccum), thisAssembler) =>
+                val (nextIdx, vis) = thisAssembler.makeVisitor(accum, currIdx)
+                (
+                  nextIdx + 1,
+                  visitorsAccum :+ vis.asInstanceOf[UngroupedVisitor[A, ADb :: CDbsFlattened]]
+                )
+            }
+
+          val thisRawLookup: mutable.MultiDict[Any, ADb] = accum.getRawLookup[ADb](idx)
+
+          override def recordAsChild(parentId: Any, d: ArraySeq[Any]): Unit = {
+            val adb = d(idx).asInstanceOf[ADb]
+            thisRawLookup.addOne(parentId -> adb)
+            val id = par.getId(adb)
+            visitors.foreach(v => v.recordAsChild(id, d))
+          }
+
+          override def recordTopLevel(dbs: ArraySeq[Any]): Unit = {
+            val adb = dbs(idx).asInstanceOf[ADb]
+            val thisId = par.getId(adb)
+            accum.addToTopLevel(thisId, adb)
+            visitors.foreach(v => v.recordAsChild(parentId = thisId, dbs))
+          }
+
+          override def assemble(): collection.MapView[Any, Vector[Either[EE, A]]] = {
+            thisRawLookup.sets.view.mapValues { valueSet =>
+              val childValues: Vector[MapView[Any, Vector[Either[EE, Any]]]] =
+                visitors.map(v => v.assemble())
+              valueSet.toVector.map { adb =>
+                val thisId = par.getId(adb)
+                val childValuesEither = childValues.map(childLookupByParent =>
+                  childLookupByParent.getOrElse(thisId, Vector.empty)
+                )
+                for {
+                  successChildren <- gogo(Vector.empty, childValuesEither)
+                  a <- par.constructWithChild(adb, seqToHList[par.ChildVecs](successChildren))
+                } yield a
+              }
+            }
+          }
+
+          override def assembleTopLevel(): Vector[Either[EE, A]] = {
+            accum.getTopLevel[ADb].map { adb =>
+              val childValues: Vector[MapView[Any, Vector[Either[EE, Any]]]] =
+                visitors.map(v => v.assemble())
+              val thisId = par.getId(adb)
+              val childValuesEither = childValues
+                .map(childLookupByParent => childLookupByParent.getOrElse(thisId, Vector.empty))
+              for {
+                successChildren <- gogo(accum = Vector.empty, childValuesEither)
+                a <- par.constructWithChild(adb, seqToHList[par.ChildVecs](successChildren))
+              } yield a
+            }
+          }.toVector
+        }
+
+        (v.lastIdx -> v)
+      }
+    }
+  }
+
   implicit class ParentExtension[A, ADb, Cs <: HList](par: Par.Aux[A, ADb, Cs]) {
 
     def asUnordered[C0, C0Dbs <: HList](
       c0Assembler: UngroupedAssembler[C0, C0Dbs]
-    ): UngroupedParentAssembler[A, ADb :: C0Dbs] = {
-      new UngroupedParentAssembler[A, ADb :: C0Dbs] {
-
-        override private[oru] def makeVisitor(
-          accum: Accum,
-          idx: Int
-        ): (Int, UngroupedParentVisitor[A, ADb :: C0Dbs]) = {
-          val v = new UngroupedParentVisitor[A, ADb :: C0Dbs] {
-
-            val assemblers = c0Assembler :: HNil
-            private val childStartIdx: Int = idx + 1
-            val (lastIdx, visitors) =
-              convertToVisitor(Vector.empty, accum, childStartIdx, assemblers)
-
-            val thisRawLookup: mutable.MultiDict[Any, ADb] = accum.getRawLookup[ADb](idx)
-
-            override def recordAsChild(parentId: Any, d: ArraySeq[Any]): Unit = {
-              val adb = d(idx).asInstanceOf[ADb]
-              thisRawLookup.addOne(parentId -> adb)
-              val id = par.getId(adb)
-              visitors.foreach(v => v.recordAsChild(id, d))
-            }
-
-            override def recordTopLevel(dbs: ArraySeq[Any]): Unit = {
-              val adb = dbs(idx).asInstanceOf[ADb]
-              val thisId = par.getId(adb)
-              accum.addToTopLevel(thisId, adb)
-              visitors.foreach(v => v.recordAsChild(parentId = thisId, dbs))
-            }
-
-            override def assemble(): collection.MapView[Any, Vector[Either[EE, A]]] = {
-              thisRawLookup.sets.view.mapValues { valueSet =>
-                val childValues: Vector[MapView[Any, Vector[Either[EE, Any]]]] =
-                  visitors.map(v => v.assemble())
-                valueSet.toVector.map { adb =>
-                  val thisId = par.getId(adb)
-                  val childValuesEither = childValues.map(childLookupByParent =>
-                    childLookupByParent.getOrElse(thisId, Vector.empty)
-                  )
-                  for {
-                    successChildren <- gogo(Vector.empty, childValuesEither)
-                    a <- par.constructWithChild(adb, seqToHList[par.ChildVecs](successChildren))
-                  } yield a
-                }
-              }
-            }
-
-            override def assembleTopLevel(): Vector[Either[EE, A]] = {
-              accum.getTopLevel[ADb].map { adb =>
-                val childValues: Vector[MapView[Any, Vector[Either[EE, Any]]]] =
-                  visitors.map(v => v.assemble())
-                val thisId = par.getId(adb)
-                val childValuesEither = childValues
-                  .map(childLookupByParent => childLookupByParent.getOrElse(thisId, Vector.empty))
-                for {
-                  successChildren <- gogo(accum = Vector.empty, childValuesEither)
-                  a <- par.constructWithChild(adb, seqToHList[par.ChildVecs](successChildren))
-                } yield a
-              }
-            }.toVector
-          }
-
-          ((v.lastIdx + 1) -> v)
-        }
-      }
-    }
+    ): UngroupedParentAssembler[A, ADb :: C0Dbs] =
+      mkParentUngrouped(
+        par,
+        Vector(c0Assembler.asInstanceOf[UngroupedAssembler[Any, HList]]),
+        implicitly[Flattener[C0Dbs :: HNil, C0Dbs]]
+      )
   }
 }
 
 private[oru] object UnorderedExtensions {
-
-  def convertToVisitor[HL <: HList, AnyDbs <: HList](
-    accumVisitors: Vector[UngroupedVisitor[Any, AnyDbs]],
-    accum: Accum,
-    startIdx: Int,
-    assemblers: HL
-  ): (Int, Vector[UngroupedVisitor[Any, AnyDbs]]) = {
-    assemblers match {
-      case HNil => (startIdx, accumVisitors)
-      case i :: rest => {
-        val (nextStartIdx, vis) = i
-          .asInstanceOf[UngroupedAssembler[Any, AnyDbs]]
-          .makeVisitor(
-            accum,
-            startIdx
-          )
-        convertToVisitor(accumVisitors :+ vis, accum, nextStartIdx, rest)
-      }
-    }
-  }
 
   def seqToHList[HL <: HList](orig: Vector[Any]): HL = {
 
@@ -144,6 +152,7 @@ private[oru] object UnorderedExtensions {
     impl(HNil, orig.reverse)
   }
 
+  // FIXME: naming
   @tailrec def gogo(
     accum: Vector[Vector[Any]],
     results: Vector[Vector[Either[EE, Any]]]
