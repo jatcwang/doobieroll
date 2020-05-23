@@ -1,7 +1,6 @@
 package example
 
 import shapeless.{::, HNil}
-import shapeless.Generic.Aux
 import zio.random.Random
 import zio.test.{Gen, Sized}
 import zio.test.magnolia.DeriveGen
@@ -29,26 +28,39 @@ object TestModelHelpers {
     DeriveGen[Company]
   }
 
-  def normalizeCompanies(companies: Vector[Company]): Vector[Company] = {
-    companies
-      .map { c =>
-        c.copy(
-          departments = c.departments
-            .map { d =>
-              d.copy(
-                employees = d.employees.sortBy(_.id)
-              )
-            }
-            .sortBy(_.id)
+  def normalizeDepartments(departments: Vector[Department]): Vector[Department] = {
+    departments
+      .map { d =>
+        d.copy(
+          employees = d.employees.sortBy(_.id)
         )
       }
       .sortBy(_.id)
   }
 
+  def normalizeCompanies(companies: Vector[Company]): Vector[Company] = {
+    companies
+      .map { c =>
+        c.copy(
+          departments = normalizeDepartments(c.departments)
+        )
+      }
+      .sortBy(_.id)
+  }
+
+  def normalizeEnterprise(enterprises: Vector[Enterprise]): Vector[Enterprise] =
+    enterprises
+      .map { c =>
+        c.copy(
+          departments = normalizeDepartments(c.departments),
+          invoices = c.invoices.sortBy(_.id)
+        )
+      }
+      .sortBy(_.id)
+
   def companyToDbRows(
     c: Company,
   ): Vector[Tuple3[DbCompany, DbDepartment, DbEmployee]] = {
-    import scala.collection.mutable
 
     val rows =
       mutable.ArrayBuffer.empty[Tuple3[DbCompany, DbDepartment, DbEmployee]]
@@ -63,6 +75,44 @@ object TestModelHelpers {
           dbDepartment,
           DbEmployee(id = e.id, departmentId = d.id, name = e.name),
         )
+      }
+    }
+
+    rows.toVector
+  }
+
+  def enterpriseToDbRows(
+    c: Enterprise
+  ): Vector[Tuple4[DbCompany, DbDepartment, DbEmployee, DbInvoice]] = {
+    val rows = mutable.ArrayBuffer.empty[Tuple4[DbCompany, DbDepartment, DbEmployee, DbInvoice]]
+
+    val dbCompany = DbCompany(id = c.id, name = c.name)
+
+    assert(c.departments.nonEmpty)
+    assert(c.departments.forall(_.employees.nonEmpty))
+    assert(c.invoices.nonEmpty)
+
+    // Note: In the database, inner-joining multiple child tables may result
+    // in duplicate elements if size of child A and child B differ,
+    // (Some elements from the smaller child list will be reused to 'pad-out'
+    // the shorter child list)
+    // We're trying to emulate the same behaviour here
+    c.departments.foreach { d =>
+      val dbDpmtAndEmp = {
+        val dbDepartment = DbDepartment(id = d.id, companyId = c.id, name = d.name)
+        d.employees.map(e =>
+          dbDepartment -> DbEmployee(id = e.id, departmentId = d.id, name = e.name)
+        )
+      }
+
+      dbDpmtAndEmp.zipAll(c.invoices, dbDpmtAndEmp.last, c.invoices.last).foreach {
+        case ((dbDep, dbEmp), inv) =>
+          rows += Tuple4(
+            dbCompany,
+            dbDep,
+            dbEmp,
+            DbInvoice(id = inv.id, amount = inv.amount)
+          )
       }
     }
 
@@ -110,22 +160,6 @@ object TestModelHelpers {
 
     rows.toVector
   }
-
-  def dbRowToHlist(
-    row: (DbCompany, DbDepartment, DbEmployee)
-  ): DbCompany :: DbDepartment :: DbEmployee :: HNil =
-    implicitly[Aux[
-      Tuple3[DbCompany, DbDepartment, DbEmployee],
-      DbCompany :: DbDepartment :: DbEmployee :: HNil
-    ]].to(row)
-
-  def dbRowToOptHlist(
-    row: (DbCompany, Option[DbDepartment], Option[DbEmployee])
-  ): DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil =
-    implicitly[Aux[
-      Tuple3[DbCompany, Option[DbDepartment], Option[DbEmployee]],
-      DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil
-    ]].to(row)
 
   def wrapperToOptHList(
     wrapper: Wrapper

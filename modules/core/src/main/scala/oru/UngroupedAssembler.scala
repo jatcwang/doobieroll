@@ -1,11 +1,10 @@
 package oru
 
-import oru.UngroupedAssembler.UngroupedParentAssembler
 import oru.impl.{Accum, UngroupedParentVisitor, UngroupedVisitor}
 import shapeless.{::, HList, HNil}
 
 import scala.collection.immutable.ArraySeq
-import scala.collection.{MapView, mutable}
+import scala.collection.{mutable, MapView}
 
 trait UngroupedAssembler[A, Dbs <: HList] { self =>
   // Given an offset index, returns the visitor instance which has been bound to the state accumulator,
@@ -40,7 +39,7 @@ trait UngroupedAssembler[A, Dbs <: HList] { self =>
   }
 }
 
-object UngroupedAssembler extends LowerPrioUngroupedAssemblerInstances {
+object UngroupedAssembler {
 
   trait UngroupedParentAssembler[A, Dbs <: HList] extends UngroupedAssembler[A, Dbs] { self =>
     override private[oru] def makeVisitor(
@@ -103,9 +102,9 @@ object UngroupedAssembler extends LowerPrioUngroupedAssemblerInstances {
   }
 
   def assembleUngrouped[A, Dbs <: HList](
-    rows: Vector[Dbs],
+    ungroupedParentAssembler: UngroupedParentAssembler[A, Dbs],
   )(
-    implicit ungroupedParentAssembler: UngroupedParentAssembler[A, Dbs],
+    rows: Vector[Dbs],
   ): Vector[Either[EE, A]] = {
     if (rows.isEmpty) return Vector.empty
     val accum = Accum.mkEmpty()
@@ -118,19 +117,5 @@ object UngroupedAssembler extends LowerPrioUngroupedAssemblerInstances {
 
     parVis.assembleTopLevel()
   }
-
-}
-
-private[oru] trait LowerPrioUngroupedAssemblerInstances {
-
-  implicit def toOptionalAssembler[A, ADb, RestDb <: HList](
-    implicit mkvis: UngroupedAssembler[A, ADb :: RestDb]
-  ): UngroupedAssembler[A, Option[ADb] :: RestDb] =
-    mkvis.optional
-
-  implicit def toOptionalParentAssembler[A, ADb, RestDb <: HList](
-    implicit mkvis: UngroupedParentAssembler[A, ADb :: RestDb]
-  ): UngroupedParentAssembler[A, Option[ADb] :: RestDb] =
-    mkvis.optional
 
 }

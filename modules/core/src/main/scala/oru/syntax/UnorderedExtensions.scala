@@ -31,7 +31,7 @@ trait UnorderedExtensions {
               thisRawLookup.sets.view
                 .mapValues(valueSet => valueSet.toVector.map(v => atom.construct(v :: HNil)))
           }
-          idx -> v
+          (idx + 1) -> v
         }
       }
 
@@ -62,17 +62,17 @@ trait UnorderedExtensions {
       ): (Int, UngroupedParentVisitor[A, ADb :: CDbsFlattened]) = {
         val v = new UngroupedParentVisitor[A, ADb :: CDbsFlattened] {
 
-          val (lastIdx, visitors) =
-            assemblers.foldLeft((idx + 1, Vector.empty[UngroupedVisitor[A, ADb :: CDbsFlattened]])) {
+          val thisRawLookup: mutable.MultiDict[Any, ADb] = accum.getRawLookup[ADb](idx)
+          val childStartIdx: Int = idx + 1
+          val (idxForNext, visitors) =
+            assemblers.foldLeft((childStartIdx, Vector.empty[UngroupedVisitor[A, ADb :: CDbsFlattened]])) {
               case ((currIdx, visitorsAccum), thisAssembler) =>
                 val (nextIdx, vis) = thisAssembler.makeVisitor(accum, currIdx)
                 (
-                  nextIdx + 1,
+                  nextIdx,
                   visitorsAccum :+ vis.asInstanceOf[UngroupedVisitor[A, ADb :: CDbsFlattened]]
                 )
             }
-
-          val thisRawLookup: mutable.MultiDict[Any, ADb] = accum.getRawLookup[ADb](idx)
 
           override def recordAsChild(parentId: Any, d: ArraySeq[Any]): Unit = {
             val adb = d(idx).asInstanceOf[ADb]
@@ -120,10 +120,16 @@ trait UnorderedExtensions {
           }.toVector
         }
 
-        (v.lastIdx -> v)
+        (v.idxForNext -> v)
       }
     }
   }
+
+  @inline
+  private def eraseAssemblerType[A, HL <: HList](
+    assembler: UngroupedAssembler[A, HL]
+  ): UngroupedAssembler[Any, HList] =
+    assembler.asInstanceOf[UngroupedAssembler[Any, HList]]
 
   implicit class ParentExtension[A, ADb, Cs <: HList](par: Par.Aux[A, ADb, Cs]) {
 
@@ -132,8 +138,20 @@ trait UnorderedExtensions {
     ): UngroupedParentAssembler[A, ADb :: C0Dbs] =
       mkParentUngrouped(
         par,
-        Vector(c0Assembler.asInstanceOf[UngroupedAssembler[Any, HList]]),
+        Vector(eraseAssemblerType(c0Assembler)),
         implicitly[Flattener[C0Dbs :: HNil, C0Dbs]]
+      )
+
+    def asUnordered[C0, C1, C0Dbs <: HList, C1Dbs <: HList, CDbs <: HList](
+      c0Assembler: UngroupedAssembler[C0, C0Dbs],
+      c1Assembler: UngroupedAssembler[C1, C1Dbs]
+    )(
+      implicit flattener: Flattener[C0Dbs :: C1Dbs :: HNil, CDbs]
+    ): UngroupedParentAssembler[A, ADb :: CDbs] =
+      mkParentUngrouped(
+        par,
+        Vector(eraseAssemblerType(c0Assembler), eraseAssemblerType(c1Assembler)),
+        flattener
       )
   }
 }

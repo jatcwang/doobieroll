@@ -4,21 +4,21 @@ import java.util.UUID
 
 import oru.EE
 
-final case class BigCompany(
+final case class Enterprise(
   id: UUID,
   name: String,
   departments: Vector[Department],
   invoices: Vector[Invoice]
 )
 
-object BigCompany {
+object Enterprise {
   def fromDb(
     db: DbCompany,
     departments: Vector[Department],
     invoices: Vector[Invoice]
-  ): Either[EE, BigCompany] = {
+  ): Either[EE, Enterprise] = {
     Right(
-      BigCompany(
+      Enterprise(
         id = db.id,
         name = db.name,
         departments = departments,
