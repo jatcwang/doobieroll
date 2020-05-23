@@ -12,16 +12,32 @@ object TestModelHelpers {
   implicit private val genString: DeriveGen[String] =
     DeriveGen.instance(Gen.alphaNumericStringBounded(0, 10))
 
+  val genNelEmployee: DeriveGen[Vector[Employee]] = {
+    val g = DeriveGen[Employee]
+    DeriveGen.instance(Gen.vectorOfBounded(1, 10)(g))
+  }
+
+  val genNelDepartment: DeriveGen[Vector[Department]] = {
+    implicit val emp = genNelEmployee
+    val g = DeriveGen[Department]
+    DeriveGen.instance(Gen.vectorOfBounded(1, 10)(g))
+  }
+  val genNelInvoice: DeriveGen[Vector[Invoice]] = {
+    val g = DeriveGen[Invoice]
+    DeriveGen.instance(Gen.vectorOfBounded(1, 10)(g))
+  }
+
   val genNonEmptyCompany: Gen[Random with Sized, Company] = {
-    implicit val genNelEmployee: DeriveGen[Vector[Employee]] = {
-      val g = DeriveGen[Employee]
-      DeriveGen.instance(Gen.vectorOfBounded(1, 10)(g))
-    }
-    implicit val genNelDepartment: DeriveGen[Vector[Department]] = {
-      val g = DeriveGen[Department]
-      DeriveGen.instance(Gen.vectorOfBounded(1, 10)(g))
-    }
+    implicit val emp = genNelEmployee
+    implicit val dep = genNelDepartment
     DeriveGen[Company]
+  }
+
+  val genNonEmptyEnterprise: Gen[Random with Sized, Enterprise] = {
+    implicit val emp = genNelEmployee
+    implicit val dep = genNelDepartment
+    implicit val inv = genNelInvoice
+    DeriveGen[Enterprise]
   }
 
   val genCompany: Gen[Random with Sized, Company] = {

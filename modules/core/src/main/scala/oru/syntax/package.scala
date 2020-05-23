@@ -1,5 +1,5 @@
 package oru
 
-package object syntax extends UnorderedExtensions {
+package object syntax extends UnorderedSyntax {
 
 }

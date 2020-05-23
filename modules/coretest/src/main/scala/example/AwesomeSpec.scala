@@ -42,8 +42,9 @@ object AwesomeSpec extends DefaultRunnableSpec {
       },
       test("Parent with multiple children") {
         val dbRows = expectedEnterprise.flatMap(enterpriseToDbRows)
-        pprint.pprintln(dbRows)
-        val Right(enterprises) = UngroupedAssembler.assembleUngrouped(enterpriseAssembler)(dbRows.map(_.productElements)).sequence
+        val Right(enterprises) = UngroupedAssembler
+          .assembleUngrouped(enterpriseAssembler)(dbRows.map(_.productElements))
+          .sequence
 
         assert(normalizeEnterprise(enterprises))(equalTo(expectedEnterprise))
       },
@@ -76,7 +77,21 @@ object AwesomeSpec extends DefaultRunnableSpec {
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
-      }
+      },
+      testM("Property: Roundtrip for Parent with multiple children") {
+        checkM(Gen.listOf(genNonEmptyEnterprise).map(_.toVector)) { original =>
+          zio.random
+            .shuffle(
+              original.flatMap(enterpriseToDbRows).map(_.productElements).toList
+            )
+            .map(_.toVector)
+            .map { rows =>
+              val Right(result) =
+                UngroupedAssembler.assembleUngrouped(enterpriseAssembler)(rows).sequence
+              assert(normalizeEnterprise(result))(equalTo(normalizeEnterprise(original)))
+            }
+        }
+      },
     )
 
   object ExampleModelInstances {
@@ -110,9 +125,10 @@ object AwesomeSpec extends DefaultRunnableSpec {
     val companyAssembler
       : UngroupedParentAssembler[Company, DbCompany :: DbDepartment :: DbEmployee :: HNil] =
       companyPar.asUnordered(departmentAssembler)
-    val companyOptAssembler: UngroupedParentAssembler[Company, DbCompany :: Option[DbDepartment] :: Option[
-      DbEmployee
-    ] :: HNil] =
+    val companyOptAssembler
+      : UngroupedParentAssembler[Company, DbCompany :: Option[DbDepartment] :: Option[
+        DbEmployee
+      ] :: HNil] =
       companyPar.asUnordered(departmentPar.asUnordered(employeeAssembler.optional).optional)
 
     val invoiceAssembler: UngroupedAssembler[Invoice, DbInvoice :: HNil] = invoiceAtom.asUnordered

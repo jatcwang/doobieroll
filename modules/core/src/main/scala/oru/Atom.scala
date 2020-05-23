@@ -8,7 +8,6 @@ trait Atom[A, ADb] {
   def construct(db: ADb): Either[EE, A]
 }
 
-// FIXME: can we get rid of childvecs?
 trait Par[A, ADb] {
   type Child <: HList
   type ChildVecs <: HList

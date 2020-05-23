@@ -11,8 +11,8 @@ import scala.collection.{mutable, MapView}
 import cats.implicits._
 
 // FIXME: fix reflexive calls
-trait UnorderedExtensions {
-  import UnorderedExtensions._
+trait UnorderedSyntax {
+  import UnorderedSyntax._
 
   implicit class AtomExtension[A, ADb](atom: Atom[A, ADb :: HNil]) {
     def asUnordered: UngroupedAssembler[A, ADb :: HNil] = {
@@ -98,7 +98,7 @@ trait UnorderedExtensions {
                   childLookupByParent.getOrElse(thisId, Vector.empty)
                 )
                 for {
-                  successChildren <- gogo(Vector.empty, childValuesEither)
+                  successChildren <- collectSuccess(Vector.empty, childValuesEither)
                   a <- par.constructWithChild(adb, seqToHList[par.ChildVecs](successChildren))
                 } yield a
               }
@@ -113,7 +113,7 @@ trait UnorderedExtensions {
               val childValuesEither = childValues
                 .map(childLookupByParent => childLookupByParent.getOrElse(thisId, Vector.empty))
               for {
-                successChildren <- gogo(accum = Vector.empty, childValuesEither)
+                successChildren <- collectSuccess(accum = Vector.empty, childValuesEither)
                 a <- par.constructWithChild(adb, seqToHList[par.ChildVecs](successChildren))
               } yield a
             }
@@ -156,7 +156,7 @@ trait UnorderedExtensions {
   }
 }
 
-private[oru] object UnorderedExtensions {
+private[oru] object UnorderedSyntax {
 
   def seqToHList[HL <: HList](orig: Vector[Any]): HL = {
 
@@ -170,8 +170,7 @@ private[oru] object UnorderedExtensions {
     impl(HNil, orig.reverse)
   }
 
-  // FIXME: naming
-  @tailrec def gogo(
+  @tailrec def collectSuccess(
     accum: Vector[Vector[Any]],
     results: Vector[Vector[Either[EE, Any]]]
   ): Either[EE, Vector[Vector[Any]]] = {
@@ -180,7 +179,7 @@ private[oru] object UnorderedExtensions {
       case init +: rest =>
         init.sequence match {
           case l @ Left(_) => l.rightCast
-          case Right(r)    => gogo(accum :+ r, rest)
+          case Right(r)    => collectSuccess(accum :+ r, rest)
         }
     }
   }
