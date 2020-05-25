@@ -30,7 +30,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
 
         val Right(companies) = result
 
-        assert(normalizeCompanies(companies))(equalTo(expectedCompanies))
+        assert(companies)(equalTo(expectedCompanies))
 
       },
       test("nullable children columns") {
@@ -38,7 +38,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
         val result =
           UngroupedAssembler.assembleUngrouped(companyOptAssembler)(dbRows.map(_.productElements))
         val Right(companies) = result.sequence
-        assert(normalizeCompanies(companies))(equalTo(expectedCompaniesWithSomeEmptyChildren))
+        assert(companies)(equalTo(expectedCompaniesWithSomeEmptyChildren))
       },
       test("Parent with multiple children") {
         val dbRows = expectedEnterprise.flatMap(enterpriseToDbRows)
@@ -46,7 +46,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
           .assembleUngrouped(enterpriseAssembler)(dbRows.map(_.productElements))
           .sequence
 
-        assert(normalizeEnterprise(enterprises))(equalTo(expectedEnterprise))
+        assert(enterprises)(equalTo(expectedEnterprise))
       },
       testM("Property: Roundtrip conversion from List[Company] <=> Db rows") {
         checkM(Gen.listOf(genNonEmptyCompany).map(_.toVector)) { original =>
