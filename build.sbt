@@ -1,4 +1,4 @@
-val zioVersion = "1.0.0-RC18-2"
+val zioVersion = "1.0.0-RC19-2"
 
 val circeVersion = "0.13.0"
 
@@ -28,7 +28,9 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "dev.zio" %% "zio-test" % zioVersion,
       "dev.zio" %% "zio-test-sbt" % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
-    )
+    ),
+
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
 
 lazy val bench = Project("bench", file("modules/bench"))
