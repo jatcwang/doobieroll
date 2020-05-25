@@ -6,11 +6,11 @@ import example.TestModelHelpers._
 import example.model._
 import oru.UngroupedAssembler.UngroupedParentAssembler
 import oru.{Atom, EE, Par, UngroupedAssembler}
-import shapeless.syntax.std.tuple._
 import shapeless.{test => _, _}
 import zio.test.Assertion._
 import zio.test.environment.TestEnvironment
-import zio.test._
+import zio.test.{DefaultRunnableSpec, ZSpec, _}
+import shapeless.syntax.std.tuple._
 
 object AwesomeSpec extends DefaultRunnableSpec {
   import ExampleModelInstances._
@@ -129,7 +129,7 @@ object AwesomeSpec extends DefaultRunnableSpec {
       : UngroupedParentAssembler[Company, DbCompany :: Option[DbDepartment] :: Option[
         DbEmployee
       ] :: HNil] =
-      companyPar.asUnordered(departmentPar.asUnordered(employeeAssembler).optional)
+      companyPar.asUnordered(departmentPar.asUnordered(employeeAssembler.optional).optional)
 
     val invoiceAssembler: UngroupedAssembler[Invoice, DbInvoice :: HNil] = invoiceAtom.asUnordered
 
