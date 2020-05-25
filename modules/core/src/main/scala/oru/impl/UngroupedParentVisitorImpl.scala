@@ -18,9 +18,9 @@ private[oru] final class UngroupedParentVisitorImpl[A, ADb, CDbs <: HList](
   private val (idxForNext, visitors) =
     assemblers.foldLeft((childStartIdx, Vector.empty[UngroupedVisitor[A, ADb :: CDbs]])) {
       case ((currIdx, visitorsAccum), thisAssembler) =>
-        val (nextIdx, vis) = thisAssembler.makeVisitor(accum, currIdx)
+        val vis = thisAssembler.makeVisitor(accum, currIdx)
         (
-          nextIdx,
+          vis.nextIdx,
           visitorsAccum :+ vis.asInstanceOf[UngroupedVisitor[A, ADb :: CDbs]]
         )
     }

@@ -1,7 +1,13 @@
 package oru.syntax
 
 import oru.UngroupedAssembler.UngroupedParentAssembler
-import oru.impl.{Accum, UngroupedAtomVisitorImpl, UngroupedParentVisitor, UngroupedParentVisitorImpl, UngroupedVisitor}
+import oru.impl.{
+  Accum,
+  UngroupedAtomVisitorImpl,
+  UngroupedParentVisitor,
+  UngroupedParentVisitorImpl,
+  UngroupedVisitor
+}
 import oru.{Atom, EE, Par, UngroupedAssembler}
 import shapeless._
 
@@ -16,12 +22,12 @@ trait UnorderedSyntax {
         private[oru] override def makeVisitor(
           accum: Accum,
           idx: Int
-        ): (Int, UngroupedVisitor[A, ADb :: HNil]) = {
-          val visitor = new UngroupedAtomVisitorImpl[A, ADb](
-            atom,accum, idx
+        ): UngroupedVisitor[A, ADb :: HNil] =
+          new UngroupedAtomVisitorImpl[A, ADb](
+            atom,
+            accum,
+            idx
           )
-          visitor.nextIdx -> visitor
-        }
       }
 
     }
@@ -48,16 +54,13 @@ trait UnorderedSyntax {
       private[oru] override def makeVisitor(
         accum: Accum,
         idx: Int
-      ): (Int, UngroupedParentVisitor[A, ADb :: CDbsFlattened]) = {
-        val visitor = new UngroupedParentVisitorImpl[A, ADb, CDbsFlattened](
+      ): UngroupedParentVisitor[A, ADb :: CDbsFlattened] =
+        new UngroupedParentVisitorImpl[A, ADb, CDbsFlattened](
           par,
           accum,
           idx,
           assemblers
         )
-
-        (visitor.nextIdx, visitor)
-      }
     }
   }
 

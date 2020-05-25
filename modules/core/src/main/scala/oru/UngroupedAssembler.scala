@@ -18,7 +18,7 @@ trait UngroupedAssembler[A, Dbs <: HList] { self =>
   private[oru] def makeVisitor(
     accum: Accum,
     idx: Int
-  ): (Int, UngroupedVisitor[A, Dbs])
+  ): UngroupedVisitor[A, Dbs]
 
   def optional[ADb, RestDb <: HList](
     implicit ev: (ADb :: RestDb) =:= Dbs
@@ -27,13 +27,13 @@ trait UngroupedAssembler[A, Dbs <: HList] { self =>
       private[oru] override def makeVisitor(
         accum: Accum,
         idx: Int
-      ): (Int, UngroupedVisitor[A, Option[ADb] :: RestDb]) = {
+      ): UngroupedVisitor[A, Option[ADb] :: RestDb] = {
         val v = new OptUngroupedVisitor[A, ADb, RestDb](
           accum,
           idx,
           self.asInstanceOf[UngroupedAssembler[A, ADb :: RestDb]]
         )
-        (v.nextIndex, v)
+        v
       }
     }
   }
@@ -45,7 +45,7 @@ object UngroupedAssembler {
     private[oru] override def makeVisitor(
       accum: Accum,
       idx: Int
-    ): (Int, UngroupedParentVisitor[A, Dbs])
+    ): UngroupedParentVisitor[A, Dbs]
 
     final override def optional[ADb, RestDb <: HList](
       implicit ev: (ADb :: RestDb) =:= Dbs
@@ -54,14 +54,12 @@ object UngroupedAssembler {
         private[oru] override def makeVisitor(
           accum: Accum,
           idx: Int
-        ): (Int, UngroupedParentVisitor[A, Option[ADb] :: RestDb]) = {
-          val v = new OptUngroupedParentVisitor[A, ADb, RestDb](
+        ): UngroupedParentVisitor[A, Option[ADb] :: RestDb] =
+          new OptUngroupedParentVisitor[A, ADb, RestDb](
             accum,
             idx,
             self.asInstanceOf[UngroupedParentAssembler[A, ADb :: RestDb]]
           )
-          (v.nextIndex, v)
-        }
       }
     }
   }
@@ -95,7 +93,7 @@ object UngroupedAssembler {
     if (rows.isEmpty) return Vector.empty
     val accum = Accum.mkEmpty()
 
-    val (_, parVis) = ungroupedParentAssembler.makeVisitor(accum, 0)
+    val parVis = ungroupedParentAssembler.makeVisitor(accum, 0)
 
     rows.foreach { dbs =>
       parVis.recordTopLevel(hlistToArraySeq(dbs))

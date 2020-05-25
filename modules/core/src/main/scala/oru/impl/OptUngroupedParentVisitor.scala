@@ -13,9 +13,9 @@ private[oru] final class OptUngroupedParentVisitor[A, ADb, RestDb <: HList](
   underlyingAssembler: UngroupedParentAssembler[A, ADb :: RestDb]
 ) extends UngroupedParentVisitor[A, Option[ADb] :: RestDb] {
 
-  private val (nextIndexInner, underlying) = underlyingAssembler.makeVisitor(accum, startIdx)
+  private val underlying = underlyingAssembler.makeVisitor(accum, startIdx)
 
-  val nextIndex: Int = nextIndexInner
+  override val nextIdx: Int = underlying.nextIdx
 
   override def recordTopLevel(dbs: ArraySeq[Any]): Unit =
     dbs(startIdx).asInstanceOf[Option[ADb]].foreach { adb =>
