@@ -9,12 +9,12 @@ import scala.collection.{mutable, MapView}
 private[oru] final class UngroupedParentVisitorImpl[A, ADb, CDbs <: HList](
   par: Par[A, ADb],
   accum: Accum,
-  idx: Int,
+  override val startIdx: Int,
   assemblers: Vector[UngroupedAssembler[Any, HList]],
 ) extends UngroupedParentVisitor[A, ADb :: CDbs] {
 
-  private val thisRawLookup: mutable.MultiDict[Any, ADb] = accum.getRawLookup[ADb](idx)
-  private val childStartIdx: Int = idx + 1
+  private val thisRawLookup: mutable.MultiDict[Any, ADb] = accum.getRawLookup[ADb](startIdx)
+  private val childStartIdx: Int = startIdx + 1
   private val (idxForNext, visitors) =
     assemblers.foldLeft((childStartIdx, Vector.empty[UngroupedVisitor[A, ADb :: CDbs]])) {
       case ((currIdx, visitorsAccum), thisAssembler) =>
@@ -28,14 +28,14 @@ private[oru] final class UngroupedParentVisitorImpl[A, ADb, CDbs <: HList](
   val nextIdx: Int = idxForNext
 
   override def recordAsChild(parentId: Any, d: ArraySeq[Any]): Unit = {
-    val adb = d(idx).asInstanceOf[ADb]
+    val adb = d(startIdx).asInstanceOf[ADb]
     thisRawLookup.addOne(parentId -> adb)
     val id = par.getId(adb)
     visitors.foreach(v => v.recordAsChild(id, d))
   }
 
   override def recordTopLevel(dbs: ArraySeq[Any]): Unit = {
-    val adb = dbs(idx).asInstanceOf[ADb]
+    val adb = dbs(startIdx).asInstanceOf[ADb]
     val thisId = par.getId(adb)
     accum.addToTopLevel(thisId, adb)
     visitors.foreach(v => v.recordAsChild(parentId = thisId, dbs))

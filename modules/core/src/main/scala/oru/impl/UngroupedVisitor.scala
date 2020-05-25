@@ -6,6 +6,7 @@ import scala.collection.immutable.ArraySeq
 
 private[oru] trait UngroupedVisitor[A, Dbs <: HList] {
 
+  def startIdx: Int
   def nextIdx: Int
 
   def recordAsChild(parentId: Any, d: ArraySeq[Any]): Unit

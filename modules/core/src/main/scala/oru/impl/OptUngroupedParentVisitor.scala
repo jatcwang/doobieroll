@@ -8,13 +8,10 @@ import scala.collection.MapView
 import scala.collection.immutable.ArraySeq
 
 private[oru] final class OptUngroupedParentVisitor[A, ADb, RestDb <: HList](
-  accum: Accum,
-  startIdx: Int,
-  underlyingAssembler: UngroupedParentAssembler[A, ADb :: RestDb]
+  underlying: UngroupedParentVisitor[A, ADb :: RestDb],
 ) extends UngroupedParentVisitor[A, Option[ADb] :: RestDb] {
 
-  private val underlying = underlyingAssembler.makeVisitor(accum, startIdx)
-
+  override val startIdx: Int = underlying.startIdx
   override val nextIdx: Int = underlying.nextIdx
 
   override def recordTopLevel(dbs: ArraySeq[Any]): Unit =
@@ -31,4 +28,14 @@ private[oru] final class OptUngroupedParentVisitor[A, ADb, RestDb <: HList](
     }
 
   override def assemble(): MapView[Any, Vector[Either[EE, A]]] = underlying.assemble()
+}
+
+private[oru] object OptUngroupedParentVisitor {
+  def fromAssembler[A, ADb, RestDb <: HList](
+    assembler: UngroupedParentAssembler[A, ADb :: RestDb],
+    accum: Accum,
+    startIdx: Int
+  ): UngroupedParentVisitor[A, Option[ADb] :: RestDb] = {
+    new OptUngroupedParentVisitor(assembler.makeVisitor(accum, startIdx))
+  }
 }

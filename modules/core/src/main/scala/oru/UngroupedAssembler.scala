@@ -27,14 +27,12 @@ trait UngroupedAssembler[A, Dbs <: HList] { self =>
       private[oru] override def makeVisitor(
         accum: Accum,
         idx: Int
-      ): UngroupedVisitor[A, Option[ADb] :: RestDb] = {
-        val v = new OptUngroupedVisitor[A, ADb, RestDb](
+      ): UngroupedVisitor[A, Option[ADb] :: RestDb] =
+        OptUngroupedVisitor.fromAssembler(
+          self.asInstanceOf[UngroupedAssembler[A, ADb :: RestDb]],
           accum,
-          idx,
-          self.asInstanceOf[UngroupedAssembler[A, ADb :: RestDb]]
+          idx
         )
-        v
-      }
     }
   }
 }
@@ -55,10 +53,10 @@ object UngroupedAssembler {
           accum: Accum,
           idx: Int
         ): UngroupedParentVisitor[A, Option[ADb] :: RestDb] =
-          new OptUngroupedParentVisitor[A, ADb, RestDb](
+          OptUngroupedParentVisitor.fromAssembler(
+            self.asInstanceOf[UngroupedParentAssembler[A, ADb :: RestDb]],
             accum,
             idx,
-            self.asInstanceOf[UngroupedParentAssembler[A, ADb :: RestDb]]
           )
       }
     }
