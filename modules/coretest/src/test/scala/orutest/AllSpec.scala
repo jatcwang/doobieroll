@@ -8,6 +8,6 @@ object AllSpec extends DefaultRunnableSpec {
   override def spec: ZSpec[TestEnvironment, Nothing] =
     suite("AllSpec")(
       TableColumnsSpec.spec,
-      AwesomeSpec.spec
+      AssembleUngroupedSpec.spec
     )
 }

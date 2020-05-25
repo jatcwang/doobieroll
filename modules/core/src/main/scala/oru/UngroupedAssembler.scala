@@ -89,7 +89,7 @@ object UngroupedAssembler {
     rows: Vector[Dbs],
   ): Vector[Either[EE, A]] = {
     if (rows.isEmpty) return Vector.empty
-    val accum = Accum.mkEmpty()
+    val accum = new Accum()
 
     val parVis = ungroupedParentAssembler.makeVisitor(accum, 0)
 

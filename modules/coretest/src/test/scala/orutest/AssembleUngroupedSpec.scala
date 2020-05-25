@@ -12,10 +12,10 @@ import zio.test.Assertion._
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, _}
 
-object AwesomeSpec extends DefaultRunnableSpec {
+object AssembleUngroupedSpec extends DefaultRunnableSpec {
 
   override def spec: ZSpec[TestEnvironment, Nothing] =
-    suite("AwesomeSpec")(
+    suite("AssembleUngroupedSpec")(
       test("all non-nullable columns") {
         val dbRowsHList: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] = {
           Vector(
@@ -48,6 +48,16 @@ object AwesomeSpec extends DefaultRunnableSpec {
         assert(enterprises)(equalTo(expectedEnterprise))
       },
       testM("Property: Roundtrip conversion from List[Company] <=> Db rows") {
+        check(Gen.listOf(genNonEmptyCompany).map(_.toVector)) { original =>
+          val rows = original
+            .flatMap(companyToDbRows)
+            .map(_.productElements)
+          val Right(result) =
+            UngroupedAssembler.assembleUngrouped(companyAssembler)(rows).sequence
+          assert(result)(equalTo(original))
+        }
+      },
+      testM("Property: (Shuffled) Roundtrip conversion from List[Company] <=> Db rows") {
         checkM(Gen.listOf(genNonEmptyCompany).map(_.toVector)) { original =>
           zio.random
             .shuffle(
