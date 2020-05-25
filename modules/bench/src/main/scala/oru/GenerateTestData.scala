@@ -17,7 +17,7 @@ object GenerateTestData extends App {
       .map(_.flatten)
       .provideLayer(zio.test.environment.testEnvironment)
       .map { c =>
-      println(c.length)
+        println(c.length)
         val pw = new PrintWriter(new File("testdata.json"))
         pw.write(c.asJson.spaces2)
         pw.close()

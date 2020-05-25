@@ -51,9 +51,9 @@ object TableColumnsSpec extends DefaultRunnableSpec {
     }
   )
 
-  final private case class Empty()
+  private final case class Empty()
 
-  final private case class TestClass(
+  private final case class TestClass(
     a: Int,
     strField: String,
     snake_case: Int,

@@ -53,7 +53,10 @@ object Par {
 
       override def getId(adb: ADb): Id = getId0(adb)
 
-      override def constructWithChild(adb: ADb, children: Vector[Child0] :: Vector[Child1] :: HNil): Either[EE, A] = {
+      override def constructWithChild(
+        adb: ADb,
+        children: Vector[Child0] :: Vector[Child1] :: HNil
+      ): Either[EE, A] = {
         val child0 :: child1 :: HNil = children
         constructWithChild0(adb, child0, child1)
       }

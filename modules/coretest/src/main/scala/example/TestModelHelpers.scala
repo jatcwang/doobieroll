@@ -9,7 +9,7 @@ import model._
 import scala.collection.mutable
 
 object TestModelHelpers {
-  implicit private val genString: DeriveGen[String] =
+  private implicit val genString: DeriveGen[String] =
     DeriveGen.instance(Gen.alphaNumericStringBounded(0, 10))
 
   val genNelEmployee: DeriveGen[Vector[Employee]] = {
@@ -28,13 +28,11 @@ object TestModelHelpers {
   }
 
   val genNonEmptyCompany: Gen[Random with Sized, Company] = {
-    implicit val emp = genNelEmployee
     implicit val dep = genNelDepartment
     DeriveGen[Company]
   }
 
   val genNonEmptyEnterprise: Gen[Random with Sized, Enterprise] = {
-    implicit val emp = genNelEmployee
     implicit val dep = genNelDepartment
     implicit val inv = genNelInvoice
     DeriveGen[Enterprise]

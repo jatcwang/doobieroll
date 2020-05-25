@@ -25,10 +25,13 @@ class AssembleBench {
   }
 
   val hlist10K: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] = wrappers10K.map(_.asHList)
-  val optHList10k: Vector[DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil] = wrappers10K.map(wrapperToOptHList)
+  val optHList10k: Vector[DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil] =
+    wrappers10K.map(wrapperToOptHList)
 
-  val hlist1K: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] = wrappers10K.map(_.asHList).take(1000)
-  val optHList1k: Vector[DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil] = optHList10k.take(1000)
+  val hlist1K: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] =
+    wrappers10K.map(_.asHList).take(1000)
+  val optHList1k: Vector[DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil] =
+    optHList10k.take(1000)
 
   import example.AwesomeSpec.ExampleModelInstances._
 
