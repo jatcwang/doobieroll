@@ -1,10 +1,11 @@
 package oru.impl
+import oru.impl.Accum.AnyKeyMultiMap
 import oru.{EE, Par, UngroupedAssembler}
 import oru.syntax.UnorderedSyntax.{collectSuccess, seqToHList}
 import shapeless._
 
 import scala.collection.immutable.ArraySeq
-import scala.collection.{mutable, MapView}
+import scala.collection.{MapView, mutable}
 
 private[oru] final class UngroupedParentVisitorImpl[A, ADb, CDbs <: HList](
   par: Par[A, ADb],
@@ -13,7 +14,7 @@ private[oru] final class UngroupedParentVisitorImpl[A, ADb, CDbs <: HList](
   assemblers: Vector[UngroupedAssembler[Any, HList]],
 ) extends UngroupedParentVisitor[A, ADb :: CDbs] {
 
-  private val thisRawLookup: mutable.MultiDict[Any, ADb] = accum.getRawLookup[ADb](startIdx)
+  private val thisRawLookup: AnyKeyMultiMap[ADb] = accum.getRawLookup[ADb](startIdx)
   private val childStartIdx: Int = startIdx + 1
   private val (idxForNext, visitors) =
     assemblers.foldLeft((childStartIdx, Vector.empty[UngroupedVisitor[A, ADb :: CDbs]])) {
@@ -29,7 +30,8 @@ private[oru] final class UngroupedParentVisitorImpl[A, ADb, CDbs <: HList](
 
   override def recordAsChild(parentId: Any, d: ArraySeq[Any]): Unit = {
     val adb = d(startIdx).asInstanceOf[ADb]
-    thisRawLookup.addOne(parentId -> adb)
+    val buf = thisRawLookup.getOrElseUpdate(parentId, mutable.ArrayBuffer.empty[ADb])
+    buf += adb
     val id = par.getId(adb)
     visitors.foreach(v => v.recordAsChild(id, d))
   }
@@ -42,16 +44,16 @@ private[oru] final class UngroupedParentVisitorImpl[A, ADb, CDbs <: HList](
   }
 
   override def assemble(): collection.MapView[Any, Vector[Either[EE, A]]] = {
-    thisRawLookup.sets.view.mapValues { valueSet =>
+    thisRawLookup.view.mapValues { values =>
       val childValues: Vector[MapView[Any, Vector[Either[EE, Any]]]] =
         visitors.map(v => v.assemble())
-      valueSet.toVector.map { adb =>
+      values.distinct.toVector.map { adb =>
         val thisId = par.getId(adb)
         val childValuesEither =
           childValues.map(childLookupByParent => childLookupByParent.getOrElse(thisId, Vector.empty)
           )
         for {
-          successChildren <- collectSuccess(Vector.empty, childValuesEither)
+          successChildren <- collectSuccess(accum = Vector.empty, results = childValuesEither)
           a <- par.constructWithChild(adb, seqToHList[par.ChildVecs](successChildren))
         } yield a
       }

@@ -15,20 +15,20 @@ private[oru] class Accum private (
 
   def getRawLookup[A](
     idx: Int
-  ): mutable.MultiDict[Any, A] =
+  ): AnyKeyMultiMap[A] =
     rawLookup
-      .getOrElseUpdate(idx, mutable.MultiDict.empty[Any, Any])
-      .asInstanceOf[mutable.MultiDict[Any, A]]
+      .getOrElseUpdate(idx, mutable.Map.empty[Any, mutable.ArrayBuffer[Any]])
+      .asInstanceOf[AnyKeyMultiMap[A]]
 
 }
 
 private[oru] object Accum {
-  def mkEmptyIdMap[A](): mutable.MultiDict[Any, A] = mutable.MultiDict.empty[Any, A]
-  type LookupByIdx[A] = mutable.Map[Int, mutable.MultiDict[Any, A]]
-  type AnyKeyMultiDict[A] = mutable.MultiDict[Any, A]
+
+  type LookupByIdx[A] = mutable.Map[Int, AnyKeyMultiMap[A]]
+  type AnyKeyMultiMap[A] = mutable.Map[Any, mutable.ArrayBuffer[A]]
 
   def mkEmpty(): Accum = new Accum(
     topLevelDbItem = mutable.Map.empty[Any, Any],
-    rawLookup = mutable.Map.empty[Int, AnyKeyMultiDict[Any]]
+    rawLookup = mutable.Map.empty[Int, AnyKeyMultiMap[Any]]
   )
 }
