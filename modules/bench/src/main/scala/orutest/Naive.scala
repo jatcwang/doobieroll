@@ -1,6 +1,6 @@
 package oru
 
-import example.model._
+import orutest.model._
 import cats.implicits._
 import shapeless._
 

@@ -1,4 +1,4 @@
-package example
+package orutest
 
 import shapeless.{::, HNil}
 import zio.random.Random

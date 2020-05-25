@@ -1,14 +1,16 @@
-package oru
+package orutest
 
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
-import example.TestModelHelpers._
-import example.model.{DbCompany, DbDepartment, DbEmployee, Wrapper}
+import orutest.TestModelHelpers._
+import orutest.model.{DbCompany, DbDepartment, DbEmployee, Wrapper}
 import io.circe.parser._
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
+import oru.{Naive, UngroupedAssembler}
 import shapeless._
+import TestDataInstances._
 
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.SECONDS)
@@ -32,8 +34,6 @@ class AssembleBench {
     wrappers10K.map(_.asHList).take(1000)
   val optHList1k: Vector[DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil] =
     optHList10k.take(1000)
-
-  import example.AwesomeSpec.ExampleModelInstances._
 
   @Benchmark
   def ungrouped10k(blackhole: Blackhole): Unit =

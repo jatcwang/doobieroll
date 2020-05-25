@@ -1,4 +1,4 @@
-package example
+package orutest
 
 import zio.test.{DefaultRunnableSpec, ZSpec}
 import zio.test.environment.TestEnvironment

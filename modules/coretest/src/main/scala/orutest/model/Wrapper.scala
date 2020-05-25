@@ -1,4 +1,4 @@
-package example.model
+package orutest.model
 
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec

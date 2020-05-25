@@ -1,4 +1,4 @@
-package example
+package orutest
 
 import oru.TableColumns
 import shapeless.test.illTyped

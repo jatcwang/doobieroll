@@ -1,8 +1,8 @@
 package oru
 import java.io.{File, PrintWriter}
 
-import example.TestModelHelpers._
-import example.model.Wrapper
+import orutest.TestModelHelpers._
+import orutest.model.Wrapper
 import io.circe.syntax._
 import zio._
 

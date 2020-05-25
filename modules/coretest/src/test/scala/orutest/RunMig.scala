@@ -1,4 +1,4 @@
-package example
+package orutest
 
 import org.flywaydb.core.Flyway
 

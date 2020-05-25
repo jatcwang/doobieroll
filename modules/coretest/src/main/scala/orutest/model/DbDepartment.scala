@@ -1,4 +1,4 @@
-package example.model
+package orutest.model
 
 import java.util.UUID
 
