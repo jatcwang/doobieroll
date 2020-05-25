@@ -39,7 +39,7 @@ private[oru] final class UngroupedParentVisitorImpl[A, ADb, CDbs <: HList](
   override def recordTopLevel(dbs: ArraySeq[Any]): Unit = {
     val adb = dbs(startIdx).asInstanceOf[ADb]
     val thisId = par.getId(adb)
-    accum.addToTopLevel(thisId, adb)
+    accum.addRootDbItem(thisId, adb)
     visitors.foreach(v => v.recordAsChild(parentId = thisId, dbs))
   }
 
@@ -61,7 +61,7 @@ private[oru] final class UngroupedParentVisitorImpl[A, ADb, CDbs <: HList](
   }
 
   override def assembleTopLevel(): Vector[Either[EE, A]] = {
-    accum.getTopLevel[ADb].map { adb =>
+    accum.getRootDbItems[ADb].map { adb =>
       val childValues: Vector[MapView[Any, Vector[Either[EE, Any]]]] =
         visitors.map(v => v.assemble())
       val thisId = par.getId(adb)

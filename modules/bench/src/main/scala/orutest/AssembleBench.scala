@@ -35,24 +35,31 @@ class AssembleBench {
   val optHList1k: Vector[DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil] =
     optHList10k.take(1000)
 
+  val hlist100: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] =
+    wrappers10K.map(_.asHList).take(100)
+
   @Benchmark
   def ungrouped10k(blackhole: Blackhole): Unit =
     blackhole.consume(UngroupedAssembler.assembleUngrouped(companyAssembler)(hlist10K))
 
-  @Benchmark
-  def ungroupedOpt10k(blackhole: Blackhole): Unit =
-    blackhole.consume(UngroupedAssembler.assembleUngrouped(companyOptAssembler)(optHList10k))
+//  @Benchmark
+//  def ungroupedOpt10k(blackhole: Blackhole): Unit =
+//    blackhole.consume(UngroupedAssembler.assembleUngrouped(companyOptAssembler)(optHList10k))
 
   @Benchmark
   def ungrouped1k(blackhole: Blackhole): Unit =
     blackhole.consume(UngroupedAssembler.assembleUngrouped(companyAssembler)(hlist1K))
 
   @Benchmark
-  def ungroupedOpt1k(blackhole: Blackhole): Unit =
-    blackhole.consume(UngroupedAssembler.assembleUngrouped(companyOptAssembler)(optHList1k))
+  def ungrouped100(blackhole: Blackhole): Unit =
+    blackhole.consume(UngroupedAssembler.assembleUngrouped(companyAssembler)(hlist100))
 
-  @Benchmark
-  def naive10k(blackhole: Blackhole): Unit =
-    blackhole.consume(Naive.assembleUngrouped(hlist10K))
+//  @Benchmark
+//  def ungroupedOpt1k(blackhole: Blackhole): Unit =
+//    blackhole.consume(UngroupedAssembler.assembleUngrouped(companyOptAssembler)(optHList1k))
+
+//  @Benchmark
+//  def naive10k(blackhole: Blackhole): Unit =
+//    blackhole.consume(Naive.assembleUngrouped(hlist10K))
 
 }

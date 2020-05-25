@@ -6,18 +6,19 @@ import scala.collection.immutable.ListMap
 
 private[oru] class Accum() {
 
-  var topLevelDbItem: ListMap[Any, Any] = ListMap.empty
-  // For storing raw parent DB values because all child isn't availble yet
+  val seenRootDbItem: mutable.Set[Any] = mutable.Set.empty
+  val rootDbItems: mutable.ArrayBuffer[Any] = mutable.ArrayBuffer.empty[Any]
+  // For storing raw parent DB values because all child isn't available yet
   val rawLookup: LookupByIdx[Any] = mutable.Map.empty[Int, AnyKeyMultiMap[Any]]
 
-
-  def addToTopLevel(k: Any, v: Any): Unit = {
-    if (!topLevelDbItem.contains(k))
-      topLevelDbItem += k -> v
+  def addRootDbItem(k: Any, v: Any): Unit = {
+    if (seenRootDbItem.add(k)) {
+      rootDbItems += v
+    }
   }
 
-  def getTopLevel[A]: Iterator[A] =
-    topLevelDbItem.iterator.map(_._2).asInstanceOf[Iterator[A]]
+  def getRootDbItems[A]: Iterator[A] =
+    rootDbItems.iterator.asInstanceOf[Iterator[A]]
 
   def getRawLookup[A](
     idx: Int
