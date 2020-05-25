@@ -41,6 +41,7 @@ trait UnorderedSyntax {
   import shapeless.ops.hlist._
   import shapeless._
 
+  // FIXME: extract to separate file
   type Flattener[HL <: HList, Out <: HList] = FlatMapper.Aux[HListIdentity.type, HL, Out]
 
   object HListIdentity extends Poly1 {
