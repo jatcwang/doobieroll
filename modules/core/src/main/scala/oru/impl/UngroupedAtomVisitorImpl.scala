@@ -1,6 +1,6 @@
 package oru.impl
 
-import oru.Atom
+import oru.LeafDef
 import oru.impl.Accum.AnyKeyMultiMap
 import shapeless._
 
@@ -8,7 +8,7 @@ import scala.collection.immutable.ArraySeq
 import scala.collection.mutable
 
 private[oru] final class UngroupedAtomVisitorImpl[F[_], A, ADb](
-  atom: Atom[F, A, ADb :: HNil],
+  atom: LeafDef[F, A, ADb :: HNil],
   accum: Accum,
   override val startIdx: Int
 ) extends UngroupedVisitor[F, A, ADb :: HNil] {

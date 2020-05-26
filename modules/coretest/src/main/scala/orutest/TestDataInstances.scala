@@ -1,39 +1,36 @@
 package orutest
 
-import java.util.UUID
-
 import cats.Id
 import oru.UngroupedAssembler.UngroupedParentAssembler
 import oru.syntax._
-import oru.{Atom, Par, UngroupedAssembler}
+import oru.{InfallibleParentDef, LeafDef, ParentDef, UngroupedAssembler}
 import orutest.model._
 import shapeless.{::, HNil}
 
 object TestDataInstances {
 
-  val employeeAtom: Atom[Id, Employee, DbEmployee :: HNil] =
-    new Atom[Id, Employee, DbEmployee :: HNil] {
+  val employeeAtom: LeafDef[Id, Employee, DbEmployee :: HNil] =
+    new LeafDef[Id, Employee, DbEmployee :: HNil] {
       override def construct(h: DbEmployee :: HNil): Employee =
         Employee.fromDb(h.head)
     }
 
-  val invoiceAtom: Atom[Id, Invoice, DbInvoice :: HNil] =
-    new Atom[Id, Invoice, DbInvoice :: HNil] {
+  val invoiceAtom: LeafDef[Id, Invoice, DbInvoice :: HNil] =
+    new LeafDef[Id, Invoice, DbInvoice :: HNil] {
       override def construct(db: DbInvoice :: HNil): Invoice = Invoice.fromDb(db.head)
     }
 
-  // FIXME: shouldn't need explicit type annotation
-  val departmentPar: Par.Aux[Id, Department, DbDepartment, Employee :: HNil] =
-    Par.make[Id, Department, DbDepartment, Employee, UUID](
+  val departmentPar: ParentDef.Aux[Id, Department, DbDepartment, Employee :: HNil] =
+    InfallibleParentDef.make(
       (d: DbDepartment) => d.id,
       Department.fromDb
     )
 
-  val companyPar: Par.Aux[Id, Company, DbCompany, Department :: HNil] =
-    Par.make[Id, Company, DbCompany, Department, UUID]((d: DbCompany) => d.id, Company.fromDb)
+  val companyPar: ParentDef.Aux[Id, Company, DbCompany, Department :: HNil] =
+    InfallibleParentDef.make((d: DbCompany) => d.id, Company.fromDb)
 
-  val enterprisePar: Par.Aux[Id, Enterprise, DbCompany, Department :: Invoice :: HNil] =
-    Par.make2[Id, Enterprise, DbCompany, Department, Invoice, UUID]((d: DbCompany) => d.id, Enterprise.fromDb)
+  val enterprisePar: ParentDef.Aux[Id, Enterprise, DbCompany, Department :: Invoice :: HNil] =
+    InfallibleParentDef.make2((d: DbCompany) => d.id, Enterprise.fromDb)
 
   val employeeAssembler: UngroupedAssembler[Id, Employee, DbEmployee :: HNil] =
     employeeAtom.asUnordered

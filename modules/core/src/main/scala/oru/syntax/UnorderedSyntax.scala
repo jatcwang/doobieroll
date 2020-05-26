@@ -4,14 +4,14 @@ import cats.Monad
 import cats.implicits._
 import oru.UngroupedAssembler.UngroupedParentAssembler
 import oru.impl._
-import oru.{Atom, Par, UngroupedAssembler}
+import oru.{LeafDef, ParentDef, UngroupedAssembler}
 import shapeless._
 
 import scala.annotation.tailrec
 
 trait UnorderedSyntax {
 
-  implicit class AtomExtension[F[_], A, ADb](atom: Atom[F, A, ADb :: HNil]) {
+  implicit class AtomExtension[F[_], A, ADb](atom: LeafDef[F, A, ADb :: HNil]) {
     def asUnordered: UngroupedAssembler[F, A, ADb :: HNil] = {
       new UngroupedAssembler[F, A, ADb :: HNil] {
         private[oru] override def makeVisitor(
@@ -38,7 +38,7 @@ trait UnorderedSyntax {
   }
 
   private def mkParentUngrouped[F[_], A, ADb, CDbs <: HList, CDbsFlattened <: HList](
-    par: Par[F, A, ADb],
+    par: ParentDef[F, A, ADb],
     assemblers: Vector[UngroupedAssembler[F, Any, HList]],
     flattener: Flattener[CDbs, CDbsFlattened],
     FMonad: Monad[F]
@@ -67,7 +67,7 @@ trait UnorderedSyntax {
   ): UngroupedAssembler[F, Any, HList] =
     assembler.asInstanceOf[UngroupedAssembler[F, Any, HList]]
 
-  implicit class ParentExtension[F[_], A, ADb, Cs <: HList](par: Par.Aux[F, A, ADb, Cs]) {
+  implicit class ParentExtension[F[_], A, ADb, Cs <: HList](par: ParentDef.Aux[F, A, ADb, Cs]) {
 
     def asUnordered[C0, C0Dbs <: HList](
       c0Assembler: UngroupedAssembler[F, C0, C0Dbs]

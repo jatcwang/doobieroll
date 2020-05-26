@@ -10,4 +10,5 @@ object AllSpec extends DefaultRunnableSpec {
       TableColumnsSpec.spec,
       AssembleUngroupedSpec.spec
     )
+
 }

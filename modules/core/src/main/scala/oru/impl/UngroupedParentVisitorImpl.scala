@@ -2,7 +2,7 @@ package oru.impl
 
 import cats.Monad
 import oru.impl.Accum.AnyKeyMultiMap
-import oru.{Par, UngroupedAssembler}
+import oru.{ParentDef, UngroupedAssembler}
 import oru.syntax.UnorderedSyntax.{collectSuccess, seqToHList}
 import shapeless._
 
@@ -10,7 +10,7 @@ import scala.collection.immutable.ArraySeq
 import scala.collection.{mutable, MapView}
 
 private[oru] final class UngroupedParentVisitorImpl[F[_], A, ADb, CDbs <: HList](
-  par: Par[F, A, ADb],
+  par: ParentDef[F, A, ADb],
   accum: Accum,
   override val startIdx: Int,
   assemblers: Vector[UngroupedAssembler[F, Any, HList]],
