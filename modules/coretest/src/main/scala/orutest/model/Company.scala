@@ -2,8 +2,6 @@ package orutest.model
 
 import java.util.UUID
 
-import oru.EE
-
 final case class Company(
   id: UUID,
   name: String,
@@ -11,12 +9,10 @@ final case class Company(
 )
 
 object Company {
-  def fromDb(db: DbCompany, ems: Vector[Department]): Either[EE, Company] =
-    Right(
+  def fromDb(db: DbCompany, ems: Vector[Department]): Company =
       Company(
         db.id,
         db.name,
         ems
       )
-    )
 }

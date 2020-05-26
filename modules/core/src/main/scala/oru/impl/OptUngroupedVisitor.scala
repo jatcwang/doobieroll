@@ -1,14 +1,14 @@
 package oru.impl
 
-import oru.{EE, UngroupedAssembler}
+import oru.UngroupedAssembler
 import shapeless.{::, HList}
 
 import scala.collection.MapView
 import scala.collection.immutable.ArraySeq
 
-private[oru] final class OptUngroupedVisitor[A, ADb, RestDb <: HList](
-  underlying: UngroupedVisitor[A, ADb :: RestDb],
-) extends UngroupedVisitor[A, Option[ADb] :: RestDb] {
+private[oru] final class OptUngroupedVisitor[F[_], A, ADb, RestDb <: HList](
+  underlying: UngroupedVisitor[F, A, ADb :: RestDb],
+) extends UngroupedVisitor[F, A, Option[ADb] :: RestDb] {
 
   override val startIdx: Int = underlying.startIdx
   override val nextIdx: Int = underlying.nextIdx
@@ -18,16 +18,16 @@ private[oru] final class OptUngroupedVisitor[A, ADb, RestDb <: HList](
       underlying.recordAsChild(parentId, dbs.updated(startIdx, adb))
     }
 
-  override def assemble(): MapView[Any, Vector[Either[EE, A]]] = underlying.assemble()
+  override def assemble(): MapView[Any, Vector[F[A]]] = underlying.assemble()
 }
 
 private[oru] object OptUngroupedVisitor {
 
-  def fromAssembler[A, ADb, RestDb <: HList](
-    assembler: UngroupedAssembler[A, ADb :: RestDb],
+  def fromAssembler[F[_], A, ADb, RestDb <: HList](
+    assembler: UngroupedAssembler[F, A, ADb :: RestDb],
     accum: Accum,
     startIdx: Int
-  ): UngroupedVisitor[A, Option[ADb] :: RestDb] = {
+  ): UngroupedVisitor[F, A, Option[ADb] :: RestDb] = {
     new OptUngroupedVisitor(assembler.makeVisitor(accum, startIdx))
   }
 }

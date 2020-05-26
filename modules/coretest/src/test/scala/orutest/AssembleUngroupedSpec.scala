@@ -27,32 +27,29 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
 
         val result = UngroupedAssembler.assembleUngrouped(companyAssembler)(dbRowsHList).sequence
 
-        val Right(companies) = result
-
-        assert(companies)(equalTo(expectedCompanies))
+        assert(result)(equalTo(expectedCompanies))
 
       },
       test("nullable children columns") {
         val dbRows = expectedCompaniesWithSomeEmptyChildren.flatMap(companyToOptDbRows)
         val result =
           UngroupedAssembler.assembleUngrouped(companyOptAssembler)(dbRows.map(_.productElements))
-        val Right(companies) = result.sequence
-        assert(companies)(equalTo(expectedCompaniesWithSomeEmptyChildren))
+        assert(result)(equalTo(expectedCompaniesWithSomeEmptyChildren))
       },
       test("Parent with multiple children") {
         val dbRows = expectedEnterprise.flatMap(enterpriseToDbRows)
-        val Right(enterprises) = UngroupedAssembler
+        val result = UngroupedAssembler
           .assembleUngrouped(enterpriseAssembler)(dbRows.map(_.productElements))
           .sequence
 
-        assert(enterprises)(equalTo(expectedEnterprise))
+        assert(result)(equalTo(expectedEnterprise))
       },
       testM("Property: Roundtrip conversion from List[Company] <=> Db rows") {
         check(Gen.listOf(genNonEmptyCompany).map(_.toVector)) { original =>
           val rows = original
             .flatMap(companyToDbRows)
             .map(_.productElements)
-          val Right(result) =
+          val result =
             UngroupedAssembler.assembleUngrouped(companyAssembler)(rows).sequence
           assert(result)(equalTo(original))
         }
@@ -65,7 +62,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
             )
             .map(_.toVector)
             .map { rows =>
-              val Right(result) =
+              val result =
                 UngroupedAssembler.assembleUngrouped(companyAssembler)(rows).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
@@ -81,7 +78,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
             )
             .map(_.toVector)
             .map { rows =>
-              val Right(result) =
+              val result =
                 UngroupedAssembler.assembleUngrouped(companyOptAssembler)(rows).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
@@ -95,7 +92,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
             )
             .map(_.toVector)
             .map { rows =>
-              val Right(result) =
+              val result =
                 UngroupedAssembler.assembleUngrouped(enterpriseAssembler)(rows).sequence
               assert(normalizeEnterprise(result))(equalTo(normalizeEnterprise(original)))
             }

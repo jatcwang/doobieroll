@@ -12,24 +12,24 @@ import shapeless.{::, HList, HNil}
 import scala.collection.immutable.ArraySeq
 import scala.collection.mutable
 
-trait UngroupedAssembler[A, Dbs <: HList] { self =>
+trait UngroupedAssembler[F[_], A, Dbs <: HList] { self =>
   // Given an offset index, returns the visitor instance which has been bound to the state accumulator,
   // as well as the size of input this visitor consumes
   private[oru] def makeVisitor(
     accum: Accum,
     idx: Int
-  ): UngroupedVisitor[A, Dbs]
+  ): UngroupedVisitor[F, A, Dbs]
 
   def optional[ADb, RestDb <: HList](
     implicit ev: (ADb :: RestDb) =:= Dbs
-  ): UngroupedAssembler[A, Option[ADb] :: RestDb] = {
-    new UngroupedAssembler[A, Option[ADb] :: RestDb] {
+  ): UngroupedAssembler[F, A, Option[ADb] :: RestDb] = {
+    new UngroupedAssembler[F, A, Option[ADb] :: RestDb] {
       private[oru] override def makeVisitor(
         accum: Accum,
         idx: Int
-      ): UngroupedVisitor[A, Option[ADb] :: RestDb] =
+      ): UngroupedVisitor[F, A, Option[ADb] :: RestDb] =
         OptUngroupedVisitor.fromAssembler(
-          self.asInstanceOf[UngroupedAssembler[A, ADb :: RestDb]],
+          self.asInstanceOf[UngroupedAssembler[F, A, ADb :: RestDb]],
           accum,
           idx
         )
@@ -39,22 +39,22 @@ trait UngroupedAssembler[A, Dbs <: HList] { self =>
 
 object UngroupedAssembler {
 
-  trait UngroupedParentAssembler[A, Dbs <: HList] extends UngroupedAssembler[A, Dbs] { self =>
+  trait UngroupedParentAssembler[F[_], A, Dbs <: HList] extends UngroupedAssembler[F, A, Dbs] { self =>
     private[oru] override def makeVisitor(
       accum: Accum,
       idx: Int
-    ): UngroupedParentVisitor[A, Dbs]
+    ): UngroupedParentVisitor[F, A, Dbs]
 
     final override def optional[ADb, RestDb <: HList](
       implicit ev: (ADb :: RestDb) =:= Dbs
-    ): UngroupedParentAssembler[A, Option[ADb] :: RestDb] = {
-      new UngroupedParentAssembler[A, Option[ADb] :: RestDb] {
+    ): UngroupedParentAssembler[F, A, Option[ADb] :: RestDb] = {
+      new UngroupedParentAssembler[F, A, Option[ADb] :: RestDb] {
         private[oru] override def makeVisitor(
           accum: Accum,
           idx: Int
-        ): UngroupedParentVisitor[A, Option[ADb] :: RestDb] =
+        ): UngroupedParentVisitor[F, A, Option[ADb] :: RestDb] =
           OptUngroupedParentVisitor.fromAssembler(
-            self.asInstanceOf[UngroupedParentAssembler[A, ADb :: RestDb]],
+            self.asInstanceOf[UngroupedParentAssembler[F, A, ADb :: RestDb]],
             accum,
             idx,
           )
@@ -83,11 +83,11 @@ object UngroupedAssembler {
     ArraySeq.from(arr)
   }
 
-  def assembleUngrouped[A, Dbs <: HList](
-    ungroupedParentAssembler: UngroupedParentAssembler[A, Dbs],
+  def assembleUngrouped[F[_], A, Dbs <: HList](
+    ungroupedParentAssembler: UngroupedParentAssembler[F, A, Dbs],
   )(
     rows: Vector[Dbs],
-  ): Vector[Either[EE, A]] = {
+  ): Vector[F[A]] = {
     if (rows.isEmpty) return Vector.empty
     val accum = new Accum()
 

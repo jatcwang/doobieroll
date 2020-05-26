@@ -1,17 +1,17 @@
 package oru.impl
 
+import oru.Atom
 import oru.impl.Accum.AnyKeyMultiMap
-import oru.{Atom, EE}
 import shapeless._
 
 import scala.collection.immutable.ArraySeq
 import scala.collection.mutable
 
-private[oru] final class UngroupedAtomVisitorImpl[A, ADb](
-  atom: Atom[A, ADb :: HNil],
+private[oru] final class UngroupedAtomVisitorImpl[F[_], A, ADb](
+  atom: Atom[F, A, ADb :: HNil],
   accum: Accum,
   override val startIdx: Int
-) extends UngroupedVisitor[A, ADb :: HNil] {
+) extends UngroupedVisitor[F, A, ADb :: HNil] {
 
   private val thisRawLookup: AnyKeyMultiMap[ADb] = accum.getRawLookup[ADb](startIdx)
 
@@ -23,7 +23,7 @@ private[oru] final class UngroupedAtomVisitorImpl[A, ADb](
   }
 
 
-  override def assemble(): collection.MapView[Any, Vector[Either[EE, A]]] =
+  override def assemble(): collection.MapView[Any, Vector[F[A]]] =
     thisRawLookup.view
       .mapValues(values => values.distinct.toVector.map(v => atom.construct(v :: HNil)))
 

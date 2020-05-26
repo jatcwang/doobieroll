@@ -2,8 +2,6 @@ package oru.impl;
 import scala.collection.mutable
 import Accum._
 
-import scala.collection.immutable.ListMap
-
 private[oru] class Accum() {
 
   val seenRootDbItem: mutable.Set[Any] = mutable.Set.empty

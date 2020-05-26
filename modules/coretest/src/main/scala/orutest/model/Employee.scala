@@ -2,19 +2,15 @@ package orutest.model
 
 import java.util.UUID
 
-import oru.EE
-
 final case class Employee(
   id: UUID,
   name: String,
 )
 
 object Employee {
-  def fromDb(db: DbEmployee): Either[EE, Employee] =
-    Right(
+  def fromDb(db: DbEmployee): Employee =
       Employee(
         db.id,
         db.name
       )
-    )
 }

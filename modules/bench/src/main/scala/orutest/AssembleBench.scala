@@ -4,11 +4,12 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
 import orutest.TestModelHelpers._
+import orutest.Naive
 import orutest.model.{DbCompany, DbDepartment, DbEmployee, Wrapper}
 import io.circe.parser._
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
-import oru.{Naive, UngroupedAssembler}
+import oru.UngroupedAssembler
 import shapeless._
 import TestDataInstances._
 
@@ -42,9 +43,9 @@ class AssembleBench {
   def ungrouped10k(blackhole: Blackhole): Unit =
     blackhole.consume(UngroupedAssembler.assembleUngrouped(companyAssembler)(hlist10K))
 
-//  @Benchmark
-//  def ungroupedOpt10k(blackhole: Blackhole): Unit =
-//    blackhole.consume(UngroupedAssembler.assembleUngrouped(companyOptAssembler)(optHList10k))
+  @Benchmark
+  def ungroupedOpt10k(blackhole: Blackhole): Unit =
+    blackhole.consume(UngroupedAssembler.assembleUngrouped(companyOptAssembler)(optHList10k))
 
   @Benchmark
   def ungrouped1k(blackhole: Blackhole): Unit =
@@ -54,12 +55,12 @@ class AssembleBench {
   def ungrouped100(blackhole: Blackhole): Unit =
     blackhole.consume(UngroupedAssembler.assembleUngrouped(companyAssembler)(hlist100))
 
-//  @Benchmark
-//  def ungroupedOpt1k(blackhole: Blackhole): Unit =
-//    blackhole.consume(UngroupedAssembler.assembleUngrouped(companyOptAssembler)(optHList1k))
+  @Benchmark
+  def ungroupedOpt1k(blackhole: Blackhole): Unit =
+    blackhole.consume(UngroupedAssembler.assembleUngrouped(companyOptAssembler)(optHList1k))
 
-//  @Benchmark
-//  def naive10k(blackhole: Blackhole): Unit =
-//    blackhole.consume(Naive.assembleUngrouped(hlist10K))
+  @Benchmark
+  def naive10k(blackhole: Blackhole): Unit =
+    blackhole.consume(Naive.assembleUngrouped(hlist10K))
 
 }
