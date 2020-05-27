@@ -48,7 +48,7 @@ object TableColumnsSpec extends DefaultRunnableSpec {
     test("Derivation is not allowed for empty case classes") {
       illTyped("deriveSnakeColumnNames[Empty]")
       assertCompletes
-    }
+    },
   )
 
   private final case class Empty()

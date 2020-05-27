@@ -67,13 +67,13 @@ object TestData {
     employees = Vector(
       Employee(
         e4,
-        name = "Emp4"
+        name = "Emp4",
       ),
       Employee(
         e5,
-        name = "Emp5"
-      )
-    )
+        name = "Emp5",
+      ),
+    ),
   )
 
   val expectedCompanies = Vector(
@@ -97,8 +97,8 @@ object TestData {
       departments = Vector(dep1WithChildren),
       invoices = Vector(
         Invoice(i1, 10),
-        Invoice(i2, 20)
-      )
+        Invoice(i2, 20),
+      ),
     ),
     // More departments than invoices
     Enterprise(
@@ -106,9 +106,9 @@ object TestData {
       "Ent2",
       departments = Vector(dep2WithChildren, dep3WithChildren),
       invoices = Vector(
-        Invoice(i3, 30)
-      )
-    )
+        Invoice(i3, 30),
+      ),
+    ),
   )
 
   val expectedCompaniesWithSomeEmptyChildren = Vector(
@@ -144,11 +144,11 @@ object TestData {
         Department(
           d2,
           name = "Dep2",
-          employees = Vector()
+          employees = Vector(),
         ),
-        dep3WithChildren
-      )
-    )
+        dep3WithChildren,
+      ),
+    ),
   )
 
 }

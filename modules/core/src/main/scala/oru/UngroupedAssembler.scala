@@ -5,7 +5,7 @@ import oru.impl.{
   OptUngroupedParentVisitor,
   OptUngroupedVisitor,
   UngroupedParentVisitor,
-  UngroupedVisitor
+  UngroupedVisitor,
 }
 import shapeless.{::, HList, HNil}
 
@@ -17,21 +17,21 @@ trait UngroupedAssembler[F[_], A, Dbs <: HList] { self =>
   // as well as the size of input this visitor consumes
   private[oru] def makeVisitor(
     accum: Accum,
-    idx: Int
+    idx: Int,
   ): UngroupedVisitor[F, A, Dbs]
 
   def optional[ADb, RestDb <: HList](
-    implicit ev: (ADb :: RestDb) =:= Dbs
+    implicit ev: (ADb :: RestDb) =:= Dbs,
   ): UngroupedAssembler[F, A, Option[ADb] :: RestDb] = {
     new UngroupedAssembler[F, A, Option[ADb] :: RestDb] {
       private[oru] override def makeVisitor(
         accum: Accum,
-        idx: Int
+        idx: Int,
       ): UngroupedVisitor[F, A, Option[ADb] :: RestDb] =
         OptUngroupedVisitor.fromAssembler(
           self.asInstanceOf[UngroupedAssembler[F, A, ADb :: RestDb]],
           accum,
-          idx
+          idx,
         )
     }
   }
@@ -39,19 +39,20 @@ trait UngroupedAssembler[F[_], A, Dbs <: HList] { self =>
 
 object UngroupedAssembler {
 
-  trait UngroupedParentAssembler[F[_], A, Dbs <: HList] extends UngroupedAssembler[F, A, Dbs] { self =>
+  trait UngroupedParentAssembler[F[_], A, Dbs <: HList] extends UngroupedAssembler[F, A, Dbs] {
+    self =>
     private[oru] override def makeVisitor(
       accum: Accum,
-      idx: Int
+      idx: Int,
     ): UngroupedParentVisitor[F, A, Dbs]
 
     final override def optional[ADb, RestDb <: HList](
-      implicit ev: (ADb :: RestDb) =:= Dbs
+      implicit ev: (ADb :: RestDb) =:= Dbs,
     ): UngroupedParentAssembler[F, A, Option[ADb] :: RestDb] = {
       new UngroupedParentAssembler[F, A, Option[ADb] :: RestDb] {
         private[oru] override def makeVisitor(
           accum: Accum,
-          idx: Int
+          idx: Int,
         ): UngroupedParentVisitor[F, A, Option[ADb] :: RestDb] =
           OptUngroupedParentVisitor.fromAssembler(
             self.asInstanceOf[UngroupedParentAssembler[F, A, ADb :: RestDb]],
@@ -63,7 +64,7 @@ object UngroupedAssembler {
   }
 
   def hlistToArraySeq[Dbs <: HList](
-    h: Dbs
+    h: Dbs,
   ): ArraySeq[Any] = {
     val arr = mutable.ArrayBuffer.empty[Any]
 

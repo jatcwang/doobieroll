@@ -54,7 +54,7 @@ object TableColumns {
 
 // A separate class to prevent automatic derivation
 @implicitNotFound(
-  "Cannot derive TableColumns instance. Please check that the type is a case class " + "and has at least 1 parameter"
+  "Cannot derive TableColumns instance. Please check that the type is a case class " + "and has at least 1 parameter",
 )
 private trait MkTableColumns[T] {
   def allColumns: NonEmptyList[String]

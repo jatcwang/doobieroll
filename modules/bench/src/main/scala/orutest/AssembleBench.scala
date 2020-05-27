@@ -21,7 +21,7 @@ class AssembleBench {
   val wrappers10K: Vector[Wrapper] = {
     val r = new String(
       this.getClass.getClassLoader.getResourceAsStream("testdata.json").readAllBytes(),
-      StandardCharsets.UTF_8
+      StandardCharsets.UTF_8,
     )
     decode[Vector[Wrapper]](r)
       .getOrElse(throw new Exception("decode failed"))

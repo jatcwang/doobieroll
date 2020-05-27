@@ -9,8 +9,18 @@ final case class Employee(
 
 object Employee {
   def fromDb(db: DbEmployee): Employee =
+    Employee(
+      db.id,
+      db.name,
+    )
+
+  def fromDbFallible(db: DbEmployee): Either[Err, Employee] =
+    Either.cond(
+      db.name.contains("err"),
       Employee(
         db.id,
-        db.name
-      )
+        db.name,
+      ),
+      Err(s"employee ${db.name}"),
+    )
 }

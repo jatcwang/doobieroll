@@ -44,6 +44,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
 
         assert(result)(equalTo(expectedEnterprise))
       },
+      test("Error when one of the child conversion failed") {},
       testM("Property: Roundtrip conversion from List[Company] <=> Db rows") {
         check(Gen.listOf(genNonEmptyCompany).map(_.toVector)) { original =>
           val rows = original
@@ -69,7 +70,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
         }
       },
       testM(
-        "Property: Roundtrip conversion from List[Company] <=> Db rows (with potentially empty department/employee list)"
+        "Property: Roundtrip conversion from List[Company] <=> Db rows (with potentially empty department/employee list)",
       ) {
         checkM(Gen.listOf(genCompany).map(_.toVector)) { original =>
           zio.random
@@ -88,7 +89,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
         checkM(Gen.listOf(genNonEmptyEnterprise).map(_.toVector)) { original =>
           zio.random
             .shuffle(
-              original.flatMap(enterpriseToDbRows).map(_.productElements).toList
+              original.flatMap(enterpriseToDbRows).map(_.productElements).toList,
             )
             .map(_.toVector)
             .map { rows =>

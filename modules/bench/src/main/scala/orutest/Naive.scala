@@ -5,7 +5,7 @@ import shapeless._
 
 object Naive {
   def assembleUngrouped(
-    rows: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil]
+    rows: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil],
   ): Vector[Company] =
     rows
       .groupBy(_.head.id)

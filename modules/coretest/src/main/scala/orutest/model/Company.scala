@@ -10,9 +10,21 @@ final case class Company(
 
 object Company {
   def fromDb(db: DbCompany, ems: Vector[Department]): Company =
+    Company(
+      db.id,
+      db.name,
+      ems,
+    )
+
+  def fromDbFallible(db: DbCompany, ems: Vector[Department]): Either[Err, Company] =
+    Either.cond(
+      db.name.contains("err"),
       Company(
         db.id,
         db.name,
-        ems
-      )
+        ems,
+      ),
+      Err(s"company ${db.name}"),
+    )
+
 }

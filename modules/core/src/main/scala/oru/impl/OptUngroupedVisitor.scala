@@ -26,8 +26,7 @@ private[oru] object OptUngroupedVisitor {
   def fromAssembler[F[_], A, ADb, RestDb <: HList](
     assembler: UngroupedAssembler[F, A, ADb :: RestDb],
     accum: Accum,
-    startIdx: Int
-  ): UngroupedVisitor[F, A, Option[ADb] :: RestDb] = {
+    startIdx: Int,
+  ): UngroupedVisitor[F, A, Option[ADb] :: RestDb] =
     new OptUngroupedVisitor(assembler.makeVisitor(accum, startIdx))
-  }
 }

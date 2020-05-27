@@ -13,6 +13,17 @@ object Department {
     Department(
       db.id,
       db.name,
-      ems
+      ems,
+    )
+
+  def fromDbFallible(db: DbDepartment, ems: Vector[Employee]): Either[Err, Department] =
+    Either.cond(
+      db.name.contains("err"),
+      Department(
+        db.id,
+        db.name,
+        ems,
+      ),
+      Err(s"department ${db.name}"),
     )
 }

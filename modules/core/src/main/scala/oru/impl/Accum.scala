@@ -9,17 +9,16 @@ private[oru] class Accum() {
   // For storing raw parent DB values because all child isn't available yet
   val rawLookup: LookupByIdx[Any] = mutable.Map.empty[Int, AnyKeyMultiMap[Any]]
 
-  def addRootDbItem(k: Any, v: Any): Unit = {
+  def addRootDbItem(k: Any, v: Any): Unit =
     if (seenRootDbItem.add(k)) {
       rootDbItems += v
     }
-  }
 
   def getRootDbItems[A]: Iterator[A] =
     rootDbItems.iterator.asInstanceOf[Iterator[A]]
 
   def getRawLookup[A](
-    idx: Int
+    idx: Int,
   ): AnyKeyMultiMap[A] =
     rawLookup
       .getOrElseUpdate(idx, mutable.Map.empty[Any, mutable.ArrayBuffer[Any]])

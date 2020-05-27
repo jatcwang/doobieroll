@@ -46,7 +46,7 @@ object TestModelHelpers {
     departments
       .map { d =>
         d.copy(
-          employees = d.employees.sortBy(_.id)
+          employees = d.employees.sortBy(_.id),
         )
       }
       .sortBy(_.id)
@@ -56,7 +56,7 @@ object TestModelHelpers {
     companies
       .map { c =>
         c.copy(
-          departments = normalizeDepartments(c.departments)
+          departments = normalizeDepartments(c.departments),
         )
       }
       .sortBy(_.id)
@@ -67,7 +67,7 @@ object TestModelHelpers {
       .map { c =>
         c.copy(
           departments = normalizeDepartments(c.departments),
-          invoices = c.invoices.sortBy(_.id)
+          invoices = c.invoices.sortBy(_.id),
         )
       }
       .sortBy(_.id)
@@ -96,7 +96,7 @@ object TestModelHelpers {
   }
 
   def enterpriseToDbRows(
-    c: Enterprise
+    c: Enterprise,
   ): Vector[Tuple4[DbCompany, DbDepartment, DbEmployee, DbInvoice]] = {
     val rows = mutable.ArrayBuffer.empty[Tuple4[DbCompany, DbDepartment, DbEmployee, DbInvoice]]
 
@@ -115,7 +115,7 @@ object TestModelHelpers {
       val dbDpmtAndEmp = {
         val dbDepartment = DbDepartment(id = d.id, companyId = c.id, name = d.name)
         d.employees.map(e =>
-          dbDepartment -> DbEmployee(id = e.id, departmentId = d.id, name = e.name)
+          dbDepartment -> DbEmployee(id = e.id, departmentId = d.id, name = e.name),
         )
       }
 
@@ -125,7 +125,7 @@ object TestModelHelpers {
             dbCompany,
             dbDep,
             dbEmp,
-            DbInvoice(id = inv.id, amount = inv.amount)
+            DbInvoice(id = inv.id, amount = inv.amount),
           )
       }
     }
@@ -134,7 +134,7 @@ object TestModelHelpers {
   }
 
   def companyToOptDbRows(
-    c: Company
+    c: Company,
   ): Vector[Tuple3[DbCompany, Option[DbDepartment], Option[DbEmployee]]] = {
     val rows =
       mutable.ArrayBuffer.empty[Tuple3[DbCompany, Option[DbDepartment], Option[DbEmployee]]]
@@ -151,7 +151,7 @@ object TestModelHelpers {
               rows += Tuple3(
                 dbCompany,
                 Some(dbDep),
-                None
+                None,
               )
             case nelEmployee => {
               nelEmployee.foreach { em =>
@@ -162,9 +162,9 @@ object TestModelHelpers {
                     DbEmployee(
                       id = em.id,
                       departmentId = d.id,
-                      name = em.name
-                    )
-                  )
+                      name = em.name,
+                    ),
+                  ),
                 )
               }
             }
@@ -176,7 +176,7 @@ object TestModelHelpers {
   }
 
   def wrapperToOptHList(
-    wrapper: Wrapper
+    wrapper: Wrapper,
   ): DbCompany :: Option[DbDepartment] :: Option[DbEmployee] :: HNil = {
     val optDep = if (wrapper.d.name.contains("1")) None else Some(wrapper.d)
     val optEmp = optDep.flatMap { _ =>

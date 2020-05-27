@@ -10,7 +10,7 @@ import scala.collection.mutable
 private[oru] final class UngroupedAtomVisitorImpl[F[_], A, ADb](
   atom: LeafDef[F, A, ADb :: HNil],
   accum: Accum,
-  override val startIdx: Int
+  override val startIdx: Int,
 ) extends UngroupedVisitor[F, A, ADb :: HNil] {
 
   private val thisRawLookup: AnyKeyMultiMap[ADb] = accum.getRawLookup[ADb](startIdx)
@@ -22,11 +22,8 @@ private[oru] final class UngroupedAtomVisitorImpl[F[_], A, ADb](
     buf += d(startIdx).asInstanceOf[ADb]
   }
 
-
   override def assemble(): collection.MapView[Any, Vector[F[A]]] =
     thisRawLookup.view
       .mapValues(values => values.distinct.toVector.map(v => atom.construct(v :: HNil)))
 
 }
-
-

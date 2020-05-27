@@ -29,8 +29,7 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "dev.zio" %% "zio-test-sbt" % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
     ),
-
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
   )
 
 lazy val bench = Project("bench", file("modules/bench"))
@@ -39,14 +38,14 @@ lazy val bench = Project("bench", file("modules/bench"))
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
-    )
+      ),
   )
 
 lazy val root = project
   .in(new File("."))
   .aggregate(bench, core, coretest)
   .settings(
-    publish / skip := true
+    publish / skip := true,
   )
 
 val scala213 = "2.13.2"
@@ -56,7 +55,7 @@ lazy val commonSettings = Seq(
   scalaVersion := scala213,
   crossScalaVersions := Seq(scala213, scala212),
   scalacOptions ++= Seq(
-    "-Ywarn-macros:after"
+    "-Ywarn-macros:after",
   ),
   scalacOptions --= {
     if (sys.env.contains("CI")) {

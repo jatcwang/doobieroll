@@ -14,7 +14,7 @@ private[oru] final class UngroupedParentVisitorImpl[F[_], A, ADb, CDbs <: HList]
   accum: Accum,
   override val startIdx: Int,
   assemblers: Vector[UngroupedAssembler[F, Any, HList]],
-  FMonad: Monad[F]
+  FMonad: Monad[F],
 ) extends UngroupedParentVisitor[F, A, ADb :: CDbs] {
 
   private val thisRawLookup: AnyKeyMultiMap[ADb] = accum.getRawLookup[ADb](startIdx)
@@ -25,7 +25,7 @@ private[oru] final class UngroupedParentVisitorImpl[F[_], A, ADb, CDbs <: HList]
         val vis = thisAssembler.makeVisitor(accum, currIdx)
         (
           vis.nextIdx,
-          visitorsAccum :+ vis.asInstanceOf[UngroupedVisitor[F, Any, ADb :: CDbs]]
+          visitorsAccum :+ vis.asInstanceOf[UngroupedVisitor[F, Any, ADb :: CDbs]],
         )
     }
 
@@ -53,7 +53,7 @@ private[oru] final class UngroupedParentVisitorImpl[F[_], A, ADb, CDbs <: HList]
       values.distinct.toVector.map { adb =>
         val thisId = par.getId(adb)
         val childValuesEither =
-          childValues.map(childLookupByParent => childLookupByParent.getOrElse(thisId, Vector.empty)
+          childValues.map(childLookupByParent => childLookupByParent.getOrElse(thisId, Vector.empty),
           )
         FMonad.flatMap(collectSuccess(childValuesEither)(FMonad)) { successChildren =>
           par.constructWithChild(adb, seqToHList[par.ChildVecs](successChildren))

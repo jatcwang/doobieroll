@@ -16,12 +16,12 @@ trait UnorderedSyntax {
       new UngroupedAssembler[F, A, ADb :: HNil] {
         private[oru] override def makeVisitor(
           accum: Accum,
-          idx: Int
+          idx: Int,
         ): UngroupedVisitor[F, A, ADb :: HNil] =
           new UngroupedAtomVisitorImpl[F, A, ADb](
             atom,
             accum,
-            idx
+            idx,
           )
       }
 
@@ -41,7 +41,7 @@ trait UnorderedSyntax {
     par: ParentDef[F, A, ADb],
     assemblers: Vector[UngroupedAssembler[F, Any, HList]],
     flattener: Flattener[CDbs, CDbsFlattened],
-    FMonad: Monad[F]
+    FMonad: Monad[F],
   ): UngroupedParentAssembler[F, A, ADb :: CDbsFlattened] = {
     val _ = flattener // unused. For type inference only
 
@@ -49,28 +49,28 @@ trait UnorderedSyntax {
 
       private[oru] override def makeVisitor(
         accum: Accum,
-        idx: Int
+        idx: Int,
       ): UngroupedParentVisitor[F, A, ADb :: CDbsFlattened] =
         new UngroupedParentVisitorImpl[F, A, ADb, CDbsFlattened](
           par,
           accum,
           idx,
           assemblers,
-          FMonad
+          FMonad,
         )
     }
   }
 
   @inline
   private def eraseAssemblerType[F[_], A, HL <: HList](
-    assembler: UngroupedAssembler[F, A, HL]
+    assembler: UngroupedAssembler[F, A, HL],
   ): UngroupedAssembler[F, Any, HList] =
     assembler.asInstanceOf[UngroupedAssembler[F, Any, HList]]
 
   implicit class ParentExtension[F[_], A, ADb, Cs <: HList](par: ParentDef.Aux[F, A, ADb, Cs]) {
 
     def asUnordered[C0, C0Dbs <: HList](
-      c0Assembler: UngroupedAssembler[F, C0, C0Dbs]
+      c0Assembler: UngroupedAssembler[F, C0, C0Dbs],
     )(implicit monadF: Monad[F]): UngroupedParentAssembler[F, A, ADb :: C0Dbs] =
       mkParentUngrouped(
         par,
@@ -81,16 +81,16 @@ trait UnorderedSyntax {
 
     def asUnordered[C0, C1, C0Dbs <: HList, C1Dbs <: HList, CDbs <: HList](
       c0Assembler: UngroupedAssembler[F, C0, C0Dbs],
-      c1Assembler: UngroupedAssembler[F, C1, C1Dbs]
+      c1Assembler: UngroupedAssembler[F, C1, C1Dbs],
     )(
       implicit monadF: Monad[F],
-      flattener: Flattener[C0Dbs :: C1Dbs :: HNil, CDbs]
+      flattener: Flattener[C0Dbs :: C1Dbs :: HNil, CDbs],
     ): UngroupedParentAssembler[F, A, ADb :: CDbs] =
       mkParentUngrouped(
         par,
         Vector(eraseAssemblerType(c0Assembler), eraseAssemblerType(c1Assembler)),
         flattener,
-        monadF
+        monadF,
       )
   }
 }
@@ -110,7 +110,7 @@ private[oru] object UnorderedSyntax {
   }
 
   def collectSuccess[F[_]](
-    results: Vector[Vector[F[Any]]]
+    results: Vector[Vector[F[Any]]],
   )(implicit M: Monad[F]): F[Vector[Vector[Any]]] = results.map(_.sequence).sequence
 
 }

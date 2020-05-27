@@ -23,7 +23,7 @@ object TestDataInstances {
   val departmentPar: ParentDef.Aux[Id, Department, DbDepartment, Employee :: HNil] =
     InfallibleParentDef.make(
       (d: DbDepartment) => d.id,
-      Department.fromDb
+      Department.fromDb,
     )
 
   val companyPar: ParentDef.Aux[Id, Company, DbCompany, Department :: HNil] =
@@ -42,7 +42,7 @@ object TestDataInstances {
     companyPar.asUnordered(departmentAssembler)
   val companyOptAssembler
     : UngroupedParentAssembler[Id, Company, DbCompany :: Option[DbDepartment] :: Option[
-      DbEmployee
+      DbEmployee,
     ] :: HNil] =
     companyPar.asUnordered(departmentPar.asUnordered(employeeAssembler.optional).optional)
 
@@ -51,10 +51,10 @@ object TestDataInstances {
   val enterpriseAssembler: UngroupedAssembler.UngroupedParentAssembler[
     Id,
     Enterprise,
-    DbCompany :: DbDepartment :: DbEmployee :: DbInvoice :: HNil
+    DbCompany :: DbDepartment :: DbEmployee :: DbInvoice :: HNil,
   ] = enterprisePar.asUnordered(
     departmentAssembler,
-    invoiceAssembler
+    invoiceAssembler,
   )
 
 }

@@ -18,7 +18,7 @@ private[oru] final class OptUngroupedParentVisitor[F[_], A, ADb, RestDb <: HList
       underlying.recordTopLevel(dbs.updated(startIdx, adb))
     }
 
-  override def assembleTopLevel(): Vector[F[ A]] =
+  override def assembleTopLevel(): Vector[F[A]] =
     underlying.assembleTopLevel()
 
   override def recordAsChild(parentId: Any, dbs: ArraySeq[Any]): Unit =
@@ -26,15 +26,14 @@ private[oru] final class OptUngroupedParentVisitor[F[_], A, ADb, RestDb <: HList
       underlying.recordAsChild(parentId, dbs.updated(startIdx, adb))
     }
 
-  override def assemble(): MapView[Any, Vector[F[ A]]] = underlying.assemble()
+  override def assemble(): MapView[Any, Vector[F[A]]] = underlying.assemble()
 }
 
 private[oru] object OptUngroupedParentVisitor {
   def fromAssembler[F[_], A, ADb, RestDb <: HList](
     assembler: UngroupedParentAssembler[F, A, ADb :: RestDb],
     accum: Accum,
-    startIdx: Int
-  ): UngroupedParentVisitor[F, A, Option[ADb] :: RestDb] = {
+    startIdx: Int,
+  ): UngroupedParentVisitor[F, A, Option[ADb] :: RestDb] =
     new OptUngroupedParentVisitor(assembler.makeVisitor(accum, startIdx))
-  }
 }

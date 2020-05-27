@@ -13,7 +13,8 @@ private[oru] trait UngroupedVisitor[F[_], A, Dbs <: HList] {
   def assemble(): collection.MapView[Any, Vector[F[A]]]
 }
 
-private[oru] trait UngroupedParentVisitor[F[_], A, Dbs <: HList] extends UngroupedVisitor[F, A, Dbs] {
+private[oru] trait UngroupedParentVisitor[F[_], A, Dbs <: HList]
+    extends UngroupedVisitor[F, A, Dbs] {
   def recordTopLevel(dbs: ArraySeq[Any]): Unit
   def assembleTopLevel(): Vector[F[A]]
 }
