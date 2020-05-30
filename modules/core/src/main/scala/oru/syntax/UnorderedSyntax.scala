@@ -12,7 +12,7 @@ import scala.annotation.tailrec
 trait UnorderedSyntax {
 
   implicit class AtomExtension[F[_], A, ADb](atom: LeafDef[F, A, ADb :: HNil]) {
-    def asUnordered: UngroupedAssembler[F, A, ADb :: HNil] = {
+    def forUnordered: UngroupedAssembler[F, A, ADb :: HNil] = {
       new UngroupedAssembler[F, A, ADb :: HNil] {
         private[oru] override def makeVisitor(
           accum: Accum,
@@ -69,7 +69,7 @@ trait UnorderedSyntax {
 
   implicit class ParentExtension[F[_], A, ADb, Cs <: HList](par: ParentDef.Aux[F, A, ADb, Cs]) {
 
-    def asUnordered[C0, C0Dbs <: HList](
+    def forUnordered[C0, C0Dbs <: HList](
       c0Assembler: UngroupedAssembler[F, C0, C0Dbs],
     )(implicit monadF: Monad[F]): UngroupedParentAssembler[F, A, ADb :: C0Dbs] =
       mkParentUngrouped(
@@ -79,7 +79,7 @@ trait UnorderedSyntax {
         monadF,
       )
 
-    def asUnordered[C0, C1, C0Dbs <: HList, C1Dbs <: HList, CDbs <: HList](
+    def forUnordered[C0, C1, C0Dbs <: HList, C1Dbs <: HList, CDbs <: HList](
       c0Assembler: UngroupedAssembler[F, C0, C0Dbs],
       c1Assembler: UngroupedAssembler[F, C1, C1Dbs],
     )(

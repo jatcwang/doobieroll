@@ -1,6 +1,7 @@
 package oru
 
-import shapeless._
+import shapeless.{Id => _, _}
+import cats.Id
 
 trait ParentDef[F[_], A, ADb] {
   type Child <: HList

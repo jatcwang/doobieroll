@@ -28,6 +28,7 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "dev.zio" %% "zio-test" % zioVersion,
       "dev.zio" %% "zio-test-sbt" % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
+      "com.softwaremill.quicklens" %% "quicklens" % "1.5.0",
     ),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
   )
@@ -64,6 +65,6 @@ lazy val commonSettings = Seq(
       Seq("-Xfatal-warnings")
     }
   },
-  // FIXME:
-//addCompilerPlugin("io.tryp" % "splain" % "0.5.6" cross CrossVersion.patch)
+  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full),
+  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
 )

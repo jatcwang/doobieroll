@@ -11,6 +11,7 @@ import shapeless.{test => _, _}
 import zio.test.Assertion._
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, _}
+import com.softwaremill.quicklens._
 
 object AssembleUngroupedSpec extends DefaultRunnableSpec {
 
@@ -25,7 +26,8 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
           ).map(_.productElements)
         }
 
-        val result = UngroupedAssembler.assembleUngrouped(companyAssembler)(dbRowsHList).sequence
+        val result =
+          UngroupedAssembler.assembleUngrouped(Infallible.companyAssembler)(dbRowsHList).sequence
 
         assert(result)(equalTo(expectedCompanies))
 
@@ -33,25 +35,74 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
       test("nullable children columns") {
         val dbRows = expectedCompaniesWithSomeEmptyChildren.flatMap(companyToOptDbRows)
         val result =
-          UngroupedAssembler.assembleUngrouped(companyOptAssembler)(dbRows.map(_.productElements))
+          UngroupedAssembler.assembleUngrouped(Infallible.companyOptAssembler)(
+            dbRows.map(_.productElements),
+          )
         assert(result)(equalTo(expectedCompaniesWithSomeEmptyChildren))
       },
       test("Parent with multiple children") {
         val dbRows = expectedEnterprise.flatMap(enterpriseToDbRows)
         val result = UngroupedAssembler
-          .assembleUngrouped(enterpriseAssembler)(dbRows.map(_.productElements))
+          .assembleUngrouped(Infallible.enterpriseAssembler)(dbRows.map(_.productElements))
           .sequence
 
         assert(result)(equalTo(expectedEnterprise))
       },
-      test("Error when one of the child conversion failed") {},
+      test("Error when the root level db item conversion failed") {
+        val dbRows =
+          expectedCompanies
+            .updated(0, expectedCompanies(0).copy(name = "errComp"))
+            .flatMap(companyToDbRows)
+
+        val result = UngroupedAssembler
+          .assembleUngrouped(Fallible.companyAssembler)(dbRows.map(_.productElements))
+          .sequence
+
+        assert(result)(isLeft(equalTo(Err("company errComp"))))
+      },
+      test("Error when the parent db item conversion failed") {
+        val companiesWithBadDepartment: Vector[Company] =
+          modify(expectedCompanies)(_.at(0).departments.at(0).name).setTo("errDep")
+        val dbRows = companiesWithBadDepartment
+          .flatMap(companyToDbRows)
+
+        val result = UngroupedAssembler
+          .assembleUngrouped(Fallible.companyAssembler)(dbRows.map(_.productElements))
+          .sequence
+
+        assert(result)(isLeft(equalTo(Err("department errDep"))))
+      },
+      test("Error when the leaf db item conversion failed") {
+        val companiesWithBadEmployee: Vector[Company] =
+          modify(expectedCompanies)(_.at(0).departments.at(0).employees.at(0).name).setTo("errEmp")
+        val dbRows = companiesWithBadEmployee
+          .flatMap(companyToDbRows)
+
+        val result = UngroupedAssembler
+          .assembleUngrouped(Fallible.companyAssembler)(dbRows.map(_.productElements))
+          .sequence
+
+        assert(result)(isLeft(equalTo(Err("employee errEmp"))))
+      },
+      test("Error when one of the children of a multi-children parent fails") {
+        val enterpriseWithBadInvoice: Vector[Enterprise] =
+          modify(expectedEnterprise)(_.at(0).invoices.at(0).amount).setTo(0)
+        val dbRows = enterpriseWithBadInvoice
+          .flatMap(enterpriseToDbRows)
+
+        val result = UngroupedAssembler
+          .assembleUngrouped(Fallible.enterpriseAssembler)(dbRows.map(_.productElements))
+          .sequence
+
+        assert(result)(isLeft(equalTo(Err("invoice 0"))))
+      },
       testM("Property: Roundtrip conversion from List[Company] <=> Db rows") {
         check(Gen.listOf(genNonEmptyCompany).map(_.toVector)) { original =>
           val rows = original
             .flatMap(companyToDbRows)
             .map(_.productElements)
           val result =
-            UngroupedAssembler.assembleUngrouped(companyAssembler)(rows).sequence
+            UngroupedAssembler.assembleUngrouped(Infallible.companyAssembler)(rows).sequence
           assert(result)(equalTo(original))
         }
       },
@@ -64,7 +115,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
             .map(_.toVector)
             .map { rows =>
               val result =
-                UngroupedAssembler.assembleUngrouped(companyAssembler)(rows).sequence
+                UngroupedAssembler.assembleUngrouped(Infallible.companyAssembler)(rows).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
@@ -80,7 +131,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
             .map(_.toVector)
             .map { rows =>
               val result =
-                UngroupedAssembler.assembleUngrouped(companyOptAssembler)(rows).sequence
+                UngroupedAssembler.assembleUngrouped(Infallible.companyOptAssembler)(rows).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
@@ -94,7 +145,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
             .map(_.toVector)
             .map { rows =>
               val result =
-                UngroupedAssembler.assembleUngrouped(enterpriseAssembler)(rows).sequence
+                UngroupedAssembler.assembleUngrouped(Infallible.enterpriseAssembler)(rows).sequence
               assert(normalizeEnterprise(result))(equalTo(normalizeEnterprise(original)))
             }
         }

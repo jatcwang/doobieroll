@@ -16,7 +16,7 @@ object Employee {
 
   def fromDbFallible(db: DbEmployee): Either[Err, Employee] =
     Either.cond(
-      db.name.contains("err"),
+      !db.name.contains("err"),
       Employee(
         db.id,
         db.name,

@@ -21,4 +21,21 @@ object Enterprise {
       departments = departments,
       invoices = invoices,
     )
+
+  def fromDbFallible(
+    db: DbCompany,
+    departments: Vector[Department],
+    invoices: Vector[Invoice],
+  ): Either[Err, Enterprise] = {
+    Either.cond(
+      !db.name.contains("err"),
+      Enterprise(
+        id = db.id,
+        name = db.name,
+        departments = departments,
+        invoices = invoices,
+      ),
+      Err(s"enterprise ${db.name}"),
+    )
+  }
 }
