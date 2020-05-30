@@ -2,8 +2,7 @@ package orutest
 
 import cats.Id
 import oru.UngroupedAssembler.UngroupedParentAssembler
-import oru.syntax._
-import oru.{InfallibleParentDef, LeafDef, ParentDef, UngroupedAssembler}
+import oru._
 import orutest.model._
 import shapeless.{::, HNil}
 import cats.implicits._
@@ -103,7 +102,7 @@ object TestDataInstances {
 
     val invoiceAssembler: UngroupedAssembler[ConvRes, Invoice, DbInvoice :: HNil] = invoiceLeaf.forUnordered
 
-    val enterpriseAssembler: UngroupedAssembler.UngroupedParentAssembler[
+    val enterpriseAssembler: UngroupedParentAssembler[
       ConvRes,
       Enterprise,
       DbCompany :: DbDepartment :: DbEmployee :: DbInvoice :: HNil,

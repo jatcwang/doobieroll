@@ -7,8 +7,8 @@ import shapeless._
 import scala.collection.immutable.ArraySeq
 import scala.collection.mutable
 
-private[oru] final class UngroupedAtomVisitorImpl[F[_], A, ADb](
-  atom: LeafDef[F, A, ADb :: HNil],
+private[oru] final class UngroupedLeafVisitorImpl[F[_], A, ADb](
+  leafDef: LeafDef[F, A, ADb :: HNil],
   accum: Accum,
   override val startIdx: Int,
 ) extends UngroupedVisitor[F, A, ADb :: HNil] {
@@ -24,6 +24,6 @@ private[oru] final class UngroupedAtomVisitorImpl[F[_], A, ADb](
 
   override def assemble(): collection.MapView[Any, Vector[F[A]]] =
     thisRawLookup.view
-      .mapValues(values => values.distinct.toVector.map(v => atom.construct(v :: HNil)))
+      .mapValues(values => values.distinct.toVector.map(v => leafDef.construct(v :: HNil)))
 
 }

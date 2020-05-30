@@ -63,7 +63,24 @@ object UngroupedAssembler {
     }
   }
 
-  def hlistToArraySeq[Dbs <: HList](
+  def assembleUngrouped[F[_], A, Dbs <: HList](
+    ungroupedParentAssembler: UngroupedParentAssembler[F, A, Dbs],
+  )(
+    rows: Vector[Dbs],
+  ): Vector[F[A]] = {
+    if (rows.isEmpty) return Vector.empty
+    val accum = new Accum()
+
+    val parVis = ungroupedParentAssembler.makeVisitor(accum, 0)
+
+    rows.foreach { dbs =>
+      parVis.recordTopLevel(hlistToArraySeq(dbs))
+    }
+
+    parVis.assembleTopLevel()
+  }
+
+  private def hlistToArraySeq[Dbs <: HList](
     h: Dbs,
   ): ArraySeq[Any] = {
     val arr = mutable.ArrayBuffer.empty[Any]
@@ -80,25 +97,7 @@ object UngroupedAssembler {
     }
 
     impl(h)
-
     ArraySeq.from(arr)
-  }
-
-  def assembleUngrouped[F[_], A, Dbs <: HList](
-    ungroupedParentAssembler: UngroupedParentAssembler[F, A, Dbs],
-  )(
-    rows: Vector[Dbs],
-  ): Vector[F[A]] = {
-    if (rows.isEmpty) return Vector.empty
-    val accum = new Accum()
-
-    val parVis = ungroupedParentAssembler.makeVisitor(accum, 0)
-
-    rows.foreach { dbs =>
-      parVis.recordTopLevel(hlistToArraySeq(dbs))
-    }
-
-    parVis.assembleTopLevel()
   }
 
 }

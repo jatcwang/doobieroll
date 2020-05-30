@@ -52,10 +52,11 @@ private[oru] final class UngroupedParentVisitorImpl[F[_], A, ADb, CDbs <: HList]
         visitors.map(v => v.assemble())
       values.distinct.toVector.map { adb =>
         val thisId = par.getId(adb)
-        val childValuesEither =
-          childValues.map(childLookupByParent => childLookupByParent.getOrElse(thisId, Vector.empty),
+        val childValuesF: Vector[Vector[F[Any]]] =
+          childValues.map(childLookupByParent =>
+            childLookupByParent.getOrElse(thisId, Vector.empty),
           )
-        FMonad.flatMap(collectSuccess(childValuesEither)(FMonad)) { successChildren =>
+        FMonad.flatMap(collectSuccess(childValuesF)(FMonad)) { successChildren =>
           par.constructWithChild(adb, seqToHList[par.ChildVecs](successChildren))
         }
       }
@@ -67,9 +68,9 @@ private[oru] final class UngroupedParentVisitorImpl[F[_], A, ADb, CDbs <: HList]
       val childValues: Vector[MapView[Any, Vector[F[Any]]]] =
         visitors.map(v => v.assemble())
       val thisId = par.getId(adb)
-      val childValuesEither = childValues
+      val childValuesF: Vector[Vector[F[Any]]] = childValues
         .map(childLookupByParent => childLookupByParent.getOrElse(thisId, Vector.empty))
-      FMonad.flatMap(collectSuccess(childValuesEither)(FMonad)) { successChildren =>
+      FMonad.flatMap(collectSuccess(childValuesF)(FMonad)) { successChildren =>
         par.constructWithChild(adb, seqToHList[par.ChildVecs](successChildren))
       }
     }

@@ -1,3 +1,3 @@
 package oru
 
-package object syntax extends UnorderedSyntax {}
+package object syntax extends AllSyntax

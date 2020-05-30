@@ -18,7 +18,7 @@ trait UnorderedSyntax {
           accum: Accum,
           idx: Int,
         ): UngroupedVisitor[F, A, ADb :: HNil] =
-          new UngroupedAtomVisitorImpl[F, A, ADb](
+          new UngroupedLeafVisitorImpl[F, A, ADb](
             atom,
             accum,
             idx,
