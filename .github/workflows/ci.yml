@@ -10,4 +10,4 @@
         with:
           java-version: openjdk@1.11
       - name: Compile
-        run: sbt compile
+        run: sbt test

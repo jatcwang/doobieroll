@@ -1,4 +1,4 @@
-# Object Relational Utility for Scala
+# Doobieroll - helper
 
 
 ## TODO

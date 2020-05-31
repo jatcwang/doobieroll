@@ -1,7 +1,21 @@
-val zioVersion = "1.0.0-RC19-2"
+val zioVersion = "1.0.0-RC20"
 
 val circeVersion = "0.13.0"
 val silencerVersion = "1.7.0"
+
+inThisBuild(List(
+  organization := "io.github.jatcwang",
+  homepage := Some(url("https://github.com/jatcwang/doobieroll")),
+  licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+  developers := List(
+    Developer(
+      "jatcwang",
+      "Jacob Wang",
+      "jatcwang@gmail.com",
+      url("https://almostfunctional.com")
+    )
+  )
+))
 
 lazy val core = Project("core", file("modules/core"))
   .settings(commonSettings)
@@ -54,7 +68,6 @@ lazy val root = project
 val scala213 = "2.13.2"
 val scala212 = "2.12.11"
 lazy val commonSettings = Seq(
-  version := "0.1.0",
   scalaVersion := scala212,
   crossScalaVersions := Seq(scala213, scala212),
   scalacOptions ++= Seq(
