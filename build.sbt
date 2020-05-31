@@ -20,7 +20,7 @@ inThisBuild(List(
 lazy val core = Project("core", file("modules/core"))
   .settings(commonSettings)
   .settings(
-    name := "Scala Starter",
+    name := "doobieroll",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % "2.1.1",
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6",
@@ -31,6 +31,7 @@ lazy val core = Project("core", file("modules/core"))
 lazy val coretest = Project("coretest", file("modules/coretest"))
   .dependsOn(core)
   .settings(commonSettings)
+  .settings(noPublishSettings)
   .settings(
     libraryDependencies ++= Seq(
       // FIXME:
@@ -52,6 +53,7 @@ lazy val bench = Project("bench", file("modules/bench"))
   .dependsOn(core, coretest)
   .enablePlugins(JmhPlugin)
   .settings(commonSettings)
+  .settings(noPublishSettings)
   .settings(
     libraryDependencies ++= Seq(
       ),
@@ -60,9 +62,7 @@ lazy val bench = Project("bench", file("modules/bench"))
 lazy val root = project
   .in(new File("."))
   .aggregate(bench, core, coretest)
-  .settings(
-    publish / skip := true,
-  )
+  .settings(noPublishSettings)
   .settings(commonSettings)
 
 val scala213 = "2.13.2"
@@ -89,3 +89,8 @@ lazy val commonSettings = Seq(
     "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full,
   ),
 )
+
+lazy val noPublishSettings = Seq(
+  publish / skip := true,
+)
+

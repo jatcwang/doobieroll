@@ -1,4 +1,4 @@
-package doobieroll
+package doobierolltest
 import java.io.{File, PrintWriter}
 
 import doobierolltest.TestModelHelpers._
@@ -8,7 +8,7 @@ import zio._
 
 object GenerateTestData extends App {
 
-  override def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] =
+  override def run(args: List[String]): ZIO[zio.ZEnv, Nothing, ExitCode] =
     genNonEmptyCompany
       .map { c =>
         companyToDbRows(c).map { case (c, d, e) => Wrapper(c, d, e) }
@@ -21,7 +21,6 @@ object GenerateTestData extends App {
         val pw = new PrintWriter(new File("testdata.json"))
         pw.write(c.asJson.spaces2)
         pw.close()
-      }
-      .map(_ => 0)
+      }.as(ExitCode.success)
 
 }
