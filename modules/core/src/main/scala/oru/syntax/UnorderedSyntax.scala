@@ -11,7 +11,7 @@ import scala.annotation.tailrec
 
 trait UnorderedSyntax {
 
-  implicit class AtomExtension[F[_], A, ADb](atom: LeafDef[F, A, ADb :: HNil]) {
+  implicit class LeafDefExtension[F[_], A, ADb](leafDef: LeafDef[F, A, ADb :: HNil]) {
     def forUnordered: UngroupedAssembler[F, A, ADb :: HNil] = {
       new UngroupedAssembler[F, A, ADb :: HNil] {
         private[oru] override def makeVisitor(
@@ -19,9 +19,9 @@ trait UnorderedSyntax {
           idx: Int,
         ): UngroupedVisitor[F, A, ADb :: HNil] =
           new UngroupedLeafVisitorImpl[F, A, ADb](
-            atom,
-            accum,
-            idx,
+            leafDef = leafDef,
+            accum = accum,
+            startIdx = idx,
           )
       }
 
