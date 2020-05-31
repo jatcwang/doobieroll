@@ -2,8 +2,8 @@ package oru.impl
 
 import cats.Monad
 import oru.impl.Accum.AnyKeyMultiMap
-import oru.{UngroupedAssembler, ParentDef}
-import oru.syntax.UnorderedSyntax.{seqToHList, collectSuccess}
+import oru.{ParentDef, UngroupedAssembler}
+import oru.syntax.UnorderedSyntax.{collectSuccess, seqToHList}
 import shapeless._
 
 import scala.collection.immutable.Vector

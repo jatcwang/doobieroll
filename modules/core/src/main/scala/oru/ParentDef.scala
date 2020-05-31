@@ -13,15 +13,18 @@ trait ParentDef[F[_], A, ADb] { self =>
   def constructWithChild(adb: ADb, children: ChildVecs): F[A]
 
   /** Modify the 'context' of the construction result.
-   *  For example, you can turn a infallible ParentDef into one that return Either (but never fails).
-   *  This allows you to reuse existing Parent definitions to work in a different context */
-  final def mapK[G[_]](transform: FunctionK[F, G]): ParentDef.AuxAll[G, A, ADb, Child, ChildVecs, Id] = new ParentDef[G, A, ADb] {
+    *  For example, you can turn a infallible ParentDef into one that return Either (but never fails).
+    *  This allows you to reuse existing Parent definitions to work in a different context */
+  final def mapK[G[_]](
+    transform: FunctionK[F, G],
+  ): ParentDef.AuxAll[G, A, ADb, Child, ChildVecs, Id] = new ParentDef[G, A, ADb] {
     type Child = self.Child
     type ChildVecs = self.ChildVecs
     type Id = self.Id
 
     override def getId(adb: ADb): Id = self.getId(adb)
-    override def constructWithChild(adb: ADb, children: ChildVecs): G[A] = transform.apply(self.constructWithChild(adb, children))
+    override def constructWithChild(adb: ADb, children: ChildVecs): G[A] =
+      transform.apply(self.constructWithChild(adb, children))
   }
 }
 

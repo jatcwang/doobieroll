@@ -1,7 +1,13 @@
 package oru
 
-import oru.impl.{UngroupedVisitor, Accum, UngroupedParentVisitor, OptUngroupedParentVisitor, OptUngroupedVisitor}
-import shapeless.{HList, ::, HNil}
+import oru.impl.{
+  Accum,
+  OptUngroupedParentVisitor,
+  OptUngroupedVisitor,
+  UngroupedParentVisitor,
+  UngroupedVisitor,
+}
+import shapeless.{::, HList, HNil}
 
 import scala.collection.mutable
 

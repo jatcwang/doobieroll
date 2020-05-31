@@ -37,18 +37,19 @@ object TestDataInstances {
     val employeeAssembler: UngroupedAssembler[Id, Employee, DbEmployee :: HNil] =
       employeeLeaf.forUnordered
     val departmentAssembler
-    : UngroupedParentAssembler[Id, Department, DbDepartment :: DbEmployee :: HNil] =
+      : UngroupedParentAssembler[Id, Department, DbDepartment :: DbEmployee :: HNil] =
       departmentParent.forUnordered(employeeAssembler)
     val companyAssembler
-    : UngroupedParentAssembler[Id, Company, DbCompany :: DbDepartment :: DbEmployee :: HNil] =
+      : UngroupedParentAssembler[Id, Company, DbCompany :: DbDepartment :: DbEmployee :: HNil] =
       companyParent.forUnordered(departmentAssembler)
     val companyOptAssembler
-    : UngroupedParentAssembler[Id, Company, DbCompany :: Option[DbDepartment] :: Option[
-      DbEmployee,
-    ] :: HNil] =
+      : UngroupedParentAssembler[Id, Company, DbCompany :: Option[DbDepartment] :: Option[
+        DbEmployee,
+      ] :: HNil] =
       companyParent.forUnordered(departmentParent.forUnordered(employeeAssembler.optional).optional)
 
-    val invoiceAssembler: UngroupedAssembler[Id, Invoice, DbInvoice :: HNil] = invoiceLeaf.forUnordered
+    val invoiceAssembler: UngroupedAssembler[Id, Invoice, DbInvoice :: HNil] =
+      invoiceLeaf.forUnordered
 
     val enterpriseAssembler: UngroupedAssembler.UngroupedParentAssembler[
       Id,
@@ -71,7 +72,8 @@ object TestDataInstances {
 
     val invoiceLeaf: LeafDef[ConvRes, Invoice, DbInvoice :: HNil] =
       new LeafDef[ConvRes, Invoice, DbInvoice :: HNil] {
-        override def construct(db: DbInvoice :: HNil): ConvRes[Invoice] = Invoice.fromDbFallible(db.head)
+        override def construct(db: DbInvoice :: HNil): ConvRes[Invoice] =
+          Invoice.fromDbFallible(db.head)
       }
 
     val departmentParent: ParentDef.Aux[ConvRes, Department, DbDepartment, Employee :: HNil] =
@@ -83,24 +85,29 @@ object TestDataInstances {
     val companyParent: ParentDef.Aux[ConvRes, Company, DbCompany, Department :: HNil] =
       ParentDef.make((d: DbCompany) => d.id, Company.fromDbFallible)
 
-    val enterpriseParent: ParentDef.Aux[ConvRes, Enterprise, DbCompany, Department :: Invoice :: HNil] =
+    val enterpriseParent
+      : ParentDef.Aux[ConvRes, Enterprise, DbCompany, Department :: Invoice :: HNil] =
       ParentDef.make2((d: DbCompany) => d.id, Enterprise.fromDbFallible)
 
     val employeeAssembler: UngroupedAssembler[ConvRes, Employee, DbEmployee :: HNil] =
       employeeLeaf.forUnordered
     val departmentAssembler
-    : UngroupedParentAssembler[ConvRes, Department, DbDepartment :: DbEmployee :: HNil] =
+      : UngroupedParentAssembler[ConvRes, Department, DbDepartment :: DbEmployee :: HNil] =
       departmentParent.forUnordered(employeeAssembler)
-    val companyAssembler
-    : UngroupedParentAssembler[ConvRes, Company, DbCompany :: DbDepartment :: DbEmployee :: HNil] =
+    val companyAssembler: UngroupedParentAssembler[
+      ConvRes,
+      Company,
+      DbCompany :: DbDepartment :: DbEmployee :: HNil,
+    ] =
       companyParent.forUnordered(departmentAssembler)
     val companyOptAssembler
-    : UngroupedParentAssembler[ConvRes, Company, DbCompany :: Option[DbDepartment] :: Option[
-      DbEmployee,
-    ] :: HNil] =
+      : UngroupedParentAssembler[ConvRes, Company, DbCompany :: Option[DbDepartment] :: Option[
+        DbEmployee,
+      ] :: HNil] =
       companyParent.forUnordered(departmentParent.forUnordered(employeeAssembler.optional).optional)
 
-    val invoiceAssembler: UngroupedAssembler[ConvRes, Invoice, DbInvoice :: HNil] = invoiceLeaf.forUnordered
+    val invoiceAssembler: UngroupedAssembler[ConvRes, Invoice, DbInvoice :: HNil] =
+      invoiceLeaf.forUnordered
 
     val enterpriseAssembler: UngroupedParentAssembler[
       ConvRes,

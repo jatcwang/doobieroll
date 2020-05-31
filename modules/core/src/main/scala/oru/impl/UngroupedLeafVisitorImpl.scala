@@ -25,12 +25,11 @@ private[oru] final class UngroupedLeafVisitorImpl[F[_], A, ADb](
   }
 
   @nowarn("msg=method mapValues.*deprecated")
-  override def assemble(): LazyMap[Any, Vector[F[A]]] = {
+  override def assemble(): LazyMap[Any, Vector[F[A]]] =
     // Note: call to mapValues is intentional for view-like behaviour
     // In 2.12 We want MappedValues, while in 2.13 we want MapView
     // By using strict Map the performance completely tanks
     thisRawLookup
       .mapValues(values => values.distinct.toVector.map(v => leafDef.construct(v :: HNil)))
-  }
 
 }

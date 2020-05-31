@@ -2,7 +2,7 @@ package oru.impl
 
 import oru.ImplTypes.LazyMap
 import oru.UngroupedAssembler
-import shapeless.{HList, ::}
+import shapeless.{::, HList}
 
 import scala.collection.immutable.Vector
 

@@ -44,7 +44,9 @@ class AssembleBench {
 
   @Benchmark
   def ungroupedOpt10k(blackhole: Blackhole): Unit =
-    blackhole.consume(UngroupedAssembler.assembleUngrouped(Infallible.companyOptAssembler)(optHList10k))
+    blackhole.consume(
+      UngroupedAssembler.assembleUngrouped(Infallible.companyOptAssembler)(optHList10k),
+    )
 
   @Benchmark
   def ungrouped1k(blackhole: Blackhole): Unit =
@@ -56,7 +58,9 @@ class AssembleBench {
 
   @Benchmark
   def ungroupedOpt1k(blackhole: Blackhole): Unit =
-    blackhole.consume(UngroupedAssembler.assembleUngrouped(Infallible.companyOptAssembler)(optHList1k))
+    blackhole.consume(
+      UngroupedAssembler.assembleUngrouped(Infallible.companyOptAssembler)(optHList1k),
+    )
 
   @Benchmark
   def naive10k(blackhole: Blackhole): Unit =
