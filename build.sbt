@@ -4,7 +4,7 @@ val circeVersion = "0.13.0"
 val silencerVersion = "1.7.0"
 
 inThisBuild(List(
-  organization := "io.github.jatcwang",
+  organization := "com.github.jatcwang",
   homepage := Some(url("https://github.com/jatcwang/doobieroll")),
   licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
   developers := List(
