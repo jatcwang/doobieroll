@@ -2,20 +2,23 @@ val zioVersion = "1.0.0-RC20"
 
 val circeVersion = "0.13.0"
 val silencerVersion = "1.7.0"
+val doobieVersion = "0.9.0"
 
-inThisBuild(List(
-  organization := "com.github.jatcwang",
-  homepage := Some(url("https://github.com/jatcwang/doobieroll")),
-  licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
-  developers := List(
-    Developer(
-      "jatcwang",
-      "Jacob Wang",
-      "jatcwang@gmail.com",
-      url("https://almostfunctional.com")
-    )
-  )
-))
+inThisBuild(
+  List(
+    organization := "com.github.jatcwang",
+    homepage := Some(url("https://github.com/jatcwang/doobieroll")),
+    licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+    developers := List(
+      Developer(
+        "jatcwang",
+        "Jacob Wang",
+        "jatcwang@gmail.com",
+        url("https://almostfunctional.com"),
+      ),
+    ),
+  ),
+)
 
 lazy val core = Project("core", file("modules/core"))
   .settings(commonSettings)
@@ -43,8 +46,16 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "dev.zio" %% "zio-test" % zioVersion,
       "dev.zio" %% "zio-test-sbt" % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
+      "dev.zio" %% "zio-interop-cats" % "2.1.3.0-RC15",
+      "org.tpolecat" %% "doobie-core" % doobieVersion,
+
+      "javax.activation" % "activation" % "1.1.1", // Reuqired for DataSource class in JDK 9+
+      "org.tpolecat" %% "doobie-postgres" % doobieVersion,
+      "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
+      "org.tpolecat" %% "doobie-hikari" % doobieVersion,
+      "org.postgresql" % "postgresql" % "42.2.11",
       "com.softwaremill.quicklens" %% "quicklens" % "1.5.0",
-      "org.postgresql" % "postgresql" % "42.2.11" % Test,
+      "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.9" % "test",
     ),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
   )
@@ -93,4 +104,3 @@ lazy val commonSettings = Seq(
 lazy val noPublishSettings = Seq(
   publish / skip := true,
 )
-

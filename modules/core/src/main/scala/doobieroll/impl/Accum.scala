@@ -6,7 +6,8 @@ private[doobieroll] class Accum() {
 
   val seenRootDbItem: mutable.Set[Any] = mutable.Set.empty
   val rootDbItems: mutable.ArrayBuffer[Any] = mutable.ArrayBuffer.empty[Any]
-  // For storing raw parent DB values because all child isn't available yet
+  // For storing raw DB values (with the parentId as the key) until
+  // all child values for reach parent is available
   val rawLookup: LookupByIdx[Any] = mutable.Map.empty[Int, AnyKeyMultiMap[Any]]
 
   def addRootDbItem(k: Any, v: Any): Unit =
