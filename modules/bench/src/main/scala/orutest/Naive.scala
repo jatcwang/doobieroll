@@ -9,7 +9,6 @@ object Naive {
   ): Vector[Company] =
     rows
       .groupBy(_.head.id)
-      .view
       .values
       .map { sameCompany =>
         val departmentsOfSameCompany = sameCompany

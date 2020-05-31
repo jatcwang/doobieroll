@@ -1,15 +1,8 @@
 package oru
 
-import oru.impl.{
-  Accum,
-  OptUngroupedParentVisitor,
-  OptUngroupedVisitor,
-  UngroupedParentVisitor,
-  UngroupedVisitor,
-}
-import shapeless.{::, HList, HNil}
+import oru.impl.{UngroupedVisitor, Accum, UngroupedParentVisitor, OptUngroupedParentVisitor, OptUngroupedVisitor}
+import shapeless.{HList, ::, HNil}
 
-import scala.collection.immutable.ArraySeq
 import scala.collection.mutable
 
 trait UngroupedAssembler[F[_], A, Dbs <: HList] { self =>
@@ -23,6 +16,7 @@ trait UngroupedAssembler[F[_], A, Dbs <: HList] { self =>
   def optional[ADb, RestDb <: HList](
     implicit ev: (ADb :: RestDb) =:= Dbs,
   ): UngroupedAssembler[F, A, Option[ADb] :: RestDb] = {
+    val _ = ev
     new UngroupedAssembler[F, A, Option[ADb] :: RestDb] {
       private[oru] override def makeVisitor(
         accum: Accum,
@@ -82,7 +76,7 @@ object UngroupedAssembler {
 
   private def hlistToArraySeq[Dbs <: HList](
     h: Dbs,
-  ): ArraySeq[Any] = {
+  ): Vector[Any] = {
     val arr = mutable.ArrayBuffer.empty[Any]
 
     @scala.annotation.tailrec
@@ -97,7 +91,7 @@ object UngroupedAssembler {
     }
 
     impl(h)
-    ArraySeq.from(arr)
+    arr.toVector
   }
 
 }

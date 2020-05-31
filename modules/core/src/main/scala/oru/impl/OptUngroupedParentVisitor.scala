@@ -1,10 +1,10 @@
 package oru.impl
 
+import oru.ImplTypes.LazyMap
 import oru.UngroupedAssembler.UngroupedParentAssembler
-import shapeless.{::, HList}
+import shapeless.{HList, ::}
 
-import scala.collection.MapView
-import scala.collection.immutable.ArraySeq
+import scala.collection.immutable.Vector
 
 private[oru] final class OptUngroupedParentVisitor[F[_], A, ADb, RestDb <: HList](
   underlying: UngroupedParentVisitor[F, A, ADb :: RestDb],
@@ -13,7 +13,7 @@ private[oru] final class OptUngroupedParentVisitor[F[_], A, ADb, RestDb <: HList
   override val startIdx: Int = underlying.startIdx
   override val nextIdx: Int = underlying.nextIdx
 
-  override def recordTopLevel(dbs: ArraySeq[Any]): Unit =
+  override def recordTopLevel(dbs: Vector[Any]): Unit =
     dbs(startIdx).asInstanceOf[Option[ADb]].foreach { adb =>
       underlying.recordTopLevel(dbs.updated(startIdx, adb))
     }
@@ -21,12 +21,12 @@ private[oru] final class OptUngroupedParentVisitor[F[_], A, ADb, RestDb <: HList
   override def assembleTopLevel(): Vector[F[A]] =
     underlying.assembleTopLevel()
 
-  override def recordAsChild(parentId: Any, dbs: ArraySeq[Any]): Unit =
+  override def recordAsChild(parentId: Any, dbs: Vector[Any]): Unit =
     dbs(startIdx).asInstanceOf[Option[ADb]].foreach { adb =>
       underlying.recordAsChild(parentId, dbs.updated(startIdx, adb))
     }
 
-  override def assemble(): MapView[Any, Vector[F[A]]] = underlying.assemble()
+  override def assemble(): LazyMap[Any, Vector[F[A]]] = underlying.assemble()
 }
 
 private[oru] object OptUngroupedParentVisitor {

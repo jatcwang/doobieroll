@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
 import orutest.TestModelHelpers._
-import orutest.Naive
 import orutest.model.{DbCompany, DbDepartment, DbEmployee, Wrapper}
 import io.circe.parser._
 import org.openjdk.jmh.annotations._
