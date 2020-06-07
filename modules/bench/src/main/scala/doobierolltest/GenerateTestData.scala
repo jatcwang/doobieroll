@@ -1,7 +1,7 @@
 package doobierolltest
 import java.io.{File, PrintWriter}
 
-import doobierolltest.TestModelHelpers._
+import doobierolltest.TestDataHelpers._
 import doobierolltest.model.Wrapper
 import io.circe.syntax._
 import zio._

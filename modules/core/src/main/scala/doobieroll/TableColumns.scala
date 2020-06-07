@@ -17,7 +17,6 @@ sealed abstract case class TableColumns[T](
 
   lazy val listWithParen: String = "(" + list + ")"
 
-  @SuppressWarnings(Array("DisableSyntax.defaultArgs"))
   def prefixed(prefix: String, withParen: Boolean = false): String = {
     val fieldsStr =
       allColumns.map(field => s"$prefix.$field").toList.mkString(",")

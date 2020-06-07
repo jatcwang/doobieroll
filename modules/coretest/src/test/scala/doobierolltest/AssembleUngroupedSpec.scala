@@ -4,7 +4,7 @@ import cats.implicits._
 import doobieroll.UngroupedAssembler
 import doobierolltest.TestData._
 import doobierolltest.TestDataInstances._
-import doobierolltest.TestModelHelpers._
+import doobierolltest.TestDataHelpers._
 import doobierolltest.model._
 import shapeless.syntax.std.tuple._
 import shapeless.{test => _, _}

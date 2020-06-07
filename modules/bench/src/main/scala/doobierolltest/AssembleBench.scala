@@ -3,7 +3,7 @@ package doobierolltest
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
-import doobierolltest.TestModelHelpers._
+import doobierolltest.TestDataHelpers._
 import doobierolltest.model.{DbCompany, DbDepartment, DbEmployee, Wrapper}
 import io.circe.parser._
 import org.openjdk.jmh.annotations._

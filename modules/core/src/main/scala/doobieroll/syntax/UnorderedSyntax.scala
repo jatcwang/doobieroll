@@ -69,7 +69,7 @@ trait UnorderedSyntax {
 
   implicit class ParentExtension[F[_], A, ADb, Cs <: HList](par: ParentDef.Aux[F, A, ADb, Cs]) {
 
-    def fdoobierollnordered[C0, C0Dbs <: HList](
+    def forUnordered[C0, C0Dbs <: HList](
       c0Assembler: UngroupedAssembler[F, C0, C0Dbs],
     )(implicit monadF: Monad[F]): UngroupedParentAssembler[F, A, ADb :: C0Dbs] =
       mkParentUngrouped(
