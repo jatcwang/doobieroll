@@ -2,7 +2,7 @@ package doobieroll.impl
 
 import cats.Monad
 import doobieroll.impl.Accum.AnyKeyMultiMap
-import doobieroll.{ParentDef, UngroupedAssembler}
+import doobieroll.{ParentDef, Assembler}
 import doobieroll.syntax.UnorderedSyntax.{collectSuccess, seqToHList}
 import shapeless._
 
@@ -12,23 +12,23 @@ import doobieroll.ImplTypes.LazyMap
 
 import scala.annotation.nowarn
 
-private[doobieroll] final class UngroupedParentVisitorImpl[F[_], A, ADb, CDbs <: HList](
+private[doobieroll] final class ParentVisitorImpl[F[_], A, ADb, CDbs <: HList](
   par: ParentDef[F, A, ADb],
   accum: Accum,
   override val startIdx: Int,
-  assemblers: Vector[UngroupedAssembler[F, Any, HList]],
+  assemblers: Vector[Assembler[F, Any, HList]],
   FMonad: Monad[F],
-) extends UngroupedParentVisitor[F, A, ADb :: CDbs] {
+) extends ParentVisitor[F, A, ADb :: CDbs] {
 
   private val thisRawLookup: AnyKeyMultiMap[ADb] = accum.getRawLookup[ADb](startIdx)
   private val childStartIdx: Int = startIdx + 1
   private val (idxForNext, visitors) =
-    assemblers.foldLeft((childStartIdx, Vector.empty[UngroupedVisitor[F, Any, ADb :: CDbs]])) {
+    assemblers.foldLeft((childStartIdx, Vector.empty[Visitor[F, Any, ADb :: CDbs]])) {
       case ((currIdx, visitorsAccum), thisAssembler) =>
         val vis = thisAssembler.makeVisitor(accum, currIdx)
         (
           vis.nextIdx,
-          visitorsAccum :+ vis.asInstanceOf[UngroupedVisitor[F, Any, ADb :: CDbs]],
+          visitorsAccum :+ vis.asInstanceOf[Visitor[F, Any, ADb :: CDbs]],
         )
     }
 

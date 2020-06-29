@@ -1,7 +1,7 @@
 package doobierolltest
 
 import cats.Id
-import doobieroll.UngroupedAssembler.UngroupedParentAssembler
+import doobieroll.Assembler.ParentAssembler
 import doobieroll._
 import doobierolltest.model._
 import shapeless.{::, HNil}
@@ -34,28 +34,28 @@ object TestDataInstances {
     val enterpriseParent: ParentDef.Aux[Id, Enterprise, DbCompany, Department :: Invoice :: HNil] =
       InfallibleParentDef.make2((d: DbCompany) => d.id, Enterprise.fromDb)
 
-    val employeeAssembler: UngroupedAssembler[Id, Employee, DbEmployee :: HNil] =
-      employeeLeaf.fdoobierollnordered
+    val employeeAssembler: Assembler[Id, Employee, DbEmployee :: HNil] =
+      employeeLeaf.toAssembler
     val departmentAssembler
-      : UngroupedParentAssembler[Id, Department, DbDepartment :: DbEmployee :: HNil] =
-      departmentParent.forUnordered(employeeAssembler)
+      : ParentAssembler[Id, Department, DbDepartment :: DbEmployee :: HNil] =
+      departmentParent.toAssembler(employeeAssembler)
     val companyAssembler
-      : UngroupedParentAssembler[Id, Company, DbCompany :: DbDepartment :: DbEmployee :: HNil] =
-      companyParent.forUnordered(departmentAssembler)
+      : ParentAssembler[Id, Company, DbCompany :: DbDepartment :: DbEmployee :: HNil] =
+      companyParent.toAssembler(departmentAssembler)
     val companyOptAssembler
-      : UngroupedParentAssembler[Id, Company, DbCompany :: Option[DbDepartment] :: Option[
+      : ParentAssembler[Id, Company, DbCompany :: Option[DbDepartment] :: Option[
         DbEmployee,
       ] :: HNil] =
-      companyParent.forUnordered(departmentParent.forUnordered(employeeAssembler.optional).optional)
+      companyParent.toAssembler(departmentParent.toAssembler(employeeAssembler.optional).optional)
 
-    val invoiceAssembler: UngroupedAssembler[Id, Invoice, DbInvoice :: HNil] =
-      invoiceLeaf.fdoobierollnordered
+    val invoiceAssembler: Assembler[Id, Invoice, DbInvoice :: HNil] =
+      invoiceLeaf.toAssembler
 
-    val enterpriseAssembler: UngroupedAssembler.UngroupedParentAssembler[
+    val enterpriseAssembler: Assembler.ParentAssembler[
       Id,
       Enterprise,
       DbCompany :: DbDepartment :: DbEmployee :: DbInvoice :: HNil,
-    ] = enterpriseParent.fdoobierollnordered(
+    ] = enterpriseParent.toAssembler(
       departmentAssembler,
       invoiceAssembler,
     )
@@ -89,31 +89,31 @@ object TestDataInstances {
       : ParentDef.Aux[ConvRes, Enterprise, DbCompany, Department :: Invoice :: HNil] =
       ParentDef.make2((d: DbCompany) => d.id, Enterprise.fromDbFallible)
 
-    val employeeAssembler: UngroupedAssembler[ConvRes, Employee, DbEmployee :: HNil] =
-      employeeLeaf.fdoobierollnordered
+    val employeeAssembler: Assembler[ConvRes, Employee, DbEmployee :: HNil] =
+      employeeLeaf.toAssembler
     val departmentAssembler
-      : UngroupedParentAssembler[ConvRes, Department, DbDepartment :: DbEmployee :: HNil] =
-      departmentParent.forUnordered(employeeAssembler)
-    val companyAssembler: UngroupedParentAssembler[
+      : ParentAssembler[ConvRes, Department, DbDepartment :: DbEmployee :: HNil] =
+      departmentParent.toAssembler(employeeAssembler)
+    val companyAssembler: ParentAssembler[
       ConvRes,
       Company,
       DbCompany :: DbDepartment :: DbEmployee :: HNil,
     ] =
-      companyParent.forUnordered(departmentAssembler)
+      companyParent.toAssembler(departmentAssembler)
     val companyOptAssembler
-      : UngroupedParentAssembler[ConvRes, Company, DbCompany :: Option[DbDepartment] :: Option[
+      : ParentAssembler[ConvRes, Company, DbCompany :: Option[DbDepartment] :: Option[
         DbEmployee,
       ] :: HNil] =
-      companyParent.forUnordered(departmentParent.forUnordered(employeeAssembler.optional).optional)
+      companyParent.toAssembler(departmentParent.toAssembler(employeeAssembler.optional).optional)
 
-    val invoiceAssembler: UngroupedAssembler[ConvRes, Invoice, DbInvoice :: HNil] =
-      invoiceLeaf.fdoobierollnordered
+    val invoiceAssembler: Assembler[ConvRes, Invoice, DbInvoice :: HNil] =
+      invoiceLeaf.toAssembler
 
-    val enterpriseAssembler: UngroupedParentAssembler[
+    val enterpriseAssembler: ParentAssembler[
       ConvRes,
       Enterprise,
       DbCompany :: DbDepartment :: DbEmployee :: DbInvoice :: HNil,
-    ] = enterpriseParent.fdoobierollnordered(
+    ] = enterpriseParent.toAssembler(
       departmentAssembler,
       invoiceAssembler,
     )

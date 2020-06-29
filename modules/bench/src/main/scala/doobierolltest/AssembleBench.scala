@@ -8,7 +8,7 @@ import doobierolltest.model.{DbCompany, DbDepartment, DbEmployee, Wrapper}
 import io.circe.parser._
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
-import doobieroll.UngroupedAssembler
+import doobieroll.Assembler
 import shapeless._
 import TestDataInstances._
 
@@ -40,26 +40,26 @@ class AssembleBench {
 
   @Benchmark
   def ungrouped10k(blackhole: Blackhole): Unit =
-    blackhole.consume(UngroupedAssembler.assembleUngrouped(Infallible.companyAssembler)(hlist10K))
+    blackhole.consume(Assembler.assemble(Infallible.companyAssembler)(hlist10K))
 
   @Benchmark
   def ungroupedOpt10k(blackhole: Blackhole): Unit =
     blackhole.consume(
-      UngroupedAssembler.assembleUngrouped(Infallible.companyOptAssembler)(optHList10k),
+      Assembler.assemble(Infallible.companyOptAssembler)(optHList10k),
     )
 
   @Benchmark
   def ungrouped1k(blackhole: Blackhole): Unit =
-    blackhole.consume(UngroupedAssembler.assembleUngrouped(Infallible.companyAssembler)(hlist1K))
+    blackhole.consume(Assembler.assemble(Infallible.companyAssembler)(hlist1K))
 
   @Benchmark
   def ungrouped100(blackhole: Blackhole): Unit =
-    blackhole.consume(UngroupedAssembler.assembleUngrouped(Infallible.companyAssembler)(hlist100))
+    blackhole.consume(Assembler.assemble(Infallible.companyAssembler)(hlist100))
 
   @Benchmark
   def ungroupedOpt1k(blackhole: Blackhole): Unit =
     blackhole.consume(
-      UngroupedAssembler.assembleUngrouped(Infallible.companyOptAssembler)(optHList1k),
+      Assembler.assemble(Infallible.companyOptAssembler)(optHList1k),
     )
 
   @Benchmark

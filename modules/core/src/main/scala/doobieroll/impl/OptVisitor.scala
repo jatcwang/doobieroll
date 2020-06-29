@@ -1,14 +1,14 @@
 package doobieroll.impl
 
 import doobieroll.ImplTypes.LazyMap
-import doobieroll.UngroupedAssembler
+import doobieroll.Assembler
 import shapeless.{::, HList}
 
 import scala.collection.immutable.Vector
 
-private[doobieroll] final class OptUngroupedVisitor[F[_], A, ADb, RestDb <: HList](
-  underlying: UngroupedVisitor[F, A, ADb :: RestDb],
-) extends UngroupedVisitor[F, A, Option[ADb] :: RestDb] {
+private[doobieroll] final class OptVisitor[F[_], A, ADb, RestDb <: HList](
+  underlying: Visitor[F, A, ADb :: RestDb],
+) extends Visitor[F, A, Option[ADb] :: RestDb] {
 
   override val startIdx: Int = underlying.startIdx
   override val nextIdx: Int = underlying.nextIdx
@@ -21,12 +21,12 @@ private[doobieroll] final class OptUngroupedVisitor[F[_], A, ADb, RestDb <: HLis
   override def assemble(): LazyMap[Any, Vector[F[A]]] = underlying.assemble()
 }
 
-private[doobieroll] object OptUngroupedVisitor {
+private[doobieroll] object OptVisitor {
 
   def fromAssembler[F[_], A, ADb, RestDb <: HList](
-    assembler: UngroupedAssembler[F, A, ADb :: RestDb],
+    assembler: Assembler[F, A, ADb :: RestDb],
     accum: Accum,
     startIdx: Int,
-  ): UngroupedVisitor[F, A, Option[ADb] :: RestDb] =
-    new OptUngroupedVisitor(assembler.makeVisitor(accum, startIdx))
+  ): Visitor[F, A, Option[ADb] :: RestDb] =
+    new OptVisitor(assembler.makeVisitor(accum, startIdx))
 }

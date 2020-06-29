@@ -1,7 +1,7 @@
 package doobierolltest
 
 import cats.implicits._
-import doobieroll.UngroupedAssembler
+import doobieroll.Assembler
 import doobierolltest.TestData._
 import doobierolltest.TestDataInstances._
 import doobierolltest.TestDataHelpers._
@@ -13,10 +13,10 @@ import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, _}
 import com.softwaremill.quicklens._
 
-object AssembleUngroupedSpec extends DefaultRunnableSpec {
+object AssemblerSpec extends DefaultRunnableSpec {
 
   override def spec: ZSpec[TestEnvironment, Nothing] =
-    suite("AssembleUngroupedSpec")(
+    suite("AssemblerSpec")(
       test("all non-nullable columns") {
         val dbRowsHList: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] = {
           Vector(
@@ -27,7 +27,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
         }
 
         val result =
-          UngroupedAssembler.assembleUngrouped(Infallible.companyAssembler)(dbRowsHList).sequence
+          Assembler.assemble(Infallible.companyAssembler)(dbRowsHList).sequence
 
         assert(result)(equalTo(expectedCompanies))
 
@@ -35,15 +35,15 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
       test("nullable children columns") {
         val dbRows = expectedCompaniesWithSomeEmptyChildren.flatMap(companyToOptDbRows)
         val result =
-          UngroupedAssembler.assembleUngrouped(Infallible.companyOptAssembler)(
+          Assembler.assemble(Infallible.companyOptAssembler)(
             dbRows.map(_.productElements),
           )
         assert(result)(equalTo(expectedCompaniesWithSomeEmptyChildren))
       },
       test("Parent with multiple children") {
         val dbRows = expectedEnterprise.flatMap(enterpriseToDbRows)
-        val result = UngroupedAssembler
-          .assembleUngrouped(Infallible.enterpriseAssembler)(dbRows.map(_.productElements))
+        val result = Assembler
+          .assemble(Infallible.enterpriseAssembler)(dbRows.map(_.productElements))
           .sequence
 
         assert(result)(equalTo(expectedEnterprise))
@@ -54,8 +54,8 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
             .updated(0, expectedCompanies(0).copy(name = "errComp"))
             .flatMap(companyToDbRows)
 
-        val result = UngroupedAssembler
-          .assembleUngrouped(Fallible.companyAssembler)(dbRows.map(_.productElements))
+        val result = Assembler
+          .assemble(Fallible.companyAssembler)(dbRows.map(_.productElements))
           .sequence
 
         assert(result)(isLeft(equalTo(Err("company errComp"))))
@@ -66,8 +66,8 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
         val dbRows = companiesWithBadDepartment
           .flatMap(companyToDbRows)
 
-        val result = UngroupedAssembler
-          .assembleUngrouped(Fallible.companyAssembler)(dbRows.map(_.productElements))
+        val result = Assembler
+          .assemble(Fallible.companyAssembler)(dbRows.map(_.productElements))
           .sequence
 
         assert(result)(isLeft(equalTo(Err("department errDep"))))
@@ -78,8 +78,8 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
         val dbRows = companiesWithBadEmployee
           .flatMap(companyToDbRows)
 
-        val result = UngroupedAssembler
-          .assembleUngrouped(Fallible.companyAssembler)(dbRows.map(_.productElements))
+        val result = Assembler
+          .assemble(Fallible.companyAssembler)(dbRows.map(_.productElements))
           .sequence
 
         assert(result)(isLeft(equalTo(Err("employee errEmp"))))
@@ -90,8 +90,8 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
         val dbRows = enterpriseWithBadInvoice
           .flatMap(enterpriseToDbRows)
 
-        val result = UngroupedAssembler
-          .assembleUngrouped(Fallible.enterpriseAssembler)(dbRows.map(_.productElements))
+        val result = Assembler
+          .assemble(Fallible.enterpriseAssembler)(dbRows.map(_.productElements))
           .sequence
 
         assert(result)(isLeft(equalTo(Err("invoice 0"))))
@@ -102,7 +102,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
             .flatMap(companyToDbRows)
             .map(_.productElements)
           val result =
-            UngroupedAssembler.assembleUngrouped(Infallible.companyAssembler)(rows).sequence
+            Assembler.assemble(Infallible.companyAssembler)(rows).sequence
           assert(result)(equalTo(original))
         }
       },
@@ -115,7 +115,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
             .map(_.toVector)
             .map { rows =>
               val result =
-                UngroupedAssembler.assembleUngrouped(Infallible.companyAssembler)(rows).sequence
+                Assembler.assemble(Infallible.companyAssembler)(rows).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
@@ -131,7 +131,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
             .map(_.toVector)
             .map { rows =>
               val result =
-                UngroupedAssembler.assembleUngrouped(Infallible.companyOptAssembler)(rows).sequence
+                Assembler.assemble(Infallible.companyOptAssembler)(rows).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
@@ -145,7 +145,7 @@ object AssembleUngroupedSpec extends DefaultRunnableSpec {
             .map(_.toVector)
             .map { rows =>
               val result =
-                UngroupedAssembler.assembleUngrouped(Infallible.enterpriseAssembler)(rows).sequence
+                Assembler.assemble(Infallible.enterpriseAssembler)(rows).sequence
               assert(normalizeEnterprise(result))(equalTo(normalizeEnterprise(original)))
             }
         }

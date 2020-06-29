@@ -2,9 +2,9 @@ package doobieroll.syntax
 
 import cats.Monad
 import cats.implicits._
-import doobieroll.UngroupedAssembler.UngroupedParentAssembler
+import doobieroll.Assembler.ParentAssembler
 import doobieroll.impl._
-import doobieroll.{LeafDef, ParentDef, UngroupedAssembler}
+import doobieroll.{LeafDef, ParentDef, Assembler}
 import shapeless._
 
 import scala.annotation.tailrec
@@ -12,13 +12,13 @@ import scala.annotation.tailrec
 trait UnorderedSyntax {
 
   implicit class LeafDefExtension[F[_], A, ADb](leafDef: LeafDef[F, A, ADb :: HNil]) {
-    def fdoobierollnordered: UngroupedAssembler[F, A, ADb :: HNil] = {
-      new UngroupedAssembler[F, A, ADb :: HNil] {
+    def toAssembler: Assembler[F, A, ADb :: HNil] = {
+      new Assembler[F, A, ADb :: HNil] {
         private[doobieroll] override def makeVisitor(
           accum: Accum,
           idx: Int,
-        ): UngroupedVisitor[F, A, ADb :: HNil] =
-          new UngroupedLeafVisitorImpl[F, A, ADb](
+        ): Visitor[F, A, ADb :: HNil] =
+          new LeafVisitorImpl[F, A, ADb](
             leafDef = leafDef,
             accum = accum,
             startIdx = idx,
@@ -37,21 +37,21 @@ trait UnorderedSyntax {
     implicit def caseHList[HL <: HList] = at[HL](identity)
   }
 
-  private def mkParentUngrouped[F[_], A, ADb, CDbs <: HList, CDbsFlattened <: HList](
+  private def mkParent[F[_], A, ADb, CDbs <: HList, CDbsFlattened <: HList](
     par: ParentDef[F, A, ADb],
-    assemblers: Vector[UngroupedAssembler[F, Any, HList]],
+    assemblers: Vector[Assembler[F, Any, HList]],
     flattener: Flattener[CDbs, CDbsFlattened],
     FMonad: Monad[F],
-  ): UngroupedParentAssembler[F, A, ADb :: CDbsFlattened] = {
+  ): ParentAssembler[F, A, ADb :: CDbsFlattened] = {
     val _ = flattener // unused. For type inference only
 
-    new UngroupedParentAssembler[F, A, ADb :: CDbsFlattened] {
+    new ParentAssembler[F, A, ADb :: CDbsFlattened] {
 
       private[doobieroll] override def makeVisitor(
         accum: Accum,
         idx: Int,
-      ): UngroupedParentVisitor[F, A, ADb :: CDbsFlattened] =
-        new UngroupedParentVisitorImpl[F, A, ADb, CDbsFlattened](
+      ): ParentVisitor[F, A, ADb :: CDbsFlattened] =
+        new ParentVisitorImpl[F, A, ADb, CDbsFlattened](
           par,
           accum,
           idx,
@@ -63,35 +63,37 @@ trait UnorderedSyntax {
 
   @inline
   private def eraseAssemblerType[F[_], A, HL <: HList](
-    assembler: UngroupedAssembler[F, A, HL],
-  ): UngroupedAssembler[F, Any, HList] =
-    assembler.asInstanceOf[UngroupedAssembler[F, Any, HList]]
+    assembler: Assembler[F, A, HL],
+  ): Assembler[F, Any, HList] =
+    assembler.asInstanceOf[Assembler[F, Any, HList]]
 
   implicit class ParentExtension[F[_], A, ADb, Cs <: HList](par: ParentDef.Aux[F, A, ADb, Cs]) {
 
-    def forUnordered[C0, C0Dbs <: HList](
-      c0Assembler: UngroupedAssembler[F, C0, C0Dbs],
-    )(implicit monadF: Monad[F]): UngroupedParentAssembler[F, A, ADb :: C0Dbs] =
-      mkParentUngrouped(
+    def toAssembler[C0, C0Dbs <: HList](
+      c0Assembler: Assembler[F, C0, C0Dbs],
+    )(implicit monadF: Monad[F]): ParentAssembler[F, A, ADb :: C0Dbs] =
+      mkParent(
         par,
         Vector(eraseAssemblerType(c0Assembler)),
         implicitly[Flattener[C0Dbs :: HNil, C0Dbs]],
         monadF,
       )
 
-    def fdoobierollnordered[C0, C1, C0Dbs <: HList, C1Dbs <: HList, CDbs <: HList](
-      c0Assembler: UngroupedAssembler[F, C0, C0Dbs],
-      c1Assembler: UngroupedAssembler[F, C1, C1Dbs],
+    def toAssembler[C0, C1, C0Dbs <: HList, C1Dbs <: HList, CDbs <: HList](
+      c0Assembler: Assembler[F, C0, C0Dbs],
+      c1Assembler: Assembler[F, C1, C1Dbs],
     )(
       implicit monadF: Monad[F],
       flattener: Flattener[C0Dbs :: C1Dbs :: HNil, CDbs],
-    ): UngroupedParentAssembler[F, A, ADb :: CDbs] =
-      mkParentUngrouped(
+    ): ParentAssembler[F, A, ADb :: CDbs] =
+      mkParent(
         par,
         Vector(eraseAssemblerType(c0Assembler), eraseAssemblerType(c1Assembler)),
         flattener,
         monadF,
       )
+
+    // FIXME: more toAssembler
   }
 }
 

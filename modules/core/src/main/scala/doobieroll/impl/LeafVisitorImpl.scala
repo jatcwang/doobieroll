@@ -9,11 +9,11 @@ import scala.annotation.nowarn
 import scala.collection.mutable
 import scala.collection.immutable.Vector
 
-private[doobieroll] final class UngroupedLeafVisitorImpl[F[_], A, ADb](
+private[doobieroll] final class LeafVisitorImpl[F[_], A, ADb](
   leafDef: LeafDef[F, A, ADb :: HNil],
   accum: Accum,
   override val startIdx: Int,
-) extends UngroupedVisitor[F, A, ADb :: HNil] {
+) extends Visitor[F, A, ADb :: HNil] {
 
   private val thisRawLookup: AnyKeyMultiMap[ADb] = accum.getRawLookup[ADb](startIdx)
 

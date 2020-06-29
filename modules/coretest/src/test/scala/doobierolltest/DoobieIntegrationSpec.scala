@@ -25,7 +25,7 @@ import doobierolltest.model.{Company, DbEmployee, DbInvoice, DbCompany, DbDepart
 import TestDataHelpers._
 import doobie.util.Read
 import doobie.util.query.Query0
-import doobieroll.UngroupedAssembler
+import doobieroll.Assembler
 import doobierolltest.db._
 
 import scala.concurrent.duration._
@@ -40,7 +40,7 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
           _ <- insertDbData(orig)
           rows <- fetchCompany
         } yield {
-          val result = UngroupedAssembler.assembleUngrouped(
+          val result = Assembler.assemble(
             TestDataInstances.Infallible.companyAssembler,
           )(
             rows,
@@ -54,7 +54,7 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
           _ <- insertDbData(orig)
           rows <- fetchCompanyOpt
         } yield {
-          val result = UngroupedAssembler.assembleUngrouped(
+          val result = Assembler.assemble(
             TestDataInstances.Infallible.companyOptAssembler,
           )(
             rows,
