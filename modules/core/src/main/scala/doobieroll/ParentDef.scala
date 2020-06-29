@@ -79,6 +79,8 @@ object ParentDef {
       }
     }
   }
+
+  // FIXME: more make methods
 }
 
 /** Definition of a parent type that cannot fail */

@@ -1,5 +1,4 @@
-val zioVersion = "1.0.0-RC20"
-
+val zioVersion = "1.0.0-RC21"
 val circeVersion = "0.13.0"
 val silencerVersion = "1.7.0"
 val doobieVersion = "0.9.0"
@@ -39,7 +38,7 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
     libraryDependencies ++= Seq(
       // FIXME:
       "com.lihaoyi" %% "pprint" % "0.5.9",
-      "org.flywaydb" % "flyway-core" % "6.3.2",
+      "org.flywaydb" % "flyway-core" % "6.4.4",
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
@@ -53,8 +52,8 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
-      "org.postgresql" % "postgresql" % "42.2.11",
-      "com.softwaremill.quicklens" %% "quicklens" % "1.5.0",
+      "org.postgresql" % "postgresql" % "42.2.14",
+      "com.softwaremill.quicklens" %% "quicklens" % "1.6.0",
       "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.9" % "test",
     ),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
@@ -68,6 +67,29 @@ lazy val bench = Project("bench", file("modules/bench"))
   .settings(
     libraryDependencies ++= Seq(
       ),
+  )
+
+lazy val docs = project
+  .dependsOn(core, coretest)
+  .enablePlugins(MicrositesPlugin)
+  .settings(
+    commonSettings,
+    publish / skip := true,
+  )
+  .settings(
+    mdocIn := file("docs/docs"),
+    micrositeName := "Doobieroll",
+    micrositeDescription := "Helper utilities for working with Doobie and database results",
+    micrositeUrl := "https://jatcwang.github.io",
+    micrositeBaseUrl := "/doobieroll",
+    micrositeDocumentationUrl := s"${micrositeBaseUrl.value}/docs/intro",
+    micrositeAuthor := "Jacob Wang",
+    micrositeGithubOwner := "jatcwang",
+    micrositeGithubRepo := "doobieroll",
+    micrositeCompilingDocsTool := WithMdoc,
+    micrositeHighlightTheme := "a11y-light",
+    micrositePushSiteWith := GitHub4s,
+    micrositeGithubToken := sys.env.get("GITHUB_TOKEN"),
   )
 
 lazy val root = project
