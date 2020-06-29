@@ -2,8 +2,13 @@ package doobieroll
 
 import cats.arrow.FunctionK
 
-/** An atomic group of database columns that converts to a single entity (entity does not have children)
-  *  The construction may or may not fail, represented by the error context F */
+/**
+  * Definition of a domain type with no children, converting from a database columns group type [[ADb]]
+  * The construction may or may not fail, represented by the error context [[F]]
+  * @tparam F The validation context. For example Either[MyDbConversionError, ?] or Validated[MyDbConversionError, ?]
+  * @tparam A The domain type
+  * @tparam ADb The database column group type
+  */
 trait LeafDef[F[_], A, ADb] { self =>
   def construct(db: ADb): F[A]
 

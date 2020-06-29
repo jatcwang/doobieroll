@@ -4,6 +4,13 @@ import shapeless.{Id => _, _}
 import cats.Id
 import cats.arrow.FunctionK
 
+/**
+  * Definition of a type with one or more children fields, converting from a DB column group [[ADb]],
+  * which may fail in the context of [[F]].
+  * @tparam F The validation context. For example Either[MyDbConversionError, ?] or Validated[MyDbConversionError, ?]
+  * @tparam A The domain type
+  * @tparam ADb The database column group type
+  */
 trait ParentDef[F[_], A, ADb] { self =>
   type Child <: HList
   type ChildVecs <: HList
