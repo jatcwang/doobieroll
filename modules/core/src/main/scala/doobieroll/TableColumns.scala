@@ -17,12 +17,13 @@ sealed abstract case class TableColumns[T](
 
   lazy val listWithParen: String = "(" + list + ")"
 
-  def prefixed(prefix: String, withParen: Boolean = false): String = {
-    val fieldsStr =
-      allColumns.map(field => s"$prefix.$field").toList.mkString(",")
-    if (withParen) "(" + fieldsStr + ")"
-    else fieldsStr
+  /** Prefix with the default table name */
+  def tableNamePrefixed: String = {
+    allColumns.map(field => s"$tableName.$field").toList.mkString(", ")
   }
+
+  def prefixed(prefix: String): String =
+    allColumns.map(field => s"$prefix.$field").toList.mkString(", ")
 
   lazy val parameterized: String =
     allColumns.map(_ => "?").toList.mkString(",")
@@ -33,6 +34,7 @@ sealed abstract case class TableColumns[T](
 
 object TableColumns {
 
+  // FIXME: allow custom casing
   private def snakeCaseName(str: String): String =
     str
       .replaceAll(
@@ -53,7 +55,7 @@ object TableColumns {
 
 // A separate class to prevent automatic derivation
 @implicitNotFound(
-  "Cannot derive TableColumns instance. Please check that the type is a case class " + "and has at least 1 parameter",
+  "Cannot derive TableColumns instance. Please check that the type is a case class and has at least 1 parameter",
 )
 private trait MkTableColumns[T] {
   def allColumns: NonEmptyList[String]
@@ -78,7 +80,7 @@ private object MkTableColumns {
     traversable: ToTraversable.Aux[MapperRepr, List, String],
     notHList: Repr =:!= HNil,
   ): MkTableColumns[T] = {
-    val _ = (gen, notHList) // Workaround for unused warning
+    val _ = (gen, notHList) // These are unused otherwise
     new MkTableColumns[T] {
       override def allColumns: NonEmptyList[String] =
         NonEmptyList.fromListUnsafe(keys().map(symbolName).toList)

@@ -24,15 +24,13 @@ object TableColumnsSpec extends DefaultRunnableSpec {
     test("'prefixed' returns list of field all prefixed") {
       assertEqual(
         TestClass.columns.prefixed("pre"),
-        "pre.a,pre.str_field,pre.snake_case,pre.pascal_case",
+        "pre.a, pre.str_field, pre.snake_case, pre.pascal_case",
       )
     },
-    test(
-      "'prefixed' (withParen = true) returns list of field all prefixed, surrounded by parenthesis",
-    ) {
+    test("'tableNamePrefixed' returns ") {
       assertEqual(
-        TestClass.columns.prefixed("pre", withParen = true),
-        "(pre.a,pre.str_field,pre.snake_case,pre.pascal_case)",
+        TestClass.columns.tableNamePrefixed,
+        "test_class.a, test_class.str_field, test_class.snake_case, test_class.pascal_case"
       )
     },
     test(
