@@ -46,7 +46,21 @@ object ParentDef {
     type Id = Id0
   }
 
-  def make[F[_], A, ADb, Child0, Id0](
+  // FIXME: remake F to be infallible and makeF to be fallible
+
+  def make[A, ADb, Child0, Id0](
+    getId: ADb => Id0,
+    constructWithChild: (ADb, Vector[Child0]) => A,
+  ): ParentDef.Aux[cats.Id, A, ADb, Child0 :: HNil] =
+    makeF[cats.Id, A, ADb, Child0, Id0](getId, constructWithChild)
+
+  def make2[A, ADb, Child0, Child1, Id0](
+    getId: ADb => Id0,
+    constructWithChild: (ADb, Vector[Child0], Vector[Child1]) => A,
+  ): ParentDef.Aux[cats.Id, A, ADb, Child0 :: Child1 :: HNil] =
+    makeF2[cats.Id, A, ADb, Child0, Child1, Id0](getId, constructWithChild)
+
+  def makeF[F[_], A, ADb, Child0, Id0](
     getId: ADb => Id0,
     constructWithChild: (ADb, Vector[Child0]) => F[A],
   ): ParentDef.Aux[F, A, ADb, Child0 :: HNil] = {
@@ -64,7 +78,7 @@ object ParentDef {
     }
   }
 
-  def make2[F[_], A, ADb, Child0, Child1, Id0](
+  def makeF2[F[_], A, ADb, Child0, Child1, Id0](
     getId: ADb => Id0,
     constructWithChild: (ADb, Vector[Child0], Vector[Child1]) => F[A],
   ): ParentDef.Aux[F, A, ADb, Child0 :: Child1 :: HNil] = {
@@ -88,26 +102,4 @@ object ParentDef {
   }
 
   // FIXME: more make methods
-}
-
-/** Definition of a parent type that cannot fail */
-trait InfallibleParentDef[A, ADb] extends ParentDef[Id, A, ADb]
-
-object InfallibleParentDef {
-  type Aux[A, ADb, Child0 <: HList] = ParentDef[Id, A, ADb] {
-    type Child = Child0
-  }
-
-  def make[A, ADb, Child0, Id0](
-    getId: ADb => Id0,
-    constructWithChild: (ADb, Vector[Child0]) => A,
-  ): InfallibleParentDef.Aux[A, ADb, Child0 :: HNil] =
-    ParentDef.make[Id, A, ADb, Child0, Id0](getId, constructWithChild)
-
-  def make2[A, ADb, Child0, Child1, Id0](
-    getId: ADb => Id0,
-    constructWithChild: (ADb, Vector[Child0], Vector[Child1]) => A,
-  ): InfallibleParentDef.Aux[A, ADb, Child0 :: Child1 :: HNil] =
-    ParentDef.make2[Id, A, ADb, Child0, Child1, Id0](getId, constructWithChild)
-
 }

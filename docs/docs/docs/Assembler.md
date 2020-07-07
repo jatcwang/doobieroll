@@ -6,13 +6,12 @@ permalink: docs/assembler
 
 # Assembler
 
-## Motivation
+## Motivation - What problem does it solve?
 
 Assembler helps "assemble" relational data into their corresponding hierarchical representation.
 
-Here by **relational** we mean the data model you typically get out of a relational database (e.g. SQL query result).
-However, In business logic ("domain") we typically use **Hierarchical** data models, because it's often the better,
-more intuitive way to work with the data. (e.g. "A company can have many departments, and each department can have many employees")
+When querying a relational database, the query result are often not immediately usable for our business logic nor API response
+because our domain models are often hierarchical.
 
 To use an example, DoobieRoll assemblers can help you transform results of a SQL JOIN query like this:
 
@@ -80,15 +79,14 @@ Into this:
     )
 ```
 
-Typically with doobie, the columns in the result set are grouped into logical groups roughly mapping to domain entities. 
-Using the example query above, the result type of a doobie query will probably look like this:
+With doobie, typically the columns in the result set are grouped into logical groups which roughly maps to domain models. 
+Using the example query above, the type of a doobie query will be:
 
 ```
 List[(DbCompany, DbDepartment, DbEmployee)]
 ```
 
-We will call types like `DbCompany`, `DbDepartment` and `DbEmployee` **Column Group**s. A Column Group's case class fields
-map to a column. They are defined as:
+Each field in these DB model case classes map to a column in the query result:
 
 ```
 case class DbCompany(
@@ -107,25 +105,151 @@ case class DbEmployee(
 )
 ```
 
-If we want to convert this to a `List[Company]`, what you'd normally do is to use `.groupBy`s 
-on `company.id` and `department.id` - group employees belonging to the same department/company together and then
-convert each group into their hierarchical model.
+To convert this to a `List[Company]`, we often use `.groupBy`s on the ids (in this case on `company.id` and `department.id`).
+We'd group employees belonging to the same department/company together and then convert each group into their domain model.
 
-In most cases this works, but there are some downsides:
+There are however some downsides to this approach:
 
-- Difficult to reuse the logic - You'd have to write the same transformation for every different query you have
+- Code is difficult to reuse - You'd have to write the same transformation for every different query you have
 - The logic becomes more complex when
-  - The conversion from the column group (`DbDepartment`) to your domain entity (`Department`) can fail.
+  - The conversion from the database model (`DbDepartment`) to your domain model (`Department`) can fail.
   - You object relationships are more complex, where a parent class can have multiple children types 
     (which in turn can have their own children types)
 
-Assembler solves this problem by only requiring you to declare your data relationships, and it'll take care of assembling
-your object for you!
+Assembler solves this problem by only requiring you to declare your data relationships, and it'll take care of 
+the assembling for you!
 
 # Using Assembler
 
-There are the few steps to using Assembler:
+Here are the main steps to use Assembler:
 
-- Define definitions for each individual domain and and how to convert them from **Column Group** types
-- Create the Assembler from these definitions
-- Feed the assembler with your database query results and get the hierarchical object!
+1. **Define the database-to-domain relationship** - Define how to convert each database to their corresponding domain model.
+1. **Create the Assembler** using these definitions
+1. **Assemble your query result** - Feed the database query results into the assembler to get your domain objects
+
+Let's see how it's actually done with an example:
+
+- A **Town** can have many **Schools** (one-to-many relationship)
+- A **School** can have many **Students** (one-to-many relationship)
+
+Let's say we want to find towns along with the school and the students in those schools (in a hierarchical output format).
+In JSON it will look like this:
+
+```json
+[
+  {
+    "id": "...",
+    "name": "Smallville",
+    "schools": [
+      {
+        "id": "...",
+        "name": "Oakland School"
+        "students": [
+          {
+            "id": "...",
+            "name": "Alice Wonderland"
+          },
+          // ...other students in Oakland
+        ],
+      },
+      // ...other schools in Smallville
+    ]
+  },
+  // ...other towns with their schools and students
+]
+```
+
+The code you'll write with doobie to retrieve this information will probably look like 
+
+```scala mdoc:invisible
+import doobie.postgres.implicits._
+```
+
+```scala mdoc:silent
+import java.util.UUID
+import doobie.implicits._ 
+import shapeless.{::, HNil}
+
+val query = fr"""
+SELECT town.id, town.name, school.id, school.name, student.id, student.name 
+FROM town
+LEFT JOIN school ON school.town_id = town.id
+LEFT JOIN student ON student.school_id = school.id
+WHERE town.name LIKE '%ville'
+""".query[DbTown :: DbSchool :: DbStudent :: HNil]
+
+// Our database models
+
+case class DbTown(
+  id: UUID,
+  name: String
+)
+
+case class DbSchool(
+  id: UUID,
+  name: String
+)
+
+case class DbStudent(
+  id: UUID,
+  name: String
+)
+```
+
+and after running the query against some data you'll have a result list
+
+```scala mdoc:invisible
+val queryResult = Vector.empty[DbTown :: DbSchool :: DbStudent :: HNil]
+```
+```scala
+val queryResult: Vector[DbTown :: DbSchool :: DbStudent :: HNil] = // ...
+```
+
+Now we define the domain models:
+
+```scala mdoc:silent
+case class Town(
+  id: UUID,
+  name: String,
+  schools: Vector[School]
+)
+
+case class School(
+  id: UUID,
+  name: String,
+  students: Vector[Student]
+)
+
+case class Student(
+  id: UUID,
+  name: String
+)
+```
+
+### 1. Define the database-to-domain relationship
+
+When assembling domain models, they can be split into two types:
+
+- **Leaf**: Types without any children (e.g. `Student`)
+- **Parent**: Types with one or more children types, (e.g. `Town` has `School` as children, and `School` has `Stdudent` as children)
+
+Let's define our relationships
+```scala mdoc:silent
+import cats.Id
+import doobieroll.{ParentDef, LeafDef}
+
+val townDef: ParentDef.Aux[Id, Town, DbTown, School :: HNil] = ParentDef.make(
+  getId = (d: DbTown) => d.id,
+  constructWithChild = (dbTown: DbTown, schools: Vector[School]) => Town(dbTown.id, dbTown.name, schools)
+)
+
+val schoolDef: ParentDef.Aux[Id, School, DbSchool, Student :: HNil] = ParentDef.make(
+  getId = (d: DbSchool) => d.id,
+  constructWithChild = (dbSchool: DbSchool, students: Vector[Student]) => School(dbSchool.id, dbSchool.name, students)
+)
+
+val studentDef: LeafDef[Id, Student, DbStudent] = LeafDef.make(
+  construct = (dbStudent: DbStudent) => Student(dbStudent.id, dbStudent.name)
+)
+```
+

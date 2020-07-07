@@ -23,16 +23,16 @@ object TestDataInstances {
       }
 
     val departmentParent: ParentDef.Aux[Id, Department, DbDepartment, Employee :: HNil] =
-      InfallibleParentDef.make(
+      ParentDef.make(
         (d: DbDepartment) => d.id,
         Department.fromDb,
       )
 
     val companyParent: ParentDef.Aux[Id, Company, DbCompany, Department :: HNil] =
-      InfallibleParentDef.make((d: DbCompany) => d.id, Company.fromDb)
+      ParentDef.make((d: DbCompany) => d.id, Company.fromDb)
 
     val enterpriseParent: ParentDef.Aux[Id, Enterprise, DbCompany, Department :: Invoice :: HNil] =
-      InfallibleParentDef.make2((d: DbCompany) => d.id, Enterprise.fromDb)
+      ParentDef.make2((d: DbCompany) => d.id, Enterprise.fromDb)
 
     val employeeAssembler: Assembler[Id, Employee, DbEmployee :: HNil] =
       employeeLeaf.toAssembler
@@ -77,17 +77,17 @@ object TestDataInstances {
       }
 
     val departmentParent: ParentDef.Aux[ConvRes, Department, DbDepartment, Employee :: HNil] =
-      ParentDef.make(
+      ParentDef.makeF(
         (d: DbDepartment) => d.id,
         Department.fromDbFallible,
       )
 
     val companyParent: ParentDef.Aux[ConvRes, Company, DbCompany, Department :: HNil] =
-      ParentDef.make((d: DbCompany) => d.id, Company.fromDbFallible)
+      ParentDef.makeF((d: DbCompany) => d.id, Company.fromDbFallible)
 
     val enterpriseParent
       : ParentDef.Aux[ConvRes, Enterprise, DbCompany, Department :: Invoice :: HNil] =
-      ParentDef.make2((d: DbCompany) => d.id, Enterprise.fromDbFallible)
+      ParentDef.makeF2((d: DbCompany) => d.id, Enterprise.fromDbFallible)
 
     val employeeAssembler: Assembler[ConvRes, Employee, DbEmployee :: HNil] =
       employeeLeaf.toAssembler
