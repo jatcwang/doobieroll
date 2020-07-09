@@ -18,8 +18,8 @@ To use an example, DoobieRoll assemblers can help you transform results of a SQL
 ```
 SELECT company_id, company_name, department_id, department_name, employee_id, employee_name
 FROM company
-LEFT JOIN department ON department.company_id = company.id
-LEFT JOIN employee ON employee.department_id = department.id
+INNER JOIN department ON department.company_id = company.id
+INNER JOIN employee ON employee.department_id = department.id
 ```
 
 | company_id | company_name | department_id | department_name | employee_id | employee_name |
@@ -170,11 +170,11 @@ import java.util.UUID
 import doobie.implicits._ 
 import shapeless.{::, HNil}
 
-val query = fr"""
+val townsQuery = fr"""
 SELECT town.id, town.name, school.id, school.name, student.id, student.name 
 FROM town
-LEFT JOIN school ON school.town_id = town.id
-LEFT JOIN student ON student.school_id = school.id
+INNER JOIN school ON school.town_id = town.id
+INNER JOIN student ON student.school_id = school.id
 WHERE town.name LIKE '%ville'
 """.query[DbTown :: DbSchool :: DbStudent :: HNil]
 
@@ -196,13 +196,13 @@ case class DbStudent(
 )
 ```
 
-and after running the query against some data you'll have a result list
+and after running the query against some data you'll have a result list.
 
 ```scala mdoc:invisible
 val queryResult = Vector.empty[DbTown :: DbSchool :: DbStudent :: HNil]
 ```
 ```scala
-val queryResult: Vector[DbTown :: DbSchool :: DbStudent :: HNil] = // ...
+val queryResult: Vector[DbTown :: DbSchool :: DbStudent :: HNil] = // ... run the query
 ```
 
 Now we define the domain models:
@@ -236,20 +236,38 @@ When assembling domain models, they can be split into two types:
 Let's define our relationships
 ```scala mdoc:silent
 import cats.Id
-import doobieroll.{ParentDef, LeafDef}
+import doobieroll._
+import doobieroll.implicits._
 
 val townDef: ParentDef.Aux[Id, Town, DbTown, School :: HNil] = ParentDef.make(
   getId = (d: DbTown) => d.id,
-  constructWithChild = (dbTown: DbTown, schools: Vector[School]) => Town(dbTown.id, dbTown.name, schools)
+  constructWithChild = (db: DbTown, schools: Vector[School]) => Town(db.id, db.name, schools)
 )
 
 val schoolDef: ParentDef.Aux[Id, School, DbSchool, Student :: HNil] = ParentDef.make(
   getId = (d: DbSchool) => d.id,
-  constructWithChild = (dbSchool: DbSchool, students: Vector[Student]) => School(dbSchool.id, dbSchool.name, students)
+  constructWithChild = (db: DbSchool, students: Vector[Student]) => School(db.id, db.name, students)
 )
 
 val studentDef: LeafDef[Id, Student, DbStudent] = LeafDef.make(
-  construct = (dbStudent: DbStudent) => Student(dbStudent.id, dbStudent.name)
+  (db: DbStudent) => Student(db.id, db.name)
 )
 ```
 
+### 2. Create the Assembler 
+
+With our individual definitions, we can now build an **Assembler**
+
+```scala mdoc:silent
+val assembler: ParentAssembler[cats.Id, Town, DbTown :: DbSchool :: DbStudent :: HNil] = townDef.toAssembler(
+  schoolDef.toAssembler(
+    studentDef.toAssembler
+  )
+)
+```
+
+The signature of the assembler tells us that it knows how to construct some `Town`s from a 
+list of query result rows! (`DbTown :: DbSchool :: DbStudent :: HNil`).
+(Note how the DB type of assembler and the query result from above matches!)
+
+### 3. Assemble your query result

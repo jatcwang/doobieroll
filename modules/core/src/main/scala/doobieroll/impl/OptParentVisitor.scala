@@ -1,7 +1,7 @@
 package doobieroll.impl
 
 import doobieroll.ImplTypes.LazyMap
-import doobieroll.Assembler.ParentAssembler
+import doobieroll.ParentAssembler
 import shapeless.{::, HList}
 
 import scala.collection.immutable.Vector

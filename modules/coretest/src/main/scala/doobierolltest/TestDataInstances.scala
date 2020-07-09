@@ -1,8 +1,8 @@
 package doobierolltest
 
 import cats.Id
-import doobieroll.Assembler.ParentAssembler
 import doobieroll._
+import doobieroll.implicits._
 import doobierolltest.model._
 import shapeless.{::, HNil}
 import cats.implicits._
@@ -11,16 +11,11 @@ object TestDataInstances {
 
   object Infallible {
 
-    val employeeLeaf: LeafDef[Id, Employee, DbEmployee :: HNil] =
-      new LeafDef[Id, Employee, DbEmployee :: HNil] {
-        override def construct(h: DbEmployee :: HNil): Employee =
-          Employee.fromDb(h.head)
-      }
+    val employeeLeaf: LeafDef[Id, Employee, DbEmployee] =
+      LeafDef.make(db => Employee.fromDb(db))
 
-    val invoiceLeaf: LeafDef[Id, Invoice, DbInvoice :: HNil] =
-      new LeafDef[Id, Invoice, DbInvoice :: HNil] {
-        override def construct(db: DbInvoice :: HNil): Invoice = Invoice.fromDb(db.head)
-      }
+    val invoiceLeaf: LeafDef[Id, Invoice, DbInvoice] =
+      LeafDef.make(db => Invoice.fromDb(db))
 
     val departmentParent: ParentDef.Aux[Id, Department, DbDepartment, Employee :: HNil] =
       ParentDef.make(
@@ -51,7 +46,7 @@ object TestDataInstances {
     val invoiceAssembler: Assembler[Id, Invoice, DbInvoice :: HNil] =
       invoiceLeaf.toAssembler
 
-    val enterpriseAssembler: Assembler.ParentAssembler[
+    val enterpriseAssembler: ParentAssembler[
       Id,
       Enterprise,
       DbCompany :: DbDepartment :: DbEmployee :: DbInvoice :: HNil,
@@ -64,17 +59,11 @@ object TestDataInstances {
   object Fallible {
     type ConvRes[+A] = Either[Err, A]
 
-    val employeeLeaf: LeafDef[ConvRes, Employee, DbEmployee :: HNil] =
-      new LeafDef[ConvRes, Employee, DbEmployee :: HNil] {
-        override def construct(h: DbEmployee :: HNil): ConvRes[Employee] =
-          Employee.fromDbFallible(h.head)
-      }
+    val employeeLeaf: LeafDef[ConvRes, Employee, DbEmployee] =
+      LeafDef.makeF(db => Employee.fromDbFallible(db))
 
-    val invoiceLeaf: LeafDef[ConvRes, Invoice, DbInvoice :: HNil] =
-      new LeafDef[ConvRes, Invoice, DbInvoice :: HNil] {
-        override def construct(db: DbInvoice :: HNil): ConvRes[Invoice] =
-          Invoice.fromDbFallible(db.head)
-      }
+    val invoiceLeaf: LeafDef[ConvRes, Invoice, DbInvoice] =
+      LeafDef.makeF(db => Invoice.fromDbFallible(db))
 
     val departmentParent: ParentDef.Aux[ConvRes, Department, DbDepartment, Employee :: HNil] =
       ParentDef.makeF(

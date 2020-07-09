@@ -1,5 +1,6 @@
 package doobieroll
 
+import cats.Id
 import cats.arrow.FunctionK
 
 /**
@@ -18,11 +19,11 @@ trait LeafDef[F[_], A, ADb] { self =>
 }
 
 object LeafDef {
-  def make[A, ADb](construct: ADb => A) = new LeafDef[cats.Id, A, ADb] {
-    override def construct(db: ADb): A = construct(db)
+  def make[A, ADb](f: ADb => A): LeafDef[Id, A, ADb] = new LeafDef[cats.Id, A, ADb] {
+    override def construct(db: ADb): A = f(db)
   }
 
-  def makeF[F[_], A, ADb](construct: ADb => F[A]): LeafDef[F, A, ADb] = new LeafDef[F, A, ADb] {
-    override def construct(db: ADb): F[A] = construct(db)
+  def makeF[F[_], A, ADb](f: ADb => F[A]): LeafDef[F, A, ADb] = new LeafDef[F, A, ADb] {
+    override def construct(db: ADb): F[A] = f(db)
   }
 }

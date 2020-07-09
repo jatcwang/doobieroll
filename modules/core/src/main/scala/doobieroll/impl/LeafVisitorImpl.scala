@@ -10,7 +10,7 @@ import scala.collection.mutable
 import scala.collection.immutable.Vector
 
 private[doobieroll] final class LeafVisitorImpl[F[_], A, ADb](
-  leafDef: LeafDef[F, A, ADb :: HNil],
+  leafDef: LeafDef[F, A, ADb],
   accum: Accum,
   override val startIdx: Int,
 ) extends Visitor[F, A, ADb :: HNil] {
@@ -30,6 +30,6 @@ private[doobieroll] final class LeafVisitorImpl[F[_], A, ADb](
     // In 2.12 We want MappedValues, while in 2.13 we want MapView
     // By using strict Map the performance completely tanks
     thisRawLookup
-      .mapValues(values => values.distinct.toVector.map(v => leafDef.construct(v :: HNil)))
+      .mapValues(values => values.distinct.toVector.map(v => leafDef.construct(v)))
 
 }

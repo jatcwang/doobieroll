@@ -2,9 +2,7 @@ package doobieroll
 
 import doobieroll.impl.{
   Accum,
-  OptParentVisitor,
   OptVisitor,
-  ParentVisitor,
   Visitor,
 }
 import shapeless.{::, HList, HNil}
@@ -38,30 +36,6 @@ trait Assembler[F[_], A, Dbs <: HList] { self =>
 }
 
 object Assembler {
-
-  trait ParentAssembler[F[_], A, Dbs <: HList] extends Assembler[F, A, Dbs] {
-    self =>
-    private[doobieroll] override def makeVisitor(
-      accum: Accum,
-      idx: Int,
-    ): ParentVisitor[F, A, Dbs]
-
-    final override def optional[ADb, RestDb <: HList](
-      implicit ev: (ADb :: RestDb) =:= Dbs,
-    ): ParentAssembler[F, A, Option[ADb] :: RestDb] = {
-      new ParentAssembler[F, A, Option[ADb] :: RestDb] {
-        private[doobieroll] override def makeVisitor(
-          accum: Accum,
-          idx: Int,
-        ): ParentVisitor[F, A, Option[ADb] :: RestDb] =
-          OptParentVisitor.fromAssembler(
-            self.asInstanceOf[ParentAssembler[F, A, ADb :: RestDb]],
-            accum,
-            idx,
-          )
-      }
-    }
-  }
 
   def assemble[F[_], A, Dbs <: HList](
     parentAssembler: ParentAssembler[F, A, Dbs],
