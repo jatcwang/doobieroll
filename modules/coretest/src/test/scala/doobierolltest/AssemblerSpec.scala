@@ -1,7 +1,6 @@
 package doobierolltest
 
 import cats.implicits._
-import doobieroll.Assembler
 import doobierolltest.TestData._
 import doobierolltest.TestDataInstances._
 import doobierolltest.TestDataHelpers._
@@ -26,8 +25,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
           ).map(_.productElements)
         }
 
-        val result =
-          Assembler.assemble(Infallible.companyAssembler)(dbRowsHList).sequence
+        val result = Infallible.companyAssembler.assemble(dbRowsHList).sequence
 
         assert(result)(equalTo(expectedCompanies))
 
@@ -35,16 +33,12 @@ object AssemblerSpec extends DefaultRunnableSpec {
       test("nullable children columns") {
         val dbRows = expectedCompaniesWithSomeEmptyChildren.flatMap(companyToOptDbRows)
         val result =
-          Assembler.assemble(Infallible.companyOptAssembler)(
-            dbRows.map(_.productElements),
-          )
+          Infallible.companyOptAssembler.assemble(dbRows.map(_.productElements))
         assert(result)(equalTo(expectedCompaniesWithSomeEmptyChildren))
       },
       test("Parent with multiple children") {
         val dbRows = expectedEnterprise.flatMap(enterpriseToDbRows)
-        val result = Assembler
-          .assemble(Infallible.enterpriseAssembler)(dbRows.map(_.productElements))
-          .sequence
+        val result = Infallible.enterpriseAssembler.assemble(dbRows.map(_.productElements)).sequence
 
         assert(result)(equalTo(expectedEnterprise))
       },
@@ -54,8 +48,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
             .updated(0, expectedCompanies(0).copy(name = "errComp"))
             .flatMap(companyToDbRows)
 
-        val result = Assembler
-          .assemble(Fallible.companyAssembler)(dbRows.map(_.productElements))
+        val result = Fallible.companyAssembler.assemble(dbRows.map(_.productElements))
           .sequence
 
         assert(result)(isLeft(equalTo(Err("company errComp"))))
@@ -66,8 +59,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
         val dbRows = companiesWithBadDepartment
           .flatMap(companyToDbRows)
 
-        val result = Assembler
-          .assemble(Fallible.companyAssembler)(dbRows.map(_.productElements))
+        val result = Fallible.companyAssembler.assemble(dbRows.map(_.productElements))
           .sequence
 
         assert(result)(isLeft(equalTo(Err("department errDep"))))
@@ -78,8 +70,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
         val dbRows = companiesWithBadEmployee
           .flatMap(companyToDbRows)
 
-        val result = Assembler
-          .assemble(Fallible.companyAssembler)(dbRows.map(_.productElements))
+        val result = Fallible.companyAssembler.assemble(dbRows.map(_.productElements))
           .sequence
 
         assert(result)(isLeft(equalTo(Err("employee errEmp"))))
@@ -90,8 +81,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
         val dbRows = enterpriseWithBadInvoice
           .flatMap(enterpriseToDbRows)
 
-        val result = Assembler
-          .assemble(Fallible.enterpriseAssembler)(dbRows.map(_.productElements))
+        val result = Fallible.enterpriseAssembler.assemble(dbRows.map(_.productElements))
           .sequence
 
         assert(result)(isLeft(equalTo(Err("invoice 0"))))
@@ -102,7 +92,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
             .flatMap(companyToDbRows)
             .map(_.productElements)
           val result =
-            Assembler.assemble(Infallible.companyAssembler)(rows).sequence
+            Infallible.companyAssembler.assemble(rows).sequence
           assert(result)(equalTo(original))
         }
       },
@@ -115,7 +105,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
             .map(_.toVector)
             .map { rows =>
               val result =
-                Assembler.assemble(Infallible.companyAssembler)(rows).sequence
+                Infallible.companyAssembler.assemble(rows).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
@@ -131,7 +121,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
             .map(_.toVector)
             .map { rows =>
               val result =
-                Assembler.assemble(Infallible.companyOptAssembler)(rows).sequence
+                Infallible.companyOptAssembler.assemble(rows).sequence
               assert(normalizeCompanies(result))(equalTo(normalizeCompanies(original)))
             }
         }
@@ -145,7 +135,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
             .map(_.toVector)
             .map { rows =>
               val result =
-                Assembler.assemble(Infallible.enterpriseAssembler)(rows).sequence
+                Infallible.enterpriseAssembler.assemble(rows).sequence
               assert(normalizeEnterprise(result))(equalTo(normalizeEnterprise(original)))
             }
         }

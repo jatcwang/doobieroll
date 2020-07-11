@@ -11,7 +11,7 @@ import scala.annotation.tailrec
 trait UnorderedSyntax {
 
   implicit class LeafDefExtension[F[_], A, ADb](leafDef: LeafDef[F, A, ADb]) {
-    def toAssembler: Assembler[F, A, ADb:: HNil] = {
+    def toAssembler: Assembler[F, A, ADb :: HNil] = {
       new Assembler[F, A, ADb :: HNil] {
         private[doobieroll] override def makeVisitor(
           accum: Accum,

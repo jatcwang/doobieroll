@@ -21,11 +21,10 @@ import doobie.postgres.implicits._
 import doobie.Transactor
 import doobie.implicits._
 import doobie.util.update.Update
-import doobierolltest.model.{Company, DbEmployee, DbInvoice, DbCompany, DbDepartment}
+import doobierolltest.model.{Company, DbCompany, DbDepartment, DbEmployee, DbInvoice}
 import TestDataHelpers._
 import doobie.util.Read
 import doobie.util.query.Query0
-import doobieroll.Assembler
 import doobierolltest.db._
 
 import scala.concurrent.duration._
@@ -40,11 +39,7 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
           _ <- insertDbData(orig)
           rows <- fetchCompany
         } yield {
-          val result = Assembler.assemble(
-            TestDataInstances.Infallible.companyAssembler,
-          )(
-            rows,
-          )
+          val result = TestDataInstances.Infallible.companyAssembler.assemble(rows)
           assert(normalizeCompanies(result))(equalTo(orig))
         }).ensuring(cleanupTables)
       },
@@ -54,11 +49,7 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
           _ <- insertDbData(orig)
           rows <- fetchCompanyOpt
         } yield {
-          val result = Assembler.assemble(
-            TestDataInstances.Infallible.companyOptAssembler,
-          )(
-            rows,
-          )
+          val result = TestDataInstances.Infallible.companyOptAssembler.assemble(rows)
           assert(normalizeCompanies(result))(equalTo(orig))
         }).ensuring(cleanupTables)
       },
@@ -128,7 +119,7 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
 
   val postgresContainerLayer: ZLayer[Any, Nothing, Has[Transactor[Task]]] = containerLayer(
     List(
-      DockerContainer("postgres:10.5")
+      DockerContainer("postgres:12.3-alpine")
         .withEnv("POSTGRES_PASSWORD=postgres")
         .withPorts((5432, Some(5432)))
         .withReadyChecker(
@@ -202,9 +193,8 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
     )
   }
 
-  def cleanupTables: ZIO[Db, Nothing, Unit] = {
+  def cleanupTables: ZIO[Db, Nothing, Unit] =
     runSql(Update[Unit](s"TRUNCATE company CASCADE").run(())).unit
-  }
 
   def fetchCompany: URIO[Db, Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil]] =
     fetchCompanyImpl[DbCompany :: DbDepartment :: DbEmployee :: HNil]("INNER")

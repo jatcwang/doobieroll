@@ -10,5 +10,16 @@
       - uses: olafurpg/setup-scala@v5
         with:
           java-version: openjdk@1.11
+      - name: coursier cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/coursier
+          key: ${{ runner.OS }}-coursier-cache-${{ matrix.scala }}-${{ hashFiles('**/*.sbt') }} # -${{ hashFiles('project/**.scala') }} (fails for now)
+          restore-keys: |
+            ${{ runner.OS }}-coursier-cache-${{ matrix.scala }}-${{ hashFiles('**/*.sbt') }}-
+            ${{ runner.OS }}-coursier-cache-${{ matrix.scala }}-
+            ${{ runner.OS }}-coursier-cache-
+      - name: Pull postgres image
+        run: docker ps && docker pull postgres:12.3-alpine
       - name: Compile
         run: sbt test

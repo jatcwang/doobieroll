@@ -132,33 +132,28 @@ Let's see how it's actually done with an example:
 - A **Town** can have many **Schools** (one-to-many relationship)
 - A **School** can have many **Students** (one-to-many relationship)
 
-Let's say we want to find towns along with the school and the students in those schools (in a hierarchical output format).
-In JSON it will look like this:
+```scala mdoc:silent
+import java.util.UUID
 
-```json
-[
-  {
-    "id": "...",
-    "name": "Smallville",
-    "schools": [
-      {
-        "id": "...",
-        "name": "Oakland School"
-        "students": [
-          {
-            "id": "...",
-            "name": "Alice Wonderland"
-          },
-          // ...other students in Oakland
-        ],
-      },
-      // ...other schools in Smallville
-    ]
-  },
-  // ...other towns with their schools and students
-]
+case class Town(
+  id: UUID,
+  name: String,
+  schools: Vector[School]
+)
+
+case class School(
+  id: UUID,
+  name: String,
+  students: Vector[Student]
+)
+
+case class Student(
+  id: UUID,
+  name: String
+)
 ```
 
+Let's say we want to find towns, with the schools in those towns and the students in each of those schools.
 The code you'll write with doobie to retrieve this information will probably look like 
 
 ```scala mdoc:invisible
@@ -166,7 +161,6 @@ import doobie.postgres.implicits._
 ```
 
 ```scala mdoc:silent
-import java.util.UUID
 import doobie.implicits._ 
 import shapeless.{::, HNil}
 
@@ -202,28 +196,7 @@ and after running the query against some data you'll have a result list.
 val queryResult = Vector.empty[DbTown :: DbSchool :: DbStudent :: HNil]
 ```
 ```scala
-val queryResult: Vector[DbTown :: DbSchool :: DbStudent :: HNil] = // ... run the query
-```
-
-Now we define the domain models:
-
-```scala mdoc:silent
-case class Town(
-  id: UUID,
-  name: String,
-  schools: Vector[School]
-)
-
-case class School(
-  id: UUID,
-  name: String,
-  students: Vector[Student]
-)
-
-case class Student(
-  id: UUID,
-  name: String
-)
+val queryResult: Vector[DbTown :: DbSchool :: DbStudent :: HNil] = // ...code to run the SQL query here omitted
 ```
 
 ### 1. Define the database-to-domain relationship
@@ -259,11 +232,8 @@ val studentDef: LeafDef[Id, Student, DbStudent] = LeafDef.make(
 With our individual definitions, we can now build an **Assembler**
 
 ```scala mdoc:silent
-val assembler: ParentAssembler[cats.Id, Town, DbTown :: DbSchool :: DbStudent :: HNil] = townDef.toAssembler(
-  schoolDef.toAssembler(
-    studentDef.toAssembler
-  )
-)
+val assembler: ParentAssembler[cats.Id, Town, DbTown :: DbSchool :: DbStudent :: HNil] = 
+  townDef.toAssembler(schoolDef.toAssembler(studentDef.toAssembler))
 ```
 
 The signature of the assembler tells us that it knows how to construct some `Town`s from a 
@@ -271,3 +241,9 @@ list of query result rows! (`DbTown :: DbSchool :: DbStudent :: HNil`).
 (Note how the DB type of assembler and the query result from above matches!)
 
 ### 3. Assemble your query result
+
+```
+val towns: Vector[Town] = assemble.assemble(queryResult)
+```
+
+That's it!

@@ -1,7 +1,9 @@
 package doobieroll
 
-import shapeless.{::, HList}
-import doobieroll.impl.{ParentVisitor, Accum, OptParentVisitor}
+import shapeless.{::, HList, HNil}
+import doobieroll.impl.{Accum, OptParentVisitor, ParentVisitor}
+
+import scala.collection.mutable
 
 trait ParentAssembler[F[_], A, Dbs <: HList] extends Assembler[F, A, Dbs] {
   self =>
@@ -9,6 +11,21 @@ trait ParentAssembler[F[_], A, Dbs <: HList] extends Assembler[F, A, Dbs] {
     accum: Accum,
     idx: Int,
   ): ParentVisitor[F, A, Dbs]
+
+  def assemble(rows: TraversableOnce[Dbs]): Vector[F[A]] = {
+    import doobieroll.ParentAssembler.hlistToArraySeq
+
+    if (rows.isEmpty) return Vector.empty
+    val accum = new Accum()
+
+    val parVis = this.makeVisitor(accum, 0)
+
+    rows.foreach { dbs =>
+      parVis.recordTopLevel(hlistToArraySeq(dbs))
+    }
+
+    parVis.assembleTopLevel()
+  }
 
   final override def optional[ADb, RestDb <: HList](
     implicit ev: (ADb :: RestDb) =:= Dbs,
@@ -27,3 +44,26 @@ trait ParentAssembler[F[_], A, Dbs <: HList] extends Assembler[F, A, Dbs] {
   }
 }
 
+object ParentAssembler {
+
+  private[ParentAssembler] def hlistToArraySeq[Dbs <: HList](
+    h: Dbs,
+  ): Vector[Any] = {
+    val arr = mutable.ArrayBuffer.empty[Any]
+
+    @scala.annotation.tailrec
+    def impl(h: HList): Unit = {
+      h match {
+        case x :: r => {
+          arr += x
+          impl(r)
+        }
+        case HNil => ()
+      }
+    }
+
+    impl(h)
+    arr.toVector
+  }
+
+}
