@@ -22,4 +22,6 @@
       - name: Pull postgres image
         run: docker ps && docker pull postgres:12.3-alpine
       - name: Compile
-        run: sbt test
+        run: sbt test publishMicrosite
+        env:
+          GITHUB_TOKEN: {{ secrets.GITHUB_TOKEN }}

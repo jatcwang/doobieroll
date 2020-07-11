@@ -24,9 +24,10 @@ jobs:
         run: docker ps && docker pull postgres:12.3-alpine
       - uses: olafurpg/setup-gpg@v2
       - name: Publish ${{ github.ref }}
-        run: sbt test ci-release
+        run: sbt test ci-release publishMicrosite
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          GITHUB_TOKEN: {{ secrets.GITHUB_TOKEN }}

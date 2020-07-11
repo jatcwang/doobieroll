@@ -94,7 +94,7 @@ lazy val docs = project
 
 lazy val root = project
   .in(new File("."))
-  .aggregate(bench, core, coretest)
+  .aggregate(bench, core, coretest, docs)
   .settings(noPublishSettings)
   .settings(commonSettings)
 
