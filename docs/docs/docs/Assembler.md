@@ -375,3 +375,27 @@ val schoolMoreInfoDef: ParentDef.Aux[Id, SchoolMoreInfo, DbSchool, Teacher :: St
 val schoolMoreInfoAssembler: ParentAssembler[cats.Id, SchoolMoreInfo, DbSchool :: DbTeacher :: DbStudent :: HNil] = 
   schoolMoreInfoDef.toAssembler(teacherDef.toAssembler, studentDef.toAssembler)
 ```
+
+### Validated conversion to domain types
+
+It is common for domain types to have additional constraints representing some domain logic 
+(e.g. `name` field cannot be empty). `Assembler` allows you to handle failures with any failure context
+as long as it has a `cats.Applicative` instance. (e.g. , `Either`, `Validated` `Ior`)
+
+To create a fallible definition use `makeF` instead of `make`
+
+```scala mdoc:invisible
+case class MyError(msg: String)
+```
+
+```scala mdoc:silent
+val stricterStudentDef: LeafDef[Either[MyError, *], Student, DbStudent] = LeafDef.makeF(
+  (db: DbStudent) => {
+    if (db.name.isEmpty) {
+      Left(MyError("Name is empty!"))
+    }
+    else Right(Student(id = db.id, name = db.name))
+  }
+)
+```
+

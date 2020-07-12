@@ -1,26 +1,25 @@
 ---
 layout: docs
-title:  "Quick Start"
+title:  "Introduction"
 permalink: docs/intro
 ---
 
-# Quick Start
+## What does doobieroll do?
 
-Add the following to your build.sbt:
+[![Release](https://img.shields.io/nexus/r/com.github.jatcwang/doobieroll_2.13?server=https%3A%2F%2Foss.sonatype.org)](https://oss.sonatype.org/content/repositories/releases/com/github/jatcwang/doobieroll_2.13/)
 
-[![Release](https://img.shields.io/nexus/r/com.github.jatcwang/doobieroll-core_2.13?server=https%3A%2F%2Foss.sonatype.org)](https://oss.sonatype.org/content/repositories/releases/com/github/jatcwang/doobieroll-core_2.13/)
+Doobieroll is a collection of utilities to help you work with [Doobie](https://tpolecat.github.io/doobie/) / SQL better.
 
 ```
-libraryDependencies += "com.github.jatcwang" %% "doobieroll-core" % LATEST_VERSION
+// SBT
+"com.github.jatcwang" %% "doobieroll" % "{{ site.version }}" 
+
+// Mill
+ivy"com.github.jatcwang::doobieroll:{{ site.version }}" 
 ```
 
-If you're using Scala 2.12, make sure you add `scalacOptions += "-Ypartial-unitification"` compiler flag
-
-Reload your project, and start handling errors!
-
-```scala
-import doobieroll._
-```
+- [TableColumns](tablecolumns) - Ensure fields in your SQL are consistently named and ordered.
+- [Assembler](assembler) - Assemble SQL query results into hierarchical domain models
 
 
 

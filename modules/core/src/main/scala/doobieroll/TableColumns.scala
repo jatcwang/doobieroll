@@ -14,17 +14,22 @@ sealed abstract case class TableColumns[T](
   allColumns: NonEmptyList[String],
 ) {
 
+  /** List th fields, separated by commas. e.g. "field1,field2,field3" */
   def list: String = allColumns.toList.mkString(",")
 
   def listF: Fragment = Fragment.const0(list)
 
+  /** List th fields, separated by commas and surrounded by parens.
+    * e.g. "(field1,field2,field3)"
+    * This makes INSERT queries easier to write like INSERT INTO mytable VALUES ${columns.listWithParen}
+    * */
   def listWithParen: String = s"($list)"
 
   def listWithParenF: Fragment = Fragment.const(listWithParen)
 
+  /** Return string of the form '?,?,?' depending on how many fields there is for this TableColumn*/
   def parameterized: String = allColumns.map(_ => "?").toList.mkString(",")
 
-  /** Return string of the form '?,?,?' depending on how many fields there is for this TableColumn*/
   def parameterizedF: Fragment =
     Fragment.const(parameterized)
 

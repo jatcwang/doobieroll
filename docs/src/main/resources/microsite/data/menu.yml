@@ -1,8 +1,6 @@
 options:
-  - title: Quick Start
+  - title: Introduction
     url: docs/intro
-  - title: Why Doobieroll?
-    url: docs/why
   - title: Assembler
     url: docs/assembler
   - title: TableColumns
