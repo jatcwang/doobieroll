@@ -11,6 +11,9 @@ jobs:
       - uses: olafurpg/setup-scala@v5
         with:
           java-version: openjdk@1.11
+      - uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.7
       - name: coursier cache
         uses: actions/cache@v2
         with:
@@ -23,6 +26,8 @@ jobs:
       - name: Pull postgres image
         run: docker ps && docker pull postgres:12.3-alpine
       - uses: olafurpg/setup-gpg@v2
+      - name: Setup Jekyll
+        run: gem install jekyll -v 4.1.1
       - name: Publish ${{ github.ref }}
         run: sbt test ci-release publishMicrosite
         env:

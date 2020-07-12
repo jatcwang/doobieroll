@@ -10,6 +10,9 @@
       - uses: olafurpg/setup-scala@v5
         with:
           java-version: openjdk@1.11
+      - uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.7
       - name: coursier cache
         uses: actions/cache@v2
         with:
@@ -19,6 +22,8 @@
             ${{ runner.OS }}-coursier-cache-${{ matrix.scala }}-${{ hashFiles('**/*.sbt') }}-
             ${{ runner.OS }}-coursier-cache-${{ matrix.scala }}-
             ${{ runner.OS }}-coursier-cache-
+      - name: Setup Jekyll
+        run: gem install jekyll -v 4.1.1
       - name: Pull postgres image
         run: docker ps && docker pull postgres:12.3-alpine
       - name: Compile
