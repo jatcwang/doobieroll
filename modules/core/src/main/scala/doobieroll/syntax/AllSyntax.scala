@@ -1,3 +1,3 @@
 package doobieroll.syntax
 
-trait AllSyntax extends DefSyntax with UnorderedSyntax
+trait AllSyntax extends DefSyntax with ToAssemblerSyntax

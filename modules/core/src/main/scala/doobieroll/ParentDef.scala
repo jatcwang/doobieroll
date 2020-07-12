@@ -45,8 +45,6 @@ object ParentDef {
     type Id = Id0
   }
 
-  // FIXME: remake F to be infallible and makeF to be fallible
-
   def make[A, ADb, Child0, Id0](
     getId: ADb => Id0,
     constructWithChild: (ADb, Vector[Child0]) => A,
@@ -58,6 +56,31 @@ object ParentDef {
     constructWithChild: (ADb, Vector[Child0], Vector[Child1]) => A,
   ): ParentDef.Aux[cats.Id, A, ADb, Child0 :: Child1 :: HNil] =
     makeF2[cats.Id, A, ADb, Child0, Child1, Id0](getId, constructWithChild)
+
+  def make3[A, ADb, Child0, Child1, Child2, Id0](
+    getId: ADb => Id0,
+    constructWithChild: (ADb, Vector[Child0], Vector[Child1], Vector[Child2]) => A,
+  ): ParentDef.Aux[cats.Id, A, ADb, Child0 :: Child1 :: Child2 :: HNil] =
+    makeF3[cats.Id, A, ADb, Child0, Child1, Child2, Id0](getId, constructWithChild)
+
+  def make4[A, ADb, Child0, Child1, Child2, Child3, Id0](
+    getId: ADb => Id0,
+    constructWithChild: (ADb, Vector[Child0], Vector[Child1], Vector[Child2], Vector[Child3]) => A,
+  ): ParentDef.Aux[cats.Id, A, ADb, Child0 :: Child1 :: Child2 :: Child3 :: HNil] =
+    makeF4[cats.Id, A, ADb, Child0, Child1, Child2, Child3, Id0](getId, constructWithChild)
+
+  def make5[A, ADb, Child0, Child1, Child2, Child3, Child4, Id0](
+    getId: ADb => Id0,
+    constructWithChild: (
+      ADb,
+      Vector[Child0],
+      Vector[Child1],
+      Vector[Child2],
+      Vector[Child3],
+      Vector[Child4],
+    ) => A,
+  ): ParentDef.Aux[cats.Id, A, ADb, Child0 :: Child1 :: Child2 :: Child3 :: Child4 :: HNil] =
+    makeF5[cats.Id, A, ADb, Child0, Child1, Child2, Child3, Child4, Id0](getId, constructWithChild)
 
   def makeF[F[_], A, ADb, Child0, Id0](
     getId: ADb => Id0,
@@ -100,5 +123,89 @@ object ParentDef {
     }
   }
 
-  // FIXME: more make methods
+  def makeF3[F[_], A, ADb, Child0, Child1, Child2, Id0](
+    getId: ADb => Id0,
+    constructWithChild: (ADb, Vector[Child0], Vector[Child1], Vector[Child2]) => F[A],
+  ): ParentDef.Aux[F, A, ADb, Child0 :: Child1 :: Child2 :: HNil] = {
+    val getId0 = getId
+    val constructWithChild0 = constructWithChild
+    new ParentDef[F, A, ADb] {
+      override type Child = Child0 :: Child1 :: Child2 :: HNil
+      override type ChildVecs = Vector[Child0] :: Vector[Child1] :: Vector[Child2] :: HNil
+      override type Id = Id0
+
+      override def getId(adb: ADb): Id = getId0(adb)
+
+      override def constructWithChild(
+        adb: ADb,
+        children: Vector[Child0] :: Vector[Child1] :: Vector[Child2] :: HNil,
+      ): F[A] = {
+        val child0 :: child1 :: child2 :: HNil = children
+        constructWithChild0(adb, child0, child1, child2)
+      }
+    }
+  }
+
+  def makeF4[F[_], A, ADb, Child0, Child1, Child2, Child3, Id0](
+    getId: ADb => Id0,
+    constructWithChild: (
+      ADb,
+      Vector[Child0],
+      Vector[Child1],
+      Vector[Child2],
+      Vector[Child3],
+    ) => F[A],
+  ): ParentDef.Aux[F, A, ADb, Child0 :: Child1 :: Child2 :: Child3 :: HNil] = {
+    val getId0 = getId
+    val constructWithChild0 = constructWithChild
+    new ParentDef[F, A, ADb] {
+      override type Child = Child0 :: Child1 :: Child2 :: Child3 :: HNil
+      override type ChildVecs =
+        Vector[Child0] :: Vector[Child1] :: Vector[Child2] :: Vector[Child3] :: HNil
+      override type Id = Id0
+
+      override def getId(adb: ADb): Id = getId0(adb)
+
+      override def constructWithChild(
+        adb: ADb,
+        children: Vector[Child0] :: Vector[Child1] :: Vector[Child2] :: Vector[Child3] :: HNil,
+      ): F[A] = {
+        val child0 :: child1 :: child2 :: child3 :: HNil = children
+        constructWithChild0(adb, child0, child1, child2, child3)
+      }
+    }
+  }
+
+  def makeF5[F[_], A, ADb, Child0, Child1, Child2, Child3, Child4, Id0](
+    getId: ADb => Id0,
+    constructWithChild: (
+      ADb,
+      Vector[Child0],
+      Vector[Child1],
+      Vector[Child2],
+      Vector[Child3],
+      Vector[Child4],
+    ) => F[A],
+  ): ParentDef.Aux[F, A, ADb, Child0 :: Child1 :: Child2 :: Child3 :: Child4 :: HNil] = {
+    val getId0 = getId
+    val constructWithChild0 = constructWithChild
+    new ParentDef[F, A, ADb] {
+      override type Child = Child0 :: Child1 :: Child2 :: Child3 :: Child4 :: HNil
+      override type ChildVecs =
+        Vector[Child0] :: Vector[Child1] :: Vector[Child2] :: Vector[Child3] :: Vector[Child4] :: HNil
+      override type Id = Id0
+
+      override def getId(adb: ADb): Id = getId0(adb)
+
+      override def constructWithChild(
+        adb: ADb,
+        children: Vector[Child0] :: Vector[Child1] :: Vector[Child2] :: Vector[Child3] :: Vector[
+          Child4,
+        ] :: HNil,
+      ): F[A] = {
+        val child0 :: child1 :: child2 :: child3 :: child4 :: HNil = children
+        constructWithChild0(adb, child0, child1, child2, child3, child4)
+      }
+    }
+  }
 }

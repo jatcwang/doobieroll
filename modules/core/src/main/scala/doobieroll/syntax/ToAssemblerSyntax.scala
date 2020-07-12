@@ -3,12 +3,12 @@ package doobieroll.syntax
 import cats.Monad
 import cats.implicits._
 import doobieroll.impl._
-import doobieroll.{Assembler, ParentDef, LeafDef, ParentAssembler}
+import doobieroll.{Assembler, LeafDef, ParentAssembler, ParentDef}
 import shapeless._
 
 import scala.annotation.tailrec
 
-trait UnorderedSyntax {
+trait ToAssemblerSyntax {
 
   implicit class LeafDefExtension[F[_], A, ADb](leafDef: LeafDef[F, A, ADb]) {
     def toAssembler: Assembler[F, A, ADb :: HNil] = {
@@ -30,7 +30,7 @@ trait UnorderedSyntax {
   import shapeless._
   import shapeless.ops.hlist._
 
-  type Flattener[HL <: HList, Out <: HList] = FlatMapper.Aux[HListIdentity.type, HL, Out]
+  final type Flattener[HL <: HList, Out <: HList] = FlatMapper.Aux[HListIdentity.type, HL, Out]
 
   object HListIdentity extends Poly1 {
     implicit def caseHList[HL <: HList] = at[HL](identity)
@@ -92,11 +92,95 @@ trait UnorderedSyntax {
         monadF,
       )
 
-    // FIXME: more toAssembler
+    def toAssembler[C0, C1, C2, C0Dbs <: HList, C1Dbs <: HList, C2Dbs <: HList, CDbs <: HList](
+      c0Assembler: Assembler[F, C0, C0Dbs],
+      c1Assembler: Assembler[F, C1, C1Dbs],
+      c2Assembler: Assembler[F, C2, C2Dbs],
+    )(
+      implicit monadF: Monad[F],
+      flattener: Flattener[C0Dbs :: C1Dbs :: C2Dbs :: HNil, CDbs],
+    ): ParentAssembler[F, A, ADb :: CDbs] =
+      mkParent(
+        par,
+        Vector(
+          eraseAssemblerType(c0Assembler),
+          eraseAssemblerType(c1Assembler),
+          eraseAssemblerType(c2Assembler),
+        ),
+        flattener,
+        monadF,
+      )
+
+    def toAssembler[
+      C0,
+      C1,
+      C2,
+      C3,
+      C0Dbs <: HList,
+      C1Dbs <: HList,
+      C2Dbs <: HList,
+      C3Dbs <: HList,
+      CDbs <: HList,
+    ](
+      c0Assembler: Assembler[F, C0, C0Dbs],
+      c1Assembler: Assembler[F, C1, C1Dbs],
+      c2Assembler: Assembler[F, C2, C2Dbs],
+      c3Assembler: Assembler[F, C3, C3Dbs],
+    )(
+      implicit monadF: Monad[F],
+      flattener: Flattener[C0Dbs :: C1Dbs :: C2Dbs :: C3Dbs :: HNil, CDbs],
+    ): ParentAssembler[F, A, ADb :: CDbs] =
+      mkParent(
+        par,
+        Vector(
+          eraseAssemblerType(c0Assembler),
+          eraseAssemblerType(c1Assembler),
+          eraseAssemblerType(c2Assembler),
+          eraseAssemblerType(c3Assembler),
+        ),
+        flattener,
+        monadF,
+      )
+
+    def toAssembler[
+      C0,
+      C1,
+      C2,
+      C3,
+      C4,
+      C0Dbs <: HList,
+      C1Dbs <: HList,
+      C2Dbs <: HList,
+      C3Dbs <: HList,
+      C4Dbs <: HList,
+      CDbs <: HList,
+    ](
+      c0Assembler: Assembler[F, C0, C0Dbs],
+      c1Assembler: Assembler[F, C1, C1Dbs],
+      c2Assembler: Assembler[F, C2, C2Dbs],
+      c3Assembler: Assembler[F, C3, C3Dbs],
+      c4Assembler: Assembler[F, C4, C4Dbs],
+    )(
+      implicit monadF: Monad[F],
+      flattener: Flattener[C0Dbs :: C1Dbs :: C2Dbs :: C3Dbs :: C4Dbs :: HNil, CDbs],
+    ): ParentAssembler[F, A, ADb :: CDbs] =
+      mkParent(
+        par,
+        Vector(
+          eraseAssemblerType(c0Assembler),
+          eraseAssemblerType(c1Assembler),
+          eraseAssemblerType(c2Assembler),
+          eraseAssemblerType(c3Assembler),
+          eraseAssemblerType(c4Assembler),
+        ),
+        flattener,
+        monadF,
+      )
+
   }
 }
 
-private[doobieroll] object UnorderedSyntax {
+private[doobieroll] object ToAssemblerSyntax {
 
   def seqToHList[HL <: HList](orig: Vector[Any]): HL = {
 

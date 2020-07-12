@@ -3,7 +3,7 @@ package doobieroll.impl
 import cats.Monad
 import doobieroll.impl.Accum.AnyKeyMultiMap
 import doobieroll.{ParentDef, Assembler}
-import doobieroll.syntax.UnorderedSyntax.{collectSuccess, seqToHList}
+import doobieroll.syntax.ToAssemblerSyntax.{collectSuccess, seqToHList}
 import shapeless._
 
 import scala.collection.immutable.Vector
