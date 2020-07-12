@@ -27,6 +27,7 @@ lazy val core = Project("core", file("modules/core"))
       "org.typelevel" %% "cats-core" % "2.1.1",
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6",
       "com.chuusai" %% "shapeless" % "2.3.3",
+      "org.tpolecat" %% "doobie-core" % doobieVersion,
     ),
   )
 
@@ -36,7 +37,6 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
   .settings(noPublishSettings)
   .settings(
     libraryDependencies ++= Seq(
-      // FIXME:
       "com.lihaoyi" %% "pprint" % "0.5.9",
       "org.flywaydb" % "flyway-core" % "6.4.4",
       "io.circe" %% "circe-core" % circeVersion,
@@ -46,7 +46,6 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "dev.zio" %% "zio-test-sbt" % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
       "dev.zio" %% "zio-interop-cats" % "2.1.3.0-RC15",
-      "org.tpolecat" %% "doobie-core" % doobieVersion,
 
       "javax.activation" % "activation" % "1.1.1", // Reuqired for DataSource class in JDK 9+
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,

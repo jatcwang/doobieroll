@@ -5,3 +5,5 @@ options:
     url: docs/why
   - title: Assembler
     url: docs/assembler
+  - title: TableColumns
+    url: docs/tablecolumns

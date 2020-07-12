@@ -5,6 +5,7 @@ import shapeless._
 import shapeless.ops.hlist.{Mapper, ToTraversable}
 import shapeless.ops.record.Keys
 import shapeless.tag.Tagged
+import doobie.Fragment
 
 import scala.annotation.implicitNotFound
 
@@ -13,29 +14,44 @@ sealed abstract case class TableColumns[T](
   allColumns: NonEmptyList[String],
 ) {
 
-  lazy val list: String = allColumns.toList.mkString(",")
+  def list: String = allColumns.toList.mkString(",")
 
-  lazy val listWithParen: String = "(" + list + ")"
+  def listF: Fragment = Fragment.const0(list)
 
-  /** Prefix with the default table name */
-  def tableNamePrefixed: String = {
+  def listWithParen: String = s"($list)"
+
+  def listWithParenF: Fragment = Fragment.const(listWithParen)
+
+  def parameterized: String = allColumns.map(_ => "?").toList.mkString(",")
+
+  /** Return string of the form '?,?,?' depending on how many fields there is for this TableColumn*/
+  def parameterizedF: Fragment =
+    Fragment.const(parameterized)
+
+  def parameterizedWithParen: String =
+    s"($parameterized)"
+
+  def parameterizedWithParenF: Fragment =
+    Fragment.const(parameterizedWithParen)
+
+  /** Prefix each field with the default table name.
+    * e.g. "mytable.id, mytable.name, mytable.address" */
+  def tableNamePrefixed: String =
     allColumns.map(field => s"$tableName.$field").toList.mkString(", ")
-  }
 
+  def tableNamePrefixedF: Fragment = Fragment.const(tableNamePrefixed)
+
+  /** Prefix each field with the given string. e.g. "c.id, c.name, c.address" */
   def prefixed(prefix: String): String =
     allColumns.map(field => s"$prefix.$field").toList.mkString(", ")
 
-  lazy val parameterized: String =
-    allColumns.map(_ => "?").toList.mkString(",")
-
-  lazy val parameterizedWithParen: String = "(" + parameterized + ")"
+  def prefixedF(prefix: String): Fragment = Fragment.const(prefixed(prefix))
 
 }
 
 object TableColumns {
 
-  // FIXME: allow custom casing
-  private def snakeCaseName(str: String): String =
+  private def toSnakeCase(str: String): String =
     str
       .replaceAll(
         "([A-Z]+)([A-Z][a-z])",
@@ -44,10 +60,15 @@ object TableColumns {
       .replaceAll("([a-z\\d])([A-Z])", "$1_$2")
       .toLowerCase
 
-  def deriveSnakeTableColumns[T](tableName: String)(
+  def deriveSnakeCaseTableColumns[T](tableName: String)(
+    implicit mkTableColumns: MkTableColumns[T],
+  ): TableColumns[T] =
+    deriveTableColumns[T](tableName, toSnakeCase)
+
+  def deriveTableColumns[T](tableName: String, transform: String => String)(
     implicit mkTableColumns: MkTableColumns[T],
   ): TableColumns[T] = {
-    val names = mkTableColumns.allColumns.map(TableColumns.snakeCaseName)
+    val names = mkTableColumns.allColumns.map(transform)
     new TableColumns[T](tableName, names) {}
   }
 

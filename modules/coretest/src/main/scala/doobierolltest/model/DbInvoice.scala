@@ -10,5 +10,5 @@ final case class DbInvoice(
 )
 
 object DbInvoice {
-  val columns: TableColumns[DbInvoice] = TableColumns.deriveSnakeTableColumns("invoice")
+  val columns: TableColumns[DbInvoice] = TableColumns.deriveSnakeCaseTableColumns("invoice")
 }

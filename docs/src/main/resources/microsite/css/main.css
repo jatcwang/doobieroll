@@ -2,3 +2,7 @@
   color: #c7254e;
   background-color: #f9f2f4;
 }
+
+.hljs-string {
+  line-height: inherit !important;
+}

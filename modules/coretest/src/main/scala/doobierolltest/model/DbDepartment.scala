@@ -11,5 +11,5 @@ final case class DbDepartment(
 )
 
 object DbDepartment {
-  val columns: TableColumns[DbDepartment] = TableColumns.deriveSnakeTableColumns("department")
+  val columns: TableColumns[DbDepartment] = TableColumns.deriveSnakeCaseTableColumns("department")
 }
