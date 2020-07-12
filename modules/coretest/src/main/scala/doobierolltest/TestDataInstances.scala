@@ -31,8 +31,7 @@ object TestDataInstances {
 
     val employeeAssembler: Assembler[Id, Employee, DbEmployee :: HNil] =
       employeeLeaf.toAssembler
-    val departmentAssembler
-      : ParentAssembler[Id, Department, DbDepartment :: DbEmployee :: HNil] =
+    val departmentAssembler: ParentAssembler[Id, Department, DbDepartment :: DbEmployee :: HNil] =
       departmentParent.toAssembler(employeeAssembler)
     val companyAssembler
       : ParentAssembler[Id, Company, DbCompany :: DbDepartment :: DbEmployee :: HNil] =

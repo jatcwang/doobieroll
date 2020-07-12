@@ -105,6 +105,7 @@ lazy val commonSettings = Seq(
   scalacOptions ++= Seq(
     "-Ywarn-macros:after",
   ),
+  doc / scalacOptions --= Seq("-Xfatal-warnings"),
   scalacOptions --= {
     if (sys.env.contains("CI")) {
       Seq.empty

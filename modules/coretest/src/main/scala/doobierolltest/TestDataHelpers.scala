@@ -2,7 +2,7 @@ package doobierolltest
 
 import shapeless.{::, HNil}
 import zio.random.Random
-import zio.test.{Sized, Gen}
+import zio.test.{Gen, Sized}
 import zio.test.magnolia.DeriveGen
 import model._
 
@@ -178,7 +178,7 @@ object TestDataHelpers {
   def companiesToDbData(input: Seq[Company]): Tuple3[
     Vector[DbCompany],
     Vector[DbDepartment],
-    Vector[DbEmployee]
+    Vector[DbEmployee],
   ] = {
     val companies = mutable.Set.empty[DbCompany]
     val departments = mutable.Set.empty[DbDepartment]
@@ -187,19 +187,19 @@ object TestDataHelpers {
     input.foreach { c =>
       companies += DbCompany(
         c.id,
-        c.name
+        c.name,
       )
       c.departments.foreach { d =>
         departments += DbDepartment(
           id = d.id,
           companyId = c.id,
-          name = d.name
+          name = d.name,
         )
         d.employees.foreach { e =>
           employees += DbEmployee(
             id = e.id,
             departmentId = d.id,
-            name = e.name
+            name = e.name,
           )
         }
       }
@@ -208,7 +208,7 @@ object TestDataHelpers {
     Tuple3(
       companies.toVector,
       departments.toVector,
-      employees.toVector
+      employees.toVector,
     )
   }
 

@@ -49,8 +49,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
             .updated(0, expectedCompanies(0).copy(name = "errComp"))
             .flatMap(companyToDbRows)
 
-        val result = Fallible.companyAssembler.assemble(dbRows.map(_.productElements))
-          .sequence
+        val result = Fallible.companyAssembler.assemble(dbRows.map(_.productElements)).sequence
 
         assert(result)(isLeft(equalTo(Err("company errComp"))))
       },
@@ -60,8 +59,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
         val dbRows = companiesWithBadDepartment
           .flatMap(companyToDbRows)
 
-        val result = Fallible.companyAssembler.assemble(dbRows.map(_.productElements))
-          .sequence
+        val result = Fallible.companyAssembler.assemble(dbRows.map(_.productElements)).sequence
 
         assert(result)(isLeft(equalTo(Err("department errDep"))))
       },
@@ -71,8 +69,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
         val dbRows = companiesWithBadEmployee
           .flatMap(companyToDbRows)
 
-        val result = Fallible.companyAssembler.assemble(dbRows.map(_.productElements))
-          .sequence
+        val result = Fallible.companyAssembler.assemble(dbRows.map(_.productElements)).sequence
 
         assert(result)(isLeft(equalTo(Err("employee errEmp"))))
       },
@@ -82,8 +79,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
         val dbRows = enterpriseWithBadInvoice
           .flatMap(enterpriseToDbRows)
 
-        val result = Fallible.enterpriseAssembler.assemble(dbRows.map(_.productElements))
-          .sequence
+        val result = Fallible.enterpriseAssembler.assemble(dbRows.map(_.productElements)).sequence
 
         assert(result)(isLeft(equalTo(Err("invoice 0"))))
       },

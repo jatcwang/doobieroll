@@ -2,7 +2,7 @@ package doobieroll.impl
 
 import cats.Monad
 import doobieroll.impl.Accum.AnyKeyMultiMap
-import doobieroll.{ParentDef, Assembler}
+import doobieroll.{Assembler, ParentDef}
 import doobieroll.syntax.ToAssemblerSyntax.{collectSuccess, seqToHList}
 import shapeless._
 

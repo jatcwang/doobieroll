@@ -193,48 +193,48 @@ case class DbStudent(
 and after running the query against some data you'll have a result list.
 
 ```scala mdoc:invisible
+import shapeless.syntax.std.tuple._
+val town1 = DbTown(
+UUID.fromString("bca65379-1e46-40ca-bff5-5ca96c5fd183"),
+"Smallville"
+)
+
+val town2 = DbTown(
+UUID.fromString("ee58ad86-ce81-4650-b329-b701424fc23b"),
+"Springfield"
+)
+
+val school1 = DbSchool(
+UUID.fromString("c60e0a80-cfcb-4578-b00d-14b3fe68e734"),
+"Smallville High"
+)
+
+val school2 = DbSchool(
+UUID.fromString("51f02985-db87-4350-b557-6d9476e1367f"),
+"Springfield Elementary School"
+)
+
+val student1 = DbStudent(
+UUID.fromString("d948735b-1173-411c-ac00-e019ee89897a"),
+"Clark"
+)
+
+val student2 = DbStudent(
+UUID.fromString("7158132d-fe59-4ef1-8693-1476a0359aa7"),
+"Bob"
+)
+
+val student3 = DbStudent(
+UUID.fromString("4386ad3e-a30c-4179-938f-a0ead5bd9b4a"),
+"Lisa"
+)
+
+val student4 = DbStudent(
+UUID.fromString("997c0f4b-106d-4d80-82bd-02bae0a2c177"),
+"Bart"
+)
+
 val queryResult: Vector[DbTown :: DbSchool :: DbStudent :: HNil] = {
-  import shapeless.syntax.std.tuple._
-  val town1 = DbTown(
-    UUID.fromString("bca65379-1e46-40ca-bff5-5ca96c5fd183"),
-    "Smallville"
-  )
-
-  val town2 = DbTown(
-    UUID.fromString("ee58ad86-ce81-4650-b329-b701424fc23b"),
-    "Springfield"
-  )
-
-  val school1 = DbSchool(
-    UUID.fromString("c60e0a80-cfcb-4578-b00d-14b3fe68e734"),
-    "Smallville High"
-  )
-
-  val school2 = DbSchool(
-    UUID.fromString("51f02985-db87-4350-b557-6d9476e1367f"),
-    "Springfield Elementary School"
-  )
-
-  val student1 = DbStudent(
-    UUID.fromString("d948735b-1173-411c-ac00-e019ee89897a"),
-    "Clark"
-  )
-
-  val student2 = DbStudent(
-    UUID.fromString("7158132d-fe59-4ef1-8693-1476a0359aa7"),
-    "Bob"
-  )
-
-  val student3 = DbStudent(
-    UUID.fromString("4386ad3e-a30c-4179-938f-a0ead5bd9b4a"),
-    "Lisa"
-  )
-
-  val student4 = DbStudent(
-    UUID.fromString("997c0f4b-106d-4d80-82bd-02bae0a2c177"),
-    "Bart"
-  )
-
   Vector(
     Tuple3(town1, school1, student1),
     Tuple3(town1, school1, student2),
@@ -399,3 +399,28 @@ val stricterStudentDef: LeafDef[Either[MyError, *], Student, DbStudent] = LeafDe
 )
 ```
 
+And our assemble result will be wrapped in our error
+
+```scala mdoc:invisible
+val queryResultsWithBadData: Vector[DbSchool :: DbStudent :: HNil] = Vector(
+  Tuple2(school2, student2),
+  Tuple2(school2, student3),
+  Tuple2(school1, student1.copy(name = "")),
+).map(_.productElements)
+```
+
+```scala mdoc
+import cats.implicits._ // Provides Monad instance for Either
+val schoolAssembler = schoolDef.forEither.toAssembler(stricterStudentDef.toAssembler)
+
+schoolAssembler.assemble(queryResultsWithBadData)
+```
+
+Some notes for the code snippet:
+
+* `schoolDef` (from previous section) is an unfallible definition. 
+  So we need to "lift" its error context to `Either[MyError, *]` in order to combine it with
+  the fallible `stricterStudentDef` which can fail
+* The results are partial failures - Failures will only bubble up and fail all their parents.
+  Other entities with valid data are still assembled and accessible. This is useful in many scenarios
+  where you don't want one corrupted entity to cause the whole result set to error.

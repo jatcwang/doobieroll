@@ -1,7 +1,7 @@
 package doobieroll
 
-import shapeless.{HList, ::, HNil}
-import doobieroll.impl.{ParentVisitor, Accum, OptParentVisitor}
+import shapeless.{::, HList, HNil}
+import doobieroll.impl.{Accum, OptParentVisitor, ParentVisitor}
 
 import scala.annotation.nowarn
 import scala.collection.mutable

@@ -21,6 +21,7 @@ object GenerateTestData extends App {
         val pw = new PrintWriter(new File("testdata.json"))
         pw.write(c.asJson.spaces2)
         pw.close()
-      }.as(ExitCode.success)
+      }
+      .as(ExitCode.success)
 
 }

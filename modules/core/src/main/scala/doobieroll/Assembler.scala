@@ -1,10 +1,6 @@
 package doobieroll
 
-import doobieroll.impl.{
-  Accum,
-  OptVisitor,
-  Visitor,
-}
+import doobieroll.impl.{Accum, OptVisitor, Visitor}
 import shapeless.{::, HList}
 
 trait Assembler[F[_], A, Dbs <: HList] { self =>

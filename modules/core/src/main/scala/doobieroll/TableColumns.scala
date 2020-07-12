@@ -21,7 +21,7 @@ sealed abstract case class TableColumns[T](
 
   /** List th fields, separated by commas and surrounded by parens.
     * e.g. "(field1,field2,field3)"
-    * This makes INSERT queries easier to write like INSERT INTO mytable VALUES ${columns.listWithParen}
+    * This makes INSERT queries easier to write like "INSERT INTO mytable VALUES $\{columns.listWithParen}"
     * */
   def listWithParen: String = s"($list)"
 

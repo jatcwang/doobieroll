@@ -1,6 +1,6 @@
 package doobierolltest
 
-import zio.{UIO, Has, Task, ZIO}
+import zio.{Has, Task, UIO, ZIO}
 import doobie._
 import doobie.implicits._
 import zio.interop.catz._
