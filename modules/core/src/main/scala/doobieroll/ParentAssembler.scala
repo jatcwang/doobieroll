@@ -1,9 +1,11 @@
 package doobieroll
 
-import shapeless.{::, HList, HNil}
-import doobieroll.impl.{Accum, OptParentVisitor, ParentVisitor}
+import shapeless.{HList, ::, HNil}
+import doobieroll.impl.{ParentVisitor, Accum, OptParentVisitor}
 
+import scala.annotation.nowarn
 import scala.collection.mutable
+import scala.collection.compat.IterableOnce
 
 trait ParentAssembler[F[_], A, Dbs <: HList] extends Assembler[F, A, Dbs] {
   self =>
@@ -12,15 +14,17 @@ trait ParentAssembler[F[_], A, Dbs <: HList] extends Assembler[F, A, Dbs] {
     idx: Int,
   ): ParentVisitor[F, A, Dbs]
 
-  def assemble(rows: TraversableOnce[Dbs]): Vector[F[A]] = {
+  def assemble(rows: IterableOnce[Dbs]): Vector[F[A]] = {
     import doobieroll.ParentAssembler.hlistToArraySeq
 
-    if (rows.isEmpty) return Vector.empty
+    @nowarn
+    val it = rows.toIterator
+    if (it.isEmpty) return Vector.empty
     val accum = new Accum()
 
     val parVis = this.makeVisitor(accum, 0)
 
-    rows.foreach { dbs =>
+    it.foreach { dbs =>
       parVis.recordTopLevel(hlistToArraySeq(dbs))
     }
 

@@ -5,7 +5,6 @@ import doobierolltest.TestData._
 import doobierolltest.TestDataInstances._
 import doobierolltest.TestDataHelpers._
 import doobierolltest.model._
-import shapeless.syntax.std.tuple._
 import shapeless.{test => _, _}
 import zio.test.Assertion._
 import zio.test.environment.TestEnvironment
@@ -13,6 +12,8 @@ import zio.test.{DefaultRunnableSpec, ZSpec, _}
 import com.softwaremill.quicklens._
 
 object AssemblerSpec extends DefaultRunnableSpec {
+
+  import shapeless.syntax.std.tuple._
 
   override def spec: ZSpec[TestEnvironment, Nothing] =
     suite("AssemblerSpec")(

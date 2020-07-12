@@ -193,7 +193,55 @@ case class DbStudent(
 and after running the query against some data you'll have a result list.
 
 ```scala mdoc:invisible
-val queryResult = Vector.empty[DbTown :: DbSchool :: DbStudent :: HNil]
+val queryResult: Vector[DbTown :: DbSchool :: DbStudent :: HNil] = {
+  import shapeless.syntax.std.tuple._
+  val town1 = DbTown(
+    UUID.fromString("bca65379-1e46-40ca-bff5-5ca96c5fd183"),
+    "Smallville"
+  )
+
+  val town2 = DbTown(
+    UUID.fromString("ee58ad86-ce81-4650-b329-b701424fc23b"),
+    "Springfield"
+  )
+
+  val school1 = DbSchool(
+    UUID.fromString("c60e0a80-cfcb-4578-b00d-14b3fe68e734"),
+    "Smallville High"
+  )
+
+  val school2 = DbSchool(
+    UUID.fromString("51f02985-db87-4350-b557-6d9476e1367f"),
+    "Springfield Elementary School"
+  )
+
+  val student1 = DbStudent(
+    UUID.fromString("d948735b-1173-411c-ac00-e019ee89897a"),
+    "Clark"
+  )
+
+  val student2 = DbStudent(
+    UUID.fromString("7158132d-fe59-4ef1-8693-1476a0359aa7"),
+    "Bob"
+  )
+
+  val student3 = DbStudent(
+    UUID.fromString("4386ad3e-a30c-4179-938f-a0ead5bd9b4a"),
+    "Lisa"
+  )
+
+  val student4 = DbStudent(
+    UUID.fromString("997c0f4b-106d-4d80-82bd-02bae0a2c177"),
+    "Bart"
+  )
+
+  Vector(
+    Tuple3(town1, school1, student1),
+    Tuple3(town1, school1, student2),
+    Tuple3(town2, school2, student3),
+    Tuple3(town2, school2, student4),
+  ).map(_.productElements)
+}
 ```
 ```scala
 val queryResult: Vector[DbTown :: DbSchool :: DbStudent :: HNil] = // ...code to run the SQL query here omitted
@@ -242,8 +290,88 @@ list of query result rows! (`DbTown :: DbSchool :: DbStudent :: HNil`).
 
 ### 3. Assemble your query result
 
-```
-val towns: Vector[Town] = assemble.assemble(queryResult)
+```scala mdoc
+val towns: Vector[Town] = assembler.assemble(queryResult)
 ```
 
 That's it!
+
+# Usage notes
+
+### Row identity
+When joining sibling tables, SQL engines will often duplicate data from previous rows when 
+there are no new data needed, thus `Assembler` needs to deduplicate (using `equals`/`hashCode`)
+when processing the data to avoid duplicates.
+
+So it is important to write SQL (and database types) such that your data has fields which
+allows proper uniqueness detection.
+
+Here's an example:
+
+```
+SELECT school.id, school.name, teacher.id, teacher.name, student.name
+FROM school
+LEFT JOIN teacher WHERE teacher.school_id = school.id
+LEFT JOIN student WHERE student.school_id = school.id
+```
+
+Note this problematic query only returns the name of the student but not the ID.
+If the school has 2 teachers but only one student, we will get a result like this:
+
+| school.id | school.name | teacher.id | teacher.name | student.name |
+| --        | --          | --         | --           | --           |
+| sch_id_1  | School 1    | tch_id_1   | Einstein     | Alice        |
+| sch_id_1  | School 1    | tch_id_2   | Curie        | Alice        |
+
+The problem here is that **Alice** has been duplicated by the database engine
+to "fill in" the student columns when returning the second `teacher` row.
+We have no way of knowing whether there are one or two **Alice** in the school.
+
+The simplest way to solve this is to have some sort of identifier (e.g. UUID)
+for each entity type. In the above example, we should retrieve `student.id` column.
+
+(This doesn't just apply when using `Assembler` - if you're using SQL then
+this is something you need to think about) 
+
+### Parent types with multiple children
+
+Assembler supports having more than one child for parent entities. You can use `make2`, `make3` etc
+depending on how many child entities there are.
+
+For example, `teacher` and `student` can both be child entities of a `school`.
+
+```scala mdoc:invisible
+case class Teacher(
+  id: UUID,
+  name: String
+)
+
+case class DbTeacher(
+  id: UUID,
+  name: String
+)
+
+val teacherDef: LeafDef[Id, Teacher, DbTeacher] = LeafDef.make((db: DbTeacher) => Teacher(db.id, db.name))
+```
+
+```scala mdoc:silent
+case class SchoolMoreInfo(
+  id: UUID,
+  name: String,
+  teachers: Vector[Teacher],
+  students: Vector[Student]
+)
+
+val schoolMoreInfoDef: ParentDef.Aux[Id, SchoolMoreInfo, DbSchool, Teacher :: Student :: HNil] = ParentDef.make2(
+  getId = (d: DbSchool) => d.id,
+  constructWithChild = (db: DbSchool, teachers: Vector[Teacher], students: Vector[Student]) => SchoolMoreInfo(
+    id = db.id,
+    name = db.name,
+    teachers = teachers,
+    students = students
+  )
+)
+
+val schoolMoreInfoAssembler: ParentAssembler[cats.Id, SchoolMoreInfo, DbSchool :: DbTeacher :: DbStudent :: HNil] = 
+  schoolMoreInfoDef.toAssembler(teacherDef.toAssembler, studentDef.toAssembler)
+```

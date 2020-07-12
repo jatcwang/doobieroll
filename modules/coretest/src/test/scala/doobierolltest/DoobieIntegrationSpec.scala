@@ -67,7 +67,7 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
             ExecutionContext
               .fromExecutorService(
                 Executors.newFixedThreadPool(Math.max(1, containers.length * 2)),
-              ),
+              )
           },
         )(e => ZIO.succeed(e.shutdown()))
       dbExecutorService <- ZManaged
@@ -76,7 +76,7 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
             ExecutionContext
               .fromExecutorService(
                 Executors.newFixedThreadPool(2),
-              ),
+              )
           },
         )(e => ZIO.succeed(e.shutdown()))
       manager = {
