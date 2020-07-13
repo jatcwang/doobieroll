@@ -13,15 +13,17 @@
       - uses: actions/setup-ruby@v1
         with:
           ruby-version: 2.7
-      - name: coursier cache
+      - name: Scala cache
         uses: actions/cache@v2
         with:
-          path: ~/.cache/coursier
-          key: ${{ runner.OS }}-coursier-cache-${{ matrix.scala }}-${{ hashFiles('**/*.sbt') }} # -${{ hashFiles('project/**.scala') }} (fails for now)
+          path: |
+            ~/.cache/coursier
+            ~/.sbt
+          key: ${{ runner.OS }}-scala-cache-${{ matrix.scala }}-${{ hashFiles('**/*.sbt') }} # -${{ hashFiles('project/**.scala') }} (fails for now)
           restore-keys: |
-            ${{ runner.OS }}-coursier-cache-${{ matrix.scala }}-${{ hashFiles('**/*.sbt') }}-
-            ${{ runner.OS }}-coursier-cache-${{ matrix.scala }}-
-            ${{ runner.OS }}-coursier-cache-
+            ${{ runner.OS }}-scala-cache-${{ matrix.scala }}-${{ hashFiles('**/*.sbt') }}-
+            ${{ runner.OS }}-scala-cache-${{ matrix.scala }}-
+            ${{ runner.OS }}-scala-cache-
       - name: Setup Jekyll
         run: gem install jekyll -v 4.1.1
       - name: Pull postgres image
