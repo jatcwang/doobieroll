@@ -7,5 +7,5 @@ published: false
 ---
 
 <script>
-window.location.href = "docs/intro"
+window.location.href = "docs/assembler"
 </script>

@@ -77,11 +77,11 @@ lazy val docs = project
   )
   .settings(
     mdocIn := file("docs/docs"),
-    micrositeName := "Doobieroll",
-    micrositeDescription := "Helper utilities for working with Doobie and database results",
+    micrositeName := "DoobieRoll",
+    micrositeDescription := "Collection of utilities for working with Doobie/SQL",
     micrositeUrl := "https://jatcwang.github.io",
     micrositeBaseUrl := "/doobieroll",
-    micrositeDocumentationUrl := s"${micrositeBaseUrl.value}/docs/intro",
+    micrositeDocumentationUrl := s"${micrositeBaseUrl.value}/docs/assembler",
     micrositeAuthor := "Jacob Wang",
     micrositeGithubOwner := "jatcwang",
     micrositeGithubRepo := "doobieroll",
