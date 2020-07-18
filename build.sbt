@@ -98,7 +98,7 @@ lazy val root = project
   .settings(commonSettings)
 
 val scala213 = "2.13.3"
-val scala212 = "2.12.12"
+val scala212 = "2.12.11"
 lazy val commonSettings = Seq(
   scalaVersion := scala212,
   crossScalaVersions := Seq(scala213, scala212),
