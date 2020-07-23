@@ -1,6 +1,6 @@
 val zioVersion = "1.0.0-RC21-2"
 val circeVersion = "0.13.0"
-val silencerVersion = "1.7.0"
+val silencerVersion = "1.7.1"
 val doobieVersion = "0.9.0"
 
 inThisBuild(
