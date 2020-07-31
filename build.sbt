@@ -37,7 +37,7 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
   .settings(noPublishSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "pprint" % "0.5.9",
+      "com.lihaoyi" %% "pprint" % "0.6.0",
       "org.flywaydb" % "flyway-core" % "6.5.3",
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
