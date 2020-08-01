@@ -1,5 +1,5 @@
 addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat" % "0.1.13")
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.0")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.2")
 // Need to publish locally to include a fix jcmd detection is
 //addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.3.8-SNAPSHOT")
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.3.7")
