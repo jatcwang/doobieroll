@@ -45,7 +45,7 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "dev.zio" %% "zio-test" % zioVersion,
       "dev.zio" %% "zio-test-sbt" % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
-      "dev.zio" %% "zio-interop-cats" % "2.1.3.0-RC16",
+      "dev.zio" %% "zio-interop-cats" % "2.1.4.0",
 
       "javax.activation" % "activation" % "1.1.1", // Reuqired for DataSource class in JDK 9+
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
