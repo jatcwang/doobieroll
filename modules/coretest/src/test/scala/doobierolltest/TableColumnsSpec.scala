@@ -17,7 +17,7 @@ object TableColumnsSpec extends DefaultRunnableSpec {
       assertStringEqual(TestClass.columns.list, "a,str_field,snake_case,pascal_case")
     },
     test("'listF' returns comma separate column names Fragment") {
-      assertFragmentSqlEqual(TestClass.columns.listF, "a,str_field,snake_case,pascal_case")
+      assertFragmentSqlEqual(TestClass.columns.listF, "a,str_field,snake_case,pascal_case ")
     },
     test(
       "'listWithParen' returns comma separate column names, surround by parenthesis",

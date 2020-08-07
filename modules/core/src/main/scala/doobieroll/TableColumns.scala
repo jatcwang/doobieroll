@@ -17,7 +17,7 @@ sealed abstract case class TableColumns[T](
   /** List th fields, separated by commas. e.g. "field1,field2,field3" */
   def list: String = allColumns.toList.mkString(",")
 
-  def listF: Fragment = Fragment.const0(list)
+  def listF: Fragment = Fragment.const(list)
 
   /** List th fields, separated by commas and surrounded by parens.
     * e.g. "(field1,field2,field3)"
