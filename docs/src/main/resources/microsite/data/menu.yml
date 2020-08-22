@@ -3,3 +3,7 @@ options:
     url: docs/assembler
   - title: TableColumns
     url: docs/tablecolumns
+  - title: Snippets
+    url: docs/snippets
+  - title: FAQ
+    url: docs/faq

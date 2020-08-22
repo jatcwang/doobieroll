@@ -11,8 +11,8 @@ trait Assembler[F[_], A, Dbs <: HList] { self =>
     idx: Int,
   ): Visitor[F, A, Dbs]
 
-  def optional[ADb, RestDb <: HList](
-    implicit ev: (ADb :: RestDb) =:= Dbs,
+  def optional[ADb, RestDb <: HList](implicit
+    ev: (ADb :: RestDb) =:= Dbs,
   ): Assembler[F, A, Option[ADb] :: RestDb] = {
     val _ = ev
     new Assembler[F, A, Option[ADb] :: RestDb] {

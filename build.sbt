@@ -77,6 +77,7 @@ lazy val docs = project
   )
   .settings(
     mdocIn := file("docs/docs"),
+    mdocExtraArguments ++= Seq("--noLinkHygiene"),
     micrositeName := "DoobieRoll",
     micrositeDescription := "Collection of utilities for working with Doobie/SQL",
     micrositeUrl := "https://jatcwang.github.io",

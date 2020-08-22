@@ -18,13 +18,12 @@ object AssemblerSpec extends DefaultRunnableSpec {
   override def spec: ZSpec[TestEnvironment, Nothing] =
     suite("AssemblerSpec")(
       test("all non-nullable columns") {
-        val dbRowsHList: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] = {
+        val dbRowsHList: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] =
           Vector(
             (c1db, d1db, e1db),
             (c1db, d1db, e2db),
             (c2db, d2db, e3db),
           ).map(_.productElements)
-        }
 
         val result = Infallible.companyAssembler.assemble(dbRowsHList).sequence
 
