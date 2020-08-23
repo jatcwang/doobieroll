@@ -82,5 +82,5 @@ private def updateAllNonKeyColumns(tableColumns: TableColumns[_]): Fragment =
 ```
 
 Other than having less boilerplate, the main benefit of using `TableColumns` is **consistency**.
-Since field names and order are consistent across all use sites, we won't have bugs where 
-fields are specified in different order in different queries.
+Since field names and order are consistent across all use sites, we can avoid out of order fields
+causing bugs.

@@ -31,8 +31,8 @@ trait ParentAssembler[F[_], A, Dbs <: HList] extends Assembler[F, A, Dbs] {
     parVis.assembleTopLevel()
   }
 
-  final override def optional[ADb, RestDb <: HList](
-    implicit ev: (ADb :: RestDb) =:= Dbs,
+  final override def optional[ADb, RestDb <: HList](implicit
+    ev: (ADb :: RestDb) =:= Dbs,
   ): ParentAssembler[F, A, Option[ADb] :: RestDb] = {
     new ParentAssembler[F, A, Option[ADb] :: RestDb] {
       private[doobieroll] override def makeVisitor(
@@ -58,10 +58,9 @@ object ParentAssembler {
     @scala.annotation.tailrec
     def impl(h: HList): Unit = {
       h match {
-        case x :: r => {
+        case x :: r =>
           arr += x
           impl(r)
-        }
         case HNil => ()
       }
     }

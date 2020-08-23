@@ -20,18 +20,20 @@ trait ParentDef[F[_], A, ADb] { self =>
 
   /** Modify the 'context' of the construction result.
     *  For example, you can turn a infallible ParentDef into one that return Either (but never fails).
-    *  This allows you to reuse existing Parent definitions to work in a different context */
+    *  This allows you to reuse existing Parent definitions to work in a different context
+    */
   final def mapK[G[_]](
     transform: FunctionK[F, G],
-  ): ParentDef.AuxAll[G, A, ADb, Child, ChildVecs, Id] = new ParentDef[G, A, ADb] {
-    type Child = self.Child
-    type ChildVecs = self.ChildVecs
-    type Id = self.Id
+  ): ParentDef.AuxAll[G, A, ADb, Child, ChildVecs, Id] =
+    new ParentDef[G, A, ADb] {
+      type Child = self.Child
+      type ChildVecs = self.ChildVecs
+      type Id = self.Id
 
-    override def getId(adb: ADb): Id = self.getId(adb)
-    override def constructWithChild(adb: ADb, children: ChildVecs): G[A] =
-      transform.apply(self.constructWithChild(adb, children))
-  }
+      override def getId(adb: ADb): Id = self.getId(adb)
+      override def constructWithChild(adb: ADb, children: ChildVecs): G[A] =
+        transform.apply(self.constructWithChild(adb, children))
+    }
 }
 
 object ParentDef {
@@ -192,7 +194,9 @@ object ParentDef {
     new ParentDef[F, A, ADb] {
       override type Child = Child0 :: Child1 :: Child2 :: Child3 :: Child4 :: HNil
       override type ChildVecs =
-        Vector[Child0] :: Vector[Child1] :: Vector[Child2] :: Vector[Child3] :: Vector[Child4] :: HNil
+        Vector[Child0] :: Vector[Child1] :: Vector[Child2] :: Vector[Child3] :: Vector[
+          Child4,
+        ] :: HNil
       override type Id = Id0
 
       override def getId(adb: ADb): Id = getId0(adb)

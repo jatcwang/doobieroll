@@ -38,9 +38,8 @@ object TestDataHelpers {
     DeriveGen[Enterprise]
   }
 
-  val genCompany: Gen[Random with Sized, Company] = {
+  val genCompany: Gen[Random with Sized, Company] =
     DeriveGen[Company]
-  }
 
   def normalizeDepartments(departments: Vector[Department]): Vector[Department] = {
     departments
@@ -153,7 +152,7 @@ object TestDataHelpers {
                 Some(dbDep),
                 None,
               )
-            case nelEmployee => {
+            case nelEmployee =>
               nelEmployee.foreach { em =>
                 rows += Tuple3(
                   dbCompany,
@@ -167,7 +166,6 @@ object TestDataHelpers {
                   ),
                 )
               }
-            }
           }
         }
     }

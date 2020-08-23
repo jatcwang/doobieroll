@@ -81,8 +81,8 @@ trait ToAssemblerSyntax {
     def toAssembler[C0, C1, C0Dbs <: HList, C1Dbs <: HList, CDbs <: HList](
       c0Assembler: Assembler[F, C0, C0Dbs],
       c1Assembler: Assembler[F, C1, C1Dbs],
-    )(
-      implicit monadF: Monad[F],
+    )(implicit
+      monadF: Monad[F],
       flattener: Flattener[C0Dbs :: C1Dbs :: HNil, CDbs],
     ): ParentAssembler[F, A, ADb :: CDbs] =
       mkParent(
@@ -96,8 +96,8 @@ trait ToAssemblerSyntax {
       c0Assembler: Assembler[F, C0, C0Dbs],
       c1Assembler: Assembler[F, C1, C1Dbs],
       c2Assembler: Assembler[F, C2, C2Dbs],
-    )(
-      implicit monadF: Monad[F],
+    )(implicit
+      monadF: Monad[F],
       flattener: Flattener[C0Dbs :: C1Dbs :: C2Dbs :: HNil, CDbs],
     ): ParentAssembler[F, A, ADb :: CDbs] =
       mkParent(
@@ -126,8 +126,8 @@ trait ToAssemblerSyntax {
       c1Assembler: Assembler[F, C1, C1Dbs],
       c2Assembler: Assembler[F, C2, C2Dbs],
       c3Assembler: Assembler[F, C3, C3Dbs],
-    )(
-      implicit monadF: Monad[F],
+    )(implicit
+      monadF: Monad[F],
       flattener: Flattener[C0Dbs :: C1Dbs :: C2Dbs :: C3Dbs :: HNil, CDbs],
     ): ParentAssembler[F, A, ADb :: CDbs] =
       mkParent(
@@ -160,8 +160,8 @@ trait ToAssemblerSyntax {
       c2Assembler: Assembler[F, C2, C2Dbs],
       c3Assembler: Assembler[F, C3, C3Dbs],
       c4Assembler: Assembler[F, C4, C4Dbs],
-    )(
-      implicit monadF: Monad[F],
+    )(implicit
+      monadF: Monad[F],
       flattener: Flattener[C0Dbs :: C1Dbs :: C2Dbs :: C3Dbs :: C4Dbs :: HNil, CDbs],
     ): ParentAssembler[F, A, ADb :: CDbs] =
       mkParent(

@@ -11,9 +11,8 @@ private[doobieroll] class Accum() {
   val rawLookup: LookupByIdx[Any] = mutable.Map.empty[Int, AnyKeyMultiMap[Any]]
 
   def addRootDbItem(k: Any, v: Any): Unit =
-    if (seenRootDbItem.add(k)) {
+    if (seenRootDbItem.add(k))
       rootDbItems += v
-    }
 
   def getRootDbItems[A]: Iterator[A] =
     rootDbItems.iterator.asInstanceOf[Iterator[A]]

@@ -22,12 +22,12 @@ sealed abstract case class TableColumns[T](
   /** List th fields, separated by commas and surrounded by parens.
     * e.g. "(field1,field2,field3)"
     * This makes INSERT queries easier to write like "INSERT INTO mytable VALUES $\{columns.listWithParen}"
-    * */
+    */
   def listWithParen: String = s"($list)"
 
   def listWithParenF: Fragment = Fragment.const(listWithParen)
 
-  /** Return string of the form '?,?,?' depending on how many fields there is for this TableColumn*/
+  /** Return string of the form '?,?,?' depending on how many fields there is for this TableColumn */
   def parameterized: String = allColumns.map(_ => "?").toList.mkString(",")
 
   def parameterizedF: Fragment =
@@ -40,15 +40,16 @@ sealed abstract case class TableColumns[T](
     Fragment.const(parameterizedWithParen)
 
   /** Prefix each field with the default table name.
-    * e.g. "mytable.id, mytable.name, mytable.address" */
+    * e.g. "mytable.id, mytable.name, mytable.address"
+    */
   def tableNamePrefixed: String =
-    allColumns.map(field => s"$tableName.$field").toList.mkString(", ")
+    allColumns.map(field => s"$tableName.$field").toList.mkString(",")
 
   def tableNamePrefixedF: Fragment = Fragment.const(tableNamePrefixed)
 
   /** Prefix each field with the given string. e.g. "c.id, c.name, c.address" */
   def prefixed(prefix: String): String =
-    allColumns.map(field => s"$prefix.$field").toList.mkString(", ")
+    allColumns.map(field => s"$prefix.$field").toList.mkString(",")
 
   def prefixedF(prefix: String): Fragment = Fragment.const(prefixed(prefix))
 
@@ -65,13 +66,13 @@ object TableColumns {
       .replaceAll("([a-z\\d])([A-Z])", "$1_$2")
       .toLowerCase
 
-  def deriveSnakeCaseTableColumns[T](tableName: String)(
-    implicit mkTableColumns: MkTableColumns[T],
+  def deriveSnakeCaseTableColumns[T](tableName: String)(implicit
+    mkTableColumns: MkTableColumns[T],
   ): TableColumns[T] =
     deriveTableColumns[T](tableName, toSnakeCase)
 
-  def deriveTableColumns[T](tableName: String, transform: String => String)(
-    implicit mkTableColumns: MkTableColumns[T],
+  def deriveTableColumns[T](tableName: String, transform: String => String)(implicit
+    mkTableColumns: MkTableColumns[T],
   ): TableColumns[T] = {
     val names = mkTableColumns.allColumns.map(transform)
     new TableColumns[T](tableName, names) {}
@@ -99,8 +100,8 @@ private object MkTableColumns {
     Repr <: HList,
     KeysRepr <: HList,
     MapperRepr <: HList,
-  ](
-    implicit gen: LabelledGeneric.Aux[T, Repr],
+  ](implicit
+    gen: LabelledGeneric.Aux[T, Repr],
     keys: Keys.Aux[Repr, KeysRepr],
     mapper: Mapper.Aux[symbolName.type, KeysRepr, MapperRepr],
     traversable: ToTraversable.Aux[MapperRepr, List, String],

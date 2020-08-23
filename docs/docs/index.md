@@ -13,7 +13,7 @@ DoobieRoll is a collection of utilities to make working with [Doobie](https://tp
 - [TableColumns](docs/tablecolumns) - Ensure fields in your SQL are consistently named and ordered.
 - [Assembler](docs/assembler) - Assemble SQL query results into hierarchical domain models.
 
-These utilities doesn't really depend on Doobie, so check out the utilities as they might still be useful to you!
+**Assembler** does not depend on Doobie, so check it out even if you don't use Doobie!
 
 # Installation
 
