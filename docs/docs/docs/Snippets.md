@@ -53,11 +53,9 @@ selectColumnsFrom(DbCompany.columns)
 
 ## Select columns from multiple tables - `selectColumns`
 
-
-
 ```scala mdoc
 selectColumns(
-  DbCompany.columns.prefixedF("c"),
-  DbEmployee.columns.prefixedF("e")
+  DbCompany.columns.prefixed("c"),
+  DbEmployee.columns.prefixed("e")
 ) ++ fr"FROM company c LEFT JOIN employee e ON company.id = employee.company_id"
 ```

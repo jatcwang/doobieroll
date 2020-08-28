@@ -1,11 +1,13 @@
 package doobieroll
 
+import cats.implicits._
 import cats.data.NonEmptyList
 import shapeless._
 import shapeless.ops.hlist.{Mapper, ToTraversable}
 import shapeless.ops.record.Keys
 import shapeless.tag.Tagged
 import doobie.Fragment
+import doobie.implicits._
 
 import scala.annotation.implicitNotFound
 
@@ -15,43 +17,29 @@ sealed abstract case class TableColumns[T](
 ) {
 
   /** List th fields, separated by commas. e.g. "field1,field2,field3" */
-  def list: String = allColumns.toList.mkString(",")
-
-  def listF: Fragment = Fragment.const(list)
+  def list: Fragment = Fragment.const(allColumns.foldSmash("", ",", ""))
 
   /** List th fields, separated by commas and surrounded by parens.
     * e.g. "(field1,field2,field3)"
     * This makes INSERT queries easier to write like "INSERT INTO mytable VALUES $\{columns.listWithParen}"
     */
-  def listWithParen: String = s"($list)"
-
-  def listWithParenF: Fragment = Fragment.const(listWithParen)
+  def listWithParen: Fragment = fr"($list)"
 
   /** Return string of the form '?,?,?' depending on how many fields there is for this TableColumn */
-  def parameterized: String = allColumns.map(_ => "?").toList.mkString(",")
+  def parameterized: Fragment = Fragment.const(allColumns.map(_ => "?").foldSmash("", ",", ""))
 
-  def parameterizedF: Fragment =
-    Fragment.const(parameterized)
-
-  def parameterizedWithParen: String =
-    s"($parameterized)"
-
-  def parameterizedWithParenF: Fragment =
-    Fragment.const(parameterizedWithParen)
+  def parameterizedWithParen: Fragment =
+    fr"($parameterized)"
 
   /** Prefix each field with the default table name.
     * e.g. "mytable.id, mytable.name, mytable.address"
     */
-  def tableNamePrefixed: String =
-    allColumns.map(field => s"$tableName.$field").toList.mkString(",")
-
-  def tableNamePrefixedF: Fragment = Fragment.const(tableNamePrefixed)
+  def tableNamePrefixed: Fragment =
+    Fragment.const(allColumns.map(field => s"$tableName.$field").foldSmash("", ",", ""))
 
   /** Prefix each field with the given string. e.g. "c.id, c.name, c.address" */
-  def prefixed(prefix: String): String =
-    allColumns.map(field => s"$prefix.$field").toList.mkString(",")
-
-  def prefixedF(prefix: String): Fragment = Fragment.const(prefixed(prefix))
+  def prefixed(prefix: String): Fragment =
+    Fragment.const(allColumns.map(field => s"$prefix.$field").foldSmash("", ",", ""))
 
 }
 
