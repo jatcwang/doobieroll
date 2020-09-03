@@ -5,7 +5,6 @@ import doobieroll._
 import doobieroll.implicits._
 import doobierolltest.model._
 import shapeless.{::, HNil}
-import cats.implicits._
 
 object TestDataInstances {
 

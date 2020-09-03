@@ -24,7 +24,7 @@ lazy val core = Project("core", file("modules/core"))
   .settings(
     name := "doobieroll",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-core" % "2.1.1",
+      "org.typelevel" %% "cats-core" % "2.2.0",
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6",
       "com.chuusai" %% "shapeless" % "2.3.3",
       "org.tpolecat" %% "doobie-core" % doobieVersion,

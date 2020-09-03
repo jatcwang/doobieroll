@@ -1,8 +1,6 @@
 package doobierolltest
 
 import java.util.concurrent.Executors
-
-import cats.implicits._
 import cats.effect.Blocker
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.whisk.docker.DockerReadyChecker.LogLineContains
