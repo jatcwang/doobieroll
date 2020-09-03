@@ -1,7 +1,7 @@
 package doobieroll.syntax
 
 import cats.Monad
-import cats.implicits._
+import cats.syntax.all._
 import doobieroll.impl._
 import doobieroll.{Assembler, LeafDef, ParentAssembler, ParentDef}
 import shapeless._

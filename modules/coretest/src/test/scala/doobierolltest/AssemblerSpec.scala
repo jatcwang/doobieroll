@@ -1,6 +1,6 @@
 package doobierolltest
 
-import cats.implicits._
+import cats.syntax.all._
 import doobierolltest.TestData._
 import doobierolltest.TestDataInstances._
 import doobierolltest.TestDataHelpers._

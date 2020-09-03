@@ -1,7 +1,7 @@
 package doobieroll.snippets
 import doobie.util.fragment.Fragment
 import doobieroll.TableColumns
-import cats.implicits._
+import cats.syntax.all._
 
 trait CommonSnippets {
   def selectColumnsFrom(tableColumns: TableColumns[_]): Fragment =
