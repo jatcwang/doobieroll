@@ -1,7 +1,7 @@
 val zioVersion = "1.0.1"
 val circeVersion = "0.13.0"
 val silencerVersion = "1.7.1"
-val doobieVersion = "0.9.0"
+val doobieVersion = "0.9.2"
 
 inThisBuild(
   List(
