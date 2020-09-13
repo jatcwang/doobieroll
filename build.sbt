@@ -2,9 +2,14 @@ val zioVersion = "1.0.1"
 val circeVersion = "0.13.0"
 val silencerVersion = "1.7.1"
 val doobieVersion = "0.9.2"
+val scala213 = "2.13.3"
+val scala212 = "2.12.11"
 
 inThisBuild(
   List(
+    scalaVersion := scala212,
+    crossScalaVersions := Seq(scala213, scala212),
+
     organization := "com.github.jatcwang",
     homepage := Some(url("https://github.com/jatcwang/doobieroll")),
     licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
@@ -91,6 +96,17 @@ lazy val docs = project
     micrositePushSiteWith := GitHub4s,
     micrositeGithubToken := sys.env.get("GITHUB_TOKEN"),
   )
+  .settings(
+    // Disble any2stringAdd deprecation in md files. Seems like mdoc macro generates code which
+    // use implicit conversion to string
+    scalacOptions ++= {
+      if (scalaVersion.value == scala213) {
+        Seq(
+          "-Wconf:msg=\".*method any2stringadd.*\":i")
+      }
+      else Seq.empty
+    }
+  )
 
 lazy val root = project
   .in(new File("."))
@@ -98,11 +114,7 @@ lazy val root = project
   .settings(noPublishSettings)
   .settings(commonSettings)
 
-val scala213 = "2.13.3"
-val scala212 = "2.12.11"
 lazy val commonSettings = Seq(
-  scalaVersion := scala212,
-  crossScalaVersions := Seq(scala213, scala212),
   scalacOptions ++= Seq(
     "-Ywarn-macros:after",
   ),
@@ -127,3 +139,33 @@ lazy val commonSettings = Seq(
 lazy val noPublishSettings = Seq(
   publish / skip := true,
 )
+
+ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.11")
+ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
+ThisBuild / githubWorkflowPublishTargetBranches :=
+  Seq(RefPredicate.StartsWith(Ref.Tag("v")))
+
+ThisBuild / githubWorkflowPublish := Seq(WorkflowStep.Sbt(List("ci-release", "publishMicrosite")))
+
+val setupJekyllSteps = Seq(
+  WorkflowStep.Use("actions", "setup-ruby", "v1", name = Some("Setup ruby"), params = Map("ruby-version" -> "2.7")),
+  WorkflowStep.Run(List("gem install jekyll -v 4.1.1"), name = Some("Install Jekyll (to build microsite)")),
+)
+
+ThisBuild / githubWorkflowBuildPreamble ++= setupJekyllSteps ++ Seq(
+  WorkflowStep.Run(List("docker pull postgres:12.3-alpine"), name = Some("Pull Postgres image for integration tests")),
+)
+
+ThisBuild / githubWorkflowPublishPreamble ++= setupJekyllSteps
+
+// Add makeMicrosite to the build step
+ThisBuild / githubWorkflowBuild ~= { steps =>
+  steps.map {
+    case w: WorkflowStep.Sbt if w.commands == List("test") => w.copy(commands = List("test", "makeMicrosite"))
+    case w => w
+  }
+}
+// Filter out MacOS and Windows cache steps to make yaml less noisy
+ThisBuild / githubWorkflowGeneratedCacheSteps ~= { currentSteps =>
+  currentSteps.filterNot(wf => wf.cond.exists(str => str.contains("macos") || str.contains("windows")))
+}
