@@ -70,7 +70,13 @@ lazy val bench = Project("bench", file("modules/bench"))
   .settings(noPublishSettings)
   .settings(
     libraryDependencies ++= Seq(
-      ),
+      "org.tpolecat" %% "doobie-postgres" % doobieVersion,
+      "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
+      "org.tpolecat" %% "doobie-hikari" % doobieVersion,
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.6.2",
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.6.2" % "provided",
+      "org.tpolecat" %% "skunk-core" % "0.0.21",
+    ),
   )
 
 lazy val docs = project
