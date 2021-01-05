@@ -75,7 +75,7 @@ lazy val bench = Project("bench", file("modules/bench"))
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.6.2",
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.6.2" % "provided",
-      "org.tpolecat" %% "skunk-core" % "0.0.21",
+      "org.tpolecat" %% "skunk-core" % "0.0.22",
     ),
   )
 
