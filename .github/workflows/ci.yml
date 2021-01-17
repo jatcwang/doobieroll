@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.3, 2.12.11]
+        scala: [2.13.3, 2.12.12]
         java: [adopt@1.11]
     runs-on: ${{ matrix.os }}
     steps:
@@ -82,7 +82,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.12.11]
+        scala: [2.12.12]
         java: [adopt@1.11]
     runs-on: ${{ matrix.os }}
     steps:
@@ -118,12 +118,12 @@ jobs:
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.11)
+      - name: Download target directories (2.12.12)
         uses: actions/download-artifact@v2
         with:
-          name: target-${{ matrix.os }}-2.12.11-${{ matrix.java }}
+          name: target-${{ matrix.os }}-2.12.12-${{ matrix.java }}
 
-      - name: Inflate target directories (2.12.11)
+      - name: Inflate target directories (2.12.12)
         run: |
           tar xf targets.tar
           rm targets.tar
@@ -136,4 +136,9 @@ jobs:
       - name: Install Jekyll (to build microsite)
         run: gem install jekyll -v 4.1.1
 
-      - run: sbt ++${{ matrix.scala }} ci-release publishMicrosite
+      - env:
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+        run: sbt ++${{ matrix.scala }} ci-release publishMicrosite

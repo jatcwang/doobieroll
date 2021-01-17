@@ -3,13 +3,12 @@ val circeVersion = "0.13.0"
 val silencerVersion = "1.7.1"
 val doobieVersion = "0.10.0"
 val scala213 = "2.13.3"
-val scala212 = "2.12.11"
+val scala212 = "2.12.12"
 
 inThisBuild(
   List(
     scalaVersion := scala212,
     crossScalaVersions := Seq(scala213, scala212),
-
     organization := "com.github.jatcwang",
     homepage := Some(url("https://github.com/jatcwang/doobieroll")),
     licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
@@ -51,7 +50,6 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "dev.zio" %% "zio-test-sbt" % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
       "dev.zio" %% "zio-interop-cats" % "2.2.0.1",
-
       "javax.activation" % "activation" % "1.1.1", // Reuqired for DataSource class in JDK 9+
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
@@ -107,11 +105,9 @@ lazy val docs = project
     // use implicit conversion to string
     scalacOptions ++= {
       if (scalaVersion.value == scala213) {
-        Seq(
-          "-Wconf:msg=\".*method any2stringadd.*\":i")
-      }
-      else Seq.empty
-    }
+        Seq("-Wconf:msg=\".*method any2stringadd.*\":i")
+      } else Seq.empty
+    },
   )
 
 lazy val root = project
@@ -151,15 +147,37 @@ ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches :=
   Seq(RefPredicate.StartsWith(Ref.Tag("v")))
 
-ThisBuild / githubWorkflowPublish := Seq(WorkflowStep.Sbt(List("ci-release", "publishMicrosite")))
+ThisBuild / githubWorkflowPublish := Seq(
+  WorkflowStep.Sbt(
+    List("ci-release", "publishMicrosite"),
+    env = Map(
+      "PGP_PASSPHRASE" -> "${{ secrets.PGP_PASSPHRASE }}",
+      "PGP_SECRET" -> "${{ secrets.PGP_SECRET }}",
+      "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
+      "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}",
+    ),
+  ),
+)
 
 val setupJekyllSteps = Seq(
-  WorkflowStep.Use("actions", "setup-ruby", "v1", name = Some("Setup ruby"), params = Map("ruby-version" -> "2.7")),
-  WorkflowStep.Run(List("gem install jekyll -v 4.1.1"), name = Some("Install Jekyll (to build microsite)")),
+  WorkflowStep.Use(
+    "actions",
+    "setup-ruby",
+    "v1",
+    name = Some("Setup ruby"),
+    params = Map("ruby-version" -> "2.7"),
+  ),
+  WorkflowStep.Run(
+    List("gem install jekyll -v 4.1.1"),
+    name = Some("Install Jekyll (to build microsite)"),
+  ),
 )
 
 ThisBuild / githubWorkflowBuildPreamble ++= setupJekyllSteps ++ Seq(
-  WorkflowStep.Run(List("docker pull postgres:12.3-alpine"), name = Some("Pull Postgres image for integration tests")),
+  WorkflowStep.Run(
+    List("docker pull postgres:12.3-alpine"),
+    name = Some("Pull Postgres image for integration tests"),
+  ),
 )
 
 ThisBuild / githubWorkflowPublishPreamble ++= setupJekyllSteps
@@ -167,11 +185,14 @@ ThisBuild / githubWorkflowPublishPreamble ++= setupJekyllSteps
 // Add makeMicrosite to the build step
 ThisBuild / githubWorkflowBuild ~= { steps =>
   steps.map {
-    case w: WorkflowStep.Sbt if w.commands == List("test") => w.copy(commands = List("test", "makeMicrosite"))
+    case w: WorkflowStep.Sbt if w.commands == List("test") =>
+      w.copy(commands = List("test", "makeMicrosite"))
     case w => w
   }
 }
 // Filter out MacOS and Windows cache steps to make yaml less noisy
 ThisBuild / githubWorkflowGeneratedCacheSteps ~= { currentSteps =>
-  currentSteps.filterNot(wf => wf.cond.exists(str => str.contains("macos") || str.contains("windows")))
+  currentSteps.filterNot(wf =>
+    wf.cond.exists(str => str.contains("macos") || str.contains("windows")),
+  )
 }
