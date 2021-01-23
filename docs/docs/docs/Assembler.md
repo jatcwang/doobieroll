@@ -83,8 +83,13 @@ With doobie, typically the columns in the result set are grouped into logical gr
 Using the example query above, the type of a doobie query will be:
 
 ```
-List[(DbCompany, DbDepartment, DbEmployee)]
+List[DbCompany :: DbDepartment :: DbEmployee :: HNil]
 ```
+
+(The type above is isomorphic to `List[(DbCompany, DbDepartment, DbEmployee))]`. 
+Assembler works directly shapeless's HList instead of tuples, though it's easy to convert between them. 
+I suggest [reading about it](https://books.underscore.io/shapeless-guide/shapeless-guide.html#generic-product-encodings) 
+to get a basic understand of what they represent before you continue)
 
 Each field in these DB model case classes map to a column in the query result:
 
@@ -295,6 +300,38 @@ val towns: Vector[Town] = assembler.assemble(queryResult)
 ```
 
 That's it!
+
+### 4. Usage with Doobie (and any other sources of data)
+
+The Assembler typeclass `assemble` can take any input data that resembles a list of HList.
+
+When querying with Doobie, you can query directly into an HList and then pipe the output 
+straight through Assembler.
+
+```scala mdoc:compile-only
+import cats.effect.IO
+import doobie.{ConnectionIO, Transactor}
+import doobie.implicits._
+
+// Your SQL query to perform
+// (...however you create your Doobie transactor)
+val transactor: Transactor[IO] = ??? 
+
+val query: ConnectionIO[Vector[DbTown :: DbSchool :: DbStudent :: HNil]] = 
+  fr"""
+    |SELECT school.id, school.name, teacher.id, teacher.name, student.name
+    |FROM school
+    |LEFT JOIN teacher WHERE teacher.school_id = school.id
+    |LEFT JOIN student WHERE student.school_id = school.id
+  """
+    .stripMargin
+    .query[DbTown :: DbSchool :: DbStudent :: HNil]
+    .to[Vector]
+    
+val result: IO[Vector[Town]] = query.transact(transactor).map { queryResult: Vector[DbTown :: DbSchool :: DbStudent :: HNil] =>
+  assembler.assemble(queryResult)
+}
+```
 
 # Usage notes
 
