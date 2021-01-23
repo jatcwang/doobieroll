@@ -108,6 +108,7 @@ lazy val docs = project
         Seq("-Wconf:msg=\".*method any2stringadd.*\":i")
       } else Seq.empty
     },
+    scalacOptions --= Seq("-Ywarn-dead-code"), // we use ??? in various places
   )
 
 lazy val root = project
