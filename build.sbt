@@ -95,7 +95,6 @@ lazy val docs = project
     micrositeAuthor := "Jacob Wang",
     micrositeGithubOwner := "jatcwang",
     micrositeGithubRepo := "doobieroll",
-    micrositeCompilingDocsTool := WithMdoc,
     micrositeHighlightTheme := "a11y-light",
     micrositePushSiteWith := GitHub4s,
     micrositeGithubToken := sys.env.get("GITHUB_TOKEN"),
@@ -162,9 +161,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 
 val setupJekyllSteps = Seq(
   WorkflowStep.Use(
-    "actions",
-    "setup-ruby",
-    "v1",
+    UseRef.Public("actions", "setup-ruby", "v1"),
     name = Some("Setup ruby"),
     params = Map("ruby-version" -> "2.7"),
   ),
