@@ -1,4 +1,4 @@
-val zioVersion = "1.0.4"
+val zioVersion = "1.0.4-2"
 val circeVersion = "0.13.0"
 val silencerVersion = "1.7.1"
 val doobieVersion = "0.10.0"
