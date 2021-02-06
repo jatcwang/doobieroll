@@ -1,4 +1,4 @@
-val zioVersion = "1.0.4"
+val zioVersion = "1.0.4-2"
 val circeVersion = "0.13.0"
 val silencerVersion = "1.7.1"
 val doobieVersion = "0.10.0"
@@ -41,8 +41,8 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
   .settings(noPublishSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "pprint" % "0.6.0",
-      "org.flywaydb" % "flyway-core" % "7.5.1",
+      "com.lihaoyi" %% "pprint" % "0.6.1",
+      "org.flywaydb" % "flyway-core" % "7.5.2",
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
@@ -107,7 +107,7 @@ lazy val docs = project
         Seq("-Wconf:msg=\".*method any2stringadd.*\":i")
       } else Seq.empty
     },
-    scalacOptions --= Seq("-Ywarn-dead-code"), // we use ??? in various places
+    scalacOptions --= Seq("-Wdead-code"), // we use ??? in various places
   )
 
 lazy val root = project

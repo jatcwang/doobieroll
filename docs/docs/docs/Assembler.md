@@ -311,7 +311,6 @@ straight through Assembler.
 ```scala mdoc:compile-only
 import cats.effect.IO
 import doobie.{ConnectionIO, Transactor}
-import doobie.Transactor
 import doobie.implicits._
 
 // Your SQL query to perform
