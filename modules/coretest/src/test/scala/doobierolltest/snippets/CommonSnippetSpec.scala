@@ -2,7 +2,6 @@ package doobierolltest.snippets
 
 import doobieroll.TableColumns
 import zio.test.DefaultRunnableSpec
-import zio.test._
 import doobieroll.snippets._
 import doobierolltest.testutils.FragmentAssertions._
 

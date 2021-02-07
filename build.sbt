@@ -1,9 +1,9 @@
-val zioVersion = "1.0.4"
+val zioVersion = "1.0.4-2"
 val circeVersion = "0.13.0"
 val silencerVersion = "1.7.1"
 val doobieVersion = "0.10.0"
-val scala213 = "2.13.3"
-val scala212 = "2.12.12"
+val scala213 = "2.13.4"
+val scala212 = "2.12.13"
 
 inThisBuild(
   List(
@@ -95,7 +95,6 @@ lazy val docs = project
     micrositeAuthor := "Jacob Wang",
     micrositeGithubOwner := "jatcwang",
     micrositeGithubRepo := "doobieroll",
-    micrositeCompilingDocsTool := WithMdoc,
     micrositeHighlightTheme := "a11y-light",
     micrositePushSiteWith := GitHub4s,
     micrositeGithubToken := sys.env.get("GITHUB_TOKEN"),
@@ -103,10 +102,12 @@ lazy val docs = project
   .settings(
     // Disble any2stringAdd deprecation in md files. Seems like mdoc macro generates code which
     // use implicit conversion to string
-    scalacOptions ++= {
-      if (scalaVersion.value == scala213) {
-        Seq("-Wconf:msg=\".*method any2stringadd.*\":i")
-      } else Seq.empty
+    scalacOptions ~= { opts =>
+      val extraOpts = Seq("-Wconf:msg=\".*method any2stringadd.*\":i")
+
+      val removes = Set("-Wdead-code", "-Ywarn-dead-code") // we use ??? in various places
+
+      (opts ++ extraOpts).filterNot(removes)
     },
     scalacOptions --= Seq("-Wdead-code", "-Ywarn-dead-code"), // we use ??? in various places
   )
@@ -162,9 +163,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 
 val setupJekyllSteps = Seq(
   WorkflowStep.Use(
-    "actions",
-    "setup-ruby",
-    "v1",
+    UseRef.Public("actions", "setup-ruby", "v1"),
     name = Some("Setup ruby"),
     params = Map("ruby-version" -> "2.7"),
   ),
