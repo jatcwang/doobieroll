@@ -1,6 +1,5 @@
 val zioVersion = "1.0.4-2"
 val circeVersion = "0.13.0"
-val silencerVersion = "1.7.1"
 val doobieVersion = "0.10.0"
 val scala213 = "2.13.4"
 val scala212 = "2.12.13"
@@ -122,6 +121,7 @@ lazy val commonSettings = Seq(
   scalacOptions ++= Seq(
     "-Ywarn-macros:after",
   ),
+  versionScheme := Some("early-semver"),
   doc / scalacOptions --= Seq("-Xfatal-warnings"),
   scalacOptions --= {
     if (sys.env.contains("CI")) {
@@ -132,12 +132,6 @@ lazy val commonSettings = Seq(
   },
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
-  libraryDependencies ++= Seq(
-    compilerPlugin(
-      "com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full,
-    ),
-    "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full,
-  ),
 )
 
 lazy val noPublishSettings = Seq(

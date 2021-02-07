@@ -10,48 +10,98 @@ import doobie.Fragment
 import scala.annotation.implicitNotFound
 
 sealed abstract case class TableColumns[T](
-  tableName: String,
+  tableNameStr: String,
   allColumns: NonEmptyList[String],
 ) {
 
+  @deprecated(
+    "Use tableNameStr instead. From v0.2.* onwards this method will start returning Fragment since " +
+      "doobie 0.9.0 allows you to directly interpolate Fragment in fr interpolators",
+    since = "0.1.7",
+  )
+  def tableName: String = tableNameStr
+
+  def tableNameF: Fragment = Fragment.const(tableNameStr)
+
   /** List th fields, separated by commas. e.g. "field1,field2,field3" */
-  def list: String = allColumns.toList.mkString(",")
+  @deprecated(
+    "Use listStr instead. From v0.2.* onwards this method will start returning Fragment since " +
+      "doobie 0.9.0 allows you to directly interpolate Fragment in fr interpolators",
+    since = "0.1.7",
+  )
+  def list: String = listStr
 
-  def listF: Fragment = Fragment.const(list)
+  def listF: Fragment = Fragment.const(listStr)
 
-  /** List th fields, separated by commas and surrounded by parens.
-    * e.g. "(field1,field2,field3)"
+  def listStr: String = allColumns.toList.mkString(",")
+
+  /** List th fields, separated by commas and surrounded by parens. e.g. "(field1,field2,field3)"
     * This makes INSERT queries easier to write like "INSERT INTO mytable VALUES $\{columns.listWithParen}"
     */
-  def listWithParen: String = s"($list)"
+  @deprecated(
+    "Use listWithParenStr instead. From v0.2.* onwards this method will start returning Fragment since " +
+      "doobie 0.9.0 allows you to directly interpolate Fragment in fr interpolators",
+    since = "0.1.7",
+  )
+  def listWithParen: String = listWithParenStr
 
-  def listWithParenF: Fragment = Fragment.const(listWithParen)
+  def listWithParenF: Fragment = Fragment.const(listWithParenStr)
+
+  def listWithParenStr: String = s"($listStr)"
 
   /** Return string of the form '?,?,?' depending on how many fields there is for this TableColumn */
-  def parameterized: String = allColumns.map(_ => "?").toList.mkString(",")
+  @deprecated(
+    "Use parameterizedStr instead. From v0.2.* onwards this method will start returning Fragment since " +
+      "doobie 0.9.0 allows you to directly interpolate Fragment in fr interpolators",
+    since = "0.1.7",
+  )
+  def parameterized: String = parameterizedStr
 
   def parameterizedF: Fragment =
-    Fragment.const(parameterized)
+    Fragment.const(parameterizedStr)
 
-  def parameterizedWithParen: String =
-    s"($parameterized)"
+  def parameterizedStr: String = allColumns.map(_ => "?").toList.mkString(",")
+
+  @deprecated(
+    "Use parameterizedWithParenStr instead. From v0.2.* onwards this method will start returning Fragment since " +
+      "doobie 0.9.0 allows you to directly interpolate Fragment in fr interpolators",
+    since = "0.1.7",
+  )
+  /** Return string of the form '(?,?,?)' depending on how many fields there is for this TableColumn. */
+  def parameterizedWithParen: String = parameterizedWithParenStr
 
   def parameterizedWithParenF: Fragment =
-    Fragment.const(parameterizedWithParen)
+    Fragment.const(parameterizedWithParenStr)
 
-  /** Prefix each field with the default table name.
-    * e.g. "mytable.id, mytable.name, mytable.address"
+  def parameterizedWithParenStr: String =
+    s"($parameterizedStr)"
+
+  /** Prefix each field with the default table name. e.g. "mytable.id, mytable.name, mytable.address"
     */
-  def tableNamePrefixed: String =
-    allColumns.map(field => s"$tableName.$field").toList.mkString(",")
+  @deprecated(
+    "Use tableNamePrefixedStr instead. From v0.2.* onwards this method will start returning Fragment since " +
+      "doobie 0.9.0 allows you to directly interpolate Fragment in fr interpolators",
+    since = "0.1.7",
+  )
+  def tableNamePrefixed: String = tableNamePrefixedStr
 
-  def tableNamePrefixedF: Fragment = Fragment.const(tableNamePrefixed)
+  def tableNamePrefixedF: Fragment = Fragment.const(tableNamePrefixedStr)
+
+  def tableNamePrefixedStr: String =
+    allColumns.map(field => s"$tableNameStr.$field").toList.mkString(",")
 
   /** Prefix each field with the given string. e.g. "c.id, c.name, c.address" */
-  def prefixed(prefix: String): String =
-    allColumns.map(field => s"$prefix.$field").toList.mkString(",")
+  @deprecated(
+    "Use prefixedStr instead. From v0.2.* onwards this method will start returning Fragment since " +
+      "doobie 0.9.0 allows you to directly interpolate Fragment in fr interpolators",
+    since = "0.1.7",
+  )
+  def prefixed(prefix: String): String = prefixedStr(prefix)
 
-  def prefixedF(prefix: String): Fragment = Fragment.const(prefixed(prefix))
+  def prefixedF(prefix: String): Fragment = Fragment.const(prefixedStr(prefix))
+
+  def prefixedStr(prefix: String): String =
+    allColumns.map(field => s"$prefix.$field").toList.mkString(",")
 
 }
 

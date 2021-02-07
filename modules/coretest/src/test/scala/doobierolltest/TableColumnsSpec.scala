@@ -9,17 +9,17 @@ object TableColumnsSpec extends DefaultRunnableSpec {
 
   def spec =
     suite("TableColumnSpec")(
-      test("'list' returns comma separate column names") {
-        assertStringEqual(TestClass.columns.list, "a,str_field,snake_case,pascal_case")
+      test("'listStr' returns comma separate column names") {
+        assertStringEqual(TestClass.columns.listStr, "a,str_field,snake_case,pascal_case")
       },
       test("'listF' returns comma separate column names Fragment") {
         assertFragmentSqlEqual(TestClass.columns.listF, "a,str_field,snake_case,pascal_case ")
       },
       test(
-        "'listWithParen' returns comma separate column names, surround by parenthesis",
+        "'listWithParenStr' returns comma separate column names, surround by parenthesis",
       ) {
         assertStringEqual(
-          TestClass.columns.listWithParen,
+          TestClass.columns.listWithParenStr,
           "(a,str_field,snake_case,pascal_case)",
         )
       },
@@ -31,9 +31,9 @@ object TableColumnsSpec extends DefaultRunnableSpec {
           "(a,str_field,snake_case,pascal_case) ",
         )
       },
-      test("'prefixed' returns list of field all prefixed") {
+      test("'prefixedStr' returns list of field all prefixed") {
         assertStringEqual(
-          TestClass.columns.prefixed("pre"),
+          TestClass.columns.prefixedStr("pre"),
           "pre.a,pre.str_field,pre.snake_case,pre.pascal_case",
         )
       },
@@ -43,9 +43,9 @@ object TableColumnsSpec extends DefaultRunnableSpec {
           "pre.a,pre.str_field,pre.snake_case,pre.pascal_case ",
         )
       },
-      test("'tableNamePrefixed' returns ") {
+      test("'tableNamePrefixedStr' returns ") {
         assertStringEqual(
-          TestClass.columns.tableNamePrefixed,
+          TestClass.columns.tableNamePrefixedStr,
           "test_class.a,test_class.str_field,test_class.snake_case,test_class.pascal_case",
         )
       },
@@ -56,9 +56,9 @@ object TableColumnsSpec extends DefaultRunnableSpec {
         )
       },
       test(
-        "'parameterized' returns same number of '?' as the number of columns, separated by commas",
+        "'parameterizedStr' returns same number of '?' as the number of columns, separated by commas",
       ) {
-        assertStringEqual(TestClass.columns.parameterized, "?,?,?,?")
+        assertStringEqual(TestClass.columns.parameterizedStr, "?,?,?,?")
       },
       test(
         "'parameterizedF' returns Fragment with same number of '?' as the number of columns, separated by commas",
@@ -66,9 +66,9 @@ object TableColumnsSpec extends DefaultRunnableSpec {
         assertFragmentSqlEqual(TestClass.columns.parameterizedF, "?,?,?,? ")
       },
       test(
-        "'parameterizedWithParen' is similar to 'parameterized' but the output is additionally surrounded by parenthesis",
+        "'parameterizedWithParenStr' is similar to 'parameterized' but the output is additionally surrounded by parenthesis",
       ) {
-        assertStringEqual(TestClass.columns.parameterizedWithParen, "(?,?,?,?)")
+        assertStringEqual(TestClass.columns.parameterizedWithParenStr, "(?,?,?,?)")
       },
       test(
         "'parameterizedWithParenF' is similar to 'parameterized' but the output is additionally surrounded by parenthesis",
