@@ -2,8 +2,8 @@ val zioVersion = "1.0.4-2"
 val circeVersion = "0.13.0"
 val silencerVersion = "1.7.1"
 val doobieVersion = "0.10.0"
-val scala213 = "2.13.3"
-val scala212 = "2.12.12"
+val scala213 = "2.13.4"
+val scala212 = "2.12.13"
 
 inThisBuild(
   List(
@@ -102,12 +102,13 @@ lazy val docs = project
   .settings(
     // Disble any2stringAdd deprecation in md files. Seems like mdoc macro generates code which
     // use implicit conversion to string
-    scalacOptions ++= {
-      if (scalaVersion.value == scala213) {
-        Seq("-Wconf:msg=\".*method any2stringadd.*\":i")
-      } else Seq.empty
+    scalacOptions ~= { opts =>
+      val extraOpts = Seq("-Wconf:msg=\".*method any2stringadd.*\":i")
+
+      val removes = Set("-Wdead-code", "-Ywarn-dead-code") // we use ??? in various places
+
+      (opts ++ extraOpts).filterNot(removes)
     },
-    scalacOptions --= Seq("-Wdead-code"), // we use ??? in various places
   )
 
 lazy val root = project
