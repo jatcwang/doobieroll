@@ -6,7 +6,7 @@ import doobieroll.impl._
 import doobieroll.{Assembler, LeafDef, ParentAssembler, ParentDef}
 import shapeless._
 
-import scala.annotation.tailrec
+import scala.annotation.{nowarn, tailrec}
 
 trait ToAssemblerSyntax {
 
@@ -184,6 +184,7 @@ private[doobieroll] object ToAssemblerSyntax {
 
   def seqToHList[HL <: HList](orig: Vector[Any]): HL = {
 
+    @nowarn("msg=.*may not be exhaustive.*") // https://github.com/scala/bug/issues/12232
     @tailrec def impl(acc: HList, rest: Vector[Any]): HL =
       rest match {
         case Vector()  => acc.asInstanceOf[HL]
