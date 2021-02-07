@@ -75,6 +75,14 @@ object TableColumnsSpec extends DefaultRunnableSpec {
       ) {
         assertFragmentSqlEqual(TestClass.columns.parameterizedWithParenF, "(?,?,?,?) ")
       },
+      test(
+        "joinMap",
+      ) {
+        assertFragmentSqlEqual(
+          TestClass.columns.joinMap(c => s"x.$c AS x_$c"),
+          "x.a AS x_a,x.str_field AS x_str_field,x.snake_case AS x_snake_case,x.pascal_case AS x_pascal_case ",
+        )
+      },
       test("Derivation is not allowed for empty case classes") {
         illTyped("deriveSnakeColumnNames[Empty]")
         assertCompletes

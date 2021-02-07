@@ -1,6 +1,7 @@
 package doobieroll
 
 import cats.data.NonEmptyList
+import cats.implicits._
 import shapeless._
 import shapeless.ops.hlist.{Mapper, ToTraversable}
 import shapeless.ops.record.Keys
@@ -102,6 +103,16 @@ sealed abstract case class TableColumns[T](
 
   def prefixedStr(prefix: String): String =
     allColumns.map(field => s"$prefix.$field").toList.mkString(",")
+
+  /** Transform every field name using the provided function, then join them together with commas.
+    * This is useful for field prefixes and aliases.
+    *
+    * {{{
+    *   cols.joinMap(c => s"person.${c} AS person_${c}") === fr"person.col1 AS person_col1, person.col2 AS person_col2"
+    * }}}
+    */
+  def joinMap(func: String => String): Fragment =
+    Fragment.const(allColumns.map(func).toList.mkString(","))
 
 }
 
