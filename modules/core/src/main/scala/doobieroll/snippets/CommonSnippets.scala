@@ -6,7 +6,7 @@ import cats.syntax.all._
 trait CommonSnippets {
   def selectColumnsFrom(tableColumns: TableColumns[_]): Fragment =
     Fragment.const(
-      s"SELECT ${tableColumns.list} FROM ${tableColumns.tableName}",
+      s"SELECT ${tableColumns.listStr} FROM ${tableColumns.tableNameStr}",
     )
 
   def selectColumns(

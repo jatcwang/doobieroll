@@ -122,6 +122,7 @@ lazy val commonSettings = Seq(
   scalacOptions ++= Seq(
     "-Ywarn-macros:after",
   ),
+  versionScheme := Some("early-semver"),
   doc / scalacOptions --= Seq("-Xfatal-warnings"),
   scalacOptions --= {
     if (sys.env.contains("CI")) {
@@ -130,6 +131,7 @@ lazy val commonSettings = Seq(
       Seq("-Xfatal-warnings")
     }
   },
+  scalacOptions ++= Seq("-Xsource:3"),
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
   libraryDependencies ++= Seq(

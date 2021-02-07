@@ -66,12 +66,14 @@ object DbCompany {
 ```
 
 ```scala mdoc
-val qq: Fragment = fr"INSERT INTO company" ++
-    DbCompany.columns.listWithParenF ++
-    fr"VALUES" ++
-    DbCompany.columns.parameterizedWithParenF ++
-    fr"ON CONFLICT (id) DO UPDATE SET" ++
-    updateAllNonKeyColumns(DbCompany.columns)
+val qq: Fragment = fr"""
+  |INSERT INTO company
+  |${DbCompany.columns.listWithParenF}
+  |VALUES
+  |${DbCompany.columns.parameterizedWithParenF}
+  |ON CONFLICT (id) DO UPDATE SET
+  |${updateAllNonKeyColumns(DbCompany.columns)}
+""".stripMargin
 
 // You can define your own functions to work with the list of fields!
 private def updateAllNonKeyColumns(tableColumns: TableColumns[_]): Fragment =

@@ -170,33 +170,32 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
 
   def insertDbCompany: Update[DbCompany] = {
     val cols = DbCompany.columns
-    Update[DbCompany](
-      s"INSERT INTO ${cols.tableName} ${cols.listWithParen} " +
-        s"VALUES ${cols.parameterizedWithParen}",
+    Update(
+      s"INSERT INTO ${cols.tableNameStr} ${cols.listWithParenStr} VALUES ${cols.parameterizedWithParenStr}",
     )
   }
 
   def insertDbDepartment: Update[DbDepartment] = {
     val cols = DbDepartment.columns
     Update[DbDepartment](
-      s"INSERT INTO ${cols.tableName} ${cols.listWithParen} " +
-        s"VALUES ${cols.parameterizedWithParen}",
+      s"INSERT INTO ${cols.tableNameStr} ${cols.listWithParenStr} " +
+        s"VALUES ${cols.parameterizedWithParenStr}",
     )
   }
 
   def insertDbEmployee: Update[DbEmployee] = {
     val cols = DbEmployee.columns
     Update[DbEmployee](
-      s"INSERT INTO ${cols.tableName} ${cols.listWithParen} " +
-        s"VALUES ${cols.parameterizedWithParen}",
+      s"INSERT INTO ${cols.tableNameStr} ${cols.listWithParenStr} " +
+        s"VALUES ${cols.parameterizedWithParenStr}",
     )
   }
 
   def insertDbInvoice: Update[DbInvoice] = {
     val cols = DbInvoice.columns
     Update[DbInvoice](
-      s"INSERT INTO ${cols.tableName} ${cols.listWithParen} " +
-        s"VALUES ${cols.parameterizedWithParen}",
+      s"INSERT INTO ${cols.tableNameStr} ${cols.listWithParenStr} " +
+        s"VALUES ${cols.parameterizedWithParenStr}",
     )
   }
 
@@ -217,9 +216,9 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
     runSql(
       Query0[Dbs](
         s"""SELECT
-           ${companyCols.prefixed("c")},
-           ${departmentCols.prefixed("d")},
-           ${employeeCols.prefixed("e")}
+           ${companyCols.prefixedStr("c")},
+           ${departmentCols.prefixedStr("d")},
+           ${employeeCols.prefixedStr("e")}
             FROM company as c
          $joinType JOIN department AS d ON c.id = d.company_id
          $joinType JOIN employee AS e ON d.id = e.department_id
