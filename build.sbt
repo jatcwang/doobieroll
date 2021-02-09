@@ -26,6 +26,7 @@ lazy val core = Project("core", file("modules/core"))
   .settings(commonSettings)
   .settings(
     name := "doobieroll",
+//    mimaPreviousArtifacts := Set("com.github.jatcwang" %% "doobieroll" % "0.1.6"),
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % "2.3.1",
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2",

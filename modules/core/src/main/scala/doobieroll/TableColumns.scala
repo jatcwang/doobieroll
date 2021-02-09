@@ -108,7 +108,7 @@ sealed abstract case class TableColumns[T](
     * This is useful for field prefixes and aliases.
     *
     * {{{
-    *   cols.joinMap(c => s"person.${c} AS person_${c}") === fr"person.col1 AS person_col1, person.col2 AS person_col2"
+    * cols.joinMap(c => s"person.\$c AS person_\$c") == fr"person.col1 AS person_col1, person.col2 AS person_col2"
     * }}}
     */
   def joinMap(func: String => String): Fragment =
