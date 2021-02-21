@@ -3,7 +3,9 @@ package doobierolltest
 import doobieroll.TableColumns
 import shapeless.test.illTyped
 import zio.test._
+import zio.test.Assertion._
 import testutils.FragmentAssertions._
+import doobieroll.NoSuchField
 
 object TableColumnsSpec extends DefaultRunnableSpec {
 
@@ -74,6 +76,28 @@ object TableColumnsSpec extends DefaultRunnableSpec {
         "'parameterizedWithParenF' is similar to 'parameterized' but the output is additionally surrounded by parenthesis",
       ) {
         assertFragmentSqlEqual(TestClass.columns.parameterizedWithParenF, "(?,?,?,?) ")
+      },
+      test(
+        "'fromFieldStr' returns the column name for an existing field",
+      ) {
+        assert(TestClass.columns.fromFieldStr("PascalCase"))(isRight(equalTo("pascal_case")))
+      },
+      test(
+        "'fromFieldStr' returns an error for a non existing field",
+      ) {
+        assert(TestClass.columns.fromFieldStr("notAField"))(isLeft(equalTo(NoSuchField())))
+      },
+      test(
+        "'fromFieldF' returns the column name fragment for an existing field",
+      ) {
+        assert(TestClass.columns.fromFieldF("PascalCase").map(_.query.sql))(
+          isRight(equalTo("pascal_case")),
+        )
+      },
+      test(
+        "'fromFieldF' returns an error for a non existing field",
+      ) {
+        assert(TestClass.columns.fromFieldF("notAField"))(isLeft(equalTo(NoSuchField())))
       },
       test(
         "joinMap",

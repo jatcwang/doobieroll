@@ -12,8 +12,10 @@ import scala.annotation.implicitNotFound
 
 sealed abstract case class TableColumns[T](
   tableNameStr: String,
-  allColumns: NonEmptyList[String],
+  fieldNames: NonEmptyList[String],
+  transform: String => String = identity,
 ) {
+  val allColumns: NonEmptyList[String] = fieldNames.map(transform)
 
   @deprecated(
     "Use tableNameStr instead. From v0.2.* onwards this method will start returning Fragment since " +
@@ -104,6 +106,13 @@ sealed abstract case class TableColumns[T](
   def prefixedStr(prefix: String): String =
     allColumns.map(field => s"$prefix.$field").toList.mkString(",")
 
+  /** Return the column name associated with the provided field */
+  def fromFieldF(field: String): Either[NoSuchField, Fragment] =
+    fromFieldStr(field).map(Fragment.const0(_))
+
+  def fromFieldStr(field: String): Either[NoSuchField, String] =
+    Either.cond(fieldNames.contains_(field), transform(field), NoSuchField())
+
   /** Transform every field name using the provided function, then join them together with commas.
     * This is useful for field prefixes and aliases.
     *
@@ -135,8 +144,8 @@ object TableColumns {
   def deriveTableColumns[T](tableName: String, transform: String => String)(implicit
     mkTableColumns: MkTableColumns[T],
   ): TableColumns[T] = {
-    val names = mkTableColumns.allColumns.map(transform)
-    new TableColumns[T](tableName, names) {}
+    val names = mkTableColumns.allColumns
+    new TableColumns[T](tableName, names, transform) {}
   }
 
 }
@@ -176,3 +185,5 @@ private object MkTableColumns {
   }
 
 }
+
+case class NoSuchField() extends RuntimeException

@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  "TableColumns"
+title: "TableColumns"
 permalink: docs/tablecolumns
 ---
 
@@ -30,7 +30,7 @@ INSERT INTO company (
 ) VALUES (
   ?, ?, ?, ?, ?
 )
-ON CONFLICT (id) DO UPDATE SET 
+ON CONFLICT (id) DO UPDATE SET
   id = EXCLUDED.id,
   name = EXCLUDED.name,
   phone_number = EXCLUDED.phone_number,
@@ -86,3 +86,18 @@ private def updateAllNonKeyColumns(tableColumns: TableColumns[_]): Fragment =
 Other than having less boilerplate, the main benefit of using `TableColumns` is **consistency**.
 Since field names and order are consistent across all use sites, we can avoid out of order fields
 causing bugs.
+
+## Sorting with TableColumns
+
+Usually when sorting a table, the column (or columns) you sort on are not known at compile time. This means you usually need to validate the column name at runtime before using it in the query.
+`TableColumns` can help in this case as well:
+
+```scala mdoc
+def sortCompanies(sortingField: String): Either[NoSuchField, Fragment] =
+  DbCompany.columns.fromFieldF(sortingField).map { sortingColumnFr =>
+    fr"""
+      |SELECT ${DbCompany.columns.listStr} FROM company
+      |ORDER BY $sortingColumnFr ASC
+    """.stripMargin
+  }
+```
