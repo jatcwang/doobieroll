@@ -91,7 +91,7 @@ object TableColumnsSpec extends DefaultRunnableSpec {
         "'fromFieldF' returns the column name fragment for an existing field",
       ) {
         assert(TestClass.columns.fromFieldF("PascalCase").map(_.query.sql))(
-          isRight(equalTo("pascal_case")),
+          isRight(equalTo("pascal_case ")),
         )
       },
       test(
