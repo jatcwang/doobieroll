@@ -93,7 +93,7 @@ Usually when sorting a table, the column (or columns) you sort on are not known 
 `TableColumns` can help in this case as well:
 
 ```scala mdoc:invisible
-import doobieroll.NoSuchField
+import doobieroll.TableColumns.NoSuchField
 ```
 
 ```scala mdoc
