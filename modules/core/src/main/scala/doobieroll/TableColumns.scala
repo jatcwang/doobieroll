@@ -108,8 +108,8 @@ sealed abstract case class TableColumns[T](
     allColumns.map(field => s"$prefix.$field").toList.mkString(",")
 
   /** Return the column name associated with the provided field */
-  def fromFieldF(field: String): Either[doobieroll.TableColumns.NoSuchField, Fragment] =
-    fromFieldStr(field).map(Fragment.const0(_))
+  def fromFieldF(field: String): Either[NoSuchField, Fragment] =
+    fromFieldStr(field).map(Fragment.const(_))
 
   def fromFieldStr(field: String): Either[NoSuchField, String] =
     Either.cond(fieldNames.contains_(field), transform(field), NoSuchField())
