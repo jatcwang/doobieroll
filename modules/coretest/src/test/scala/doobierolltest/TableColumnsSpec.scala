@@ -1,11 +1,11 @@
 package doobierolltest
 
 import doobieroll.TableColumns
+import doobieroll.TableColumns.NoSuchField
 import shapeless.test.illTyped
 import zio.test._
 import zio.test.Assertion._
 import testutils.FragmentAssertions._
-import doobieroll.NoSuchField
 
 object TableColumnsSpec extends DefaultRunnableSpec {
 

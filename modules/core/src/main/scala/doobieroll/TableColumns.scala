@@ -7,6 +7,7 @@ import shapeless.ops.hlist.{Mapper, ToTraversable}
 import shapeless.ops.record.Keys
 import shapeless.tag.Tagged
 import doobie.Fragment
+import doobieroll.TableColumns.NoSuchField
 
 import scala.annotation.implicitNotFound
 
@@ -107,7 +108,7 @@ sealed abstract case class TableColumns[T](
     allColumns.map(field => s"$prefix.$field").toList.mkString(",")
 
   /** Return the column name associated with the provided field */
-  def fromFieldF(field: String): Either[NoSuchField, Fragment] =
+  def fromFieldF(field: String): Either[doobieroll.TableColumns.NoSuchField, Fragment] =
     fromFieldStr(field).map(Fragment.const0(_))
 
   def fromFieldStr(field: String): Either[NoSuchField, String] =
@@ -148,6 +149,8 @@ object TableColumns {
     new TableColumns[T](tableName, names, transform) {}
   }
 
+  case class NoSuchField() extends RuntimeException
+
 }
 
 // A separate class to prevent automatic derivation
@@ -185,5 +188,3 @@ private object MkTableColumns {
   }
 
 }
-
-case class NoSuchField() extends RuntimeException

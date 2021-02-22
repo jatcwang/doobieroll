@@ -92,6 +92,10 @@ causing bugs.
 Usually when sorting a table, the column (or columns) you sort on are not known at compile time. This means you usually need to validate the column name at runtime before using it in the query.
 `TableColumns` can help in this case as well:
 
+```scala mdoc:invisible
+import doobieroll.NoSuchField
+```
+
 ```scala mdoc
 def sortCompanies(sortingField: String): Either[NoSuchField, Fragment] =
   DbCompany.columns.fromFieldF(sortingField).map { sortingColumnFr =>
