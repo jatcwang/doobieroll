@@ -14,8 +14,8 @@ object TableColumnsSpec extends DefaultRunnableSpec {
       test("'listStr' returns comma separate column names") {
         assertStringEqual(TestClass.columns.listStr, "a,str_field,snake_case,pascal_case")
       },
-      test("'listF' returns comma separate column names Fragment") {
-        assertFragmentSqlEqual(TestClass.columns.listF, "a,str_field,snake_case,pascal_case ")
+      test("'list' returns comma separate column names Fragment") {
+        assertFragmentSqlEqual(TestClass.columns.list, "a,str_field,snake_case,pascal_case ")
       },
       test(
         "'listWithParenStr' returns comma separate column names, surround by parenthesis",
@@ -26,10 +26,10 @@ object TableColumnsSpec extends DefaultRunnableSpec {
         )
       },
       test(
-        "'listWithParenF' returns Fragment of comma separate column names, surround by parenthesis",
+        "'listWithParen' returns Fragment of comma separate column names, surround by parenthesis",
       ) {
         assertFragmentSqlEqual(
-          TestClass.columns.listWithParenF,
+          TestClass.columns.listWithParen,
           "(a,str_field,snake_case,pascal_case) ",
         )
       },
@@ -39,9 +39,9 @@ object TableColumnsSpec extends DefaultRunnableSpec {
           "pre.a,pre.str_field,pre.snake_case,pre.pascal_case",
         )
       },
-      test("'prefixedF' returns list of field all prefixed Fragment") {
+      test("'prefixed' returns list of field all prefixed Fragment") {
         assertFragmentSqlEqual(
-          TestClass.columns.prefixedF("pre"),
+          TestClass.columns.prefixed("pre"),
           "pre.a,pre.str_field,pre.snake_case,pre.pascal_case ",
         )
       },
@@ -51,9 +51,9 @@ object TableColumnsSpec extends DefaultRunnableSpec {
           "test_class.a,test_class.str_field,test_class.snake_case,test_class.pascal_case",
         )
       },
-      test("'tableNamePrefixedF' returns ") {
+      test("'tableNamePrefixed' returns ") {
         assertFragmentSqlEqual(
-          TestClass.columns.tableNamePrefixedF,
+          TestClass.columns.tableNamePrefixed,
           "test_class.a,test_class.str_field,test_class.snake_case,test_class.pascal_case ",
         )
       },
@@ -63,9 +63,9 @@ object TableColumnsSpec extends DefaultRunnableSpec {
         assertStringEqual(TestClass.columns.parameterizedStr, "?,?,?,?")
       },
       test(
-        "'parameterizedF' returns Fragment with same number of '?' as the number of columns, separated by commas",
+        "'parameterized' returns Fragment with same number of '?' as the number of columns, separated by commas",
       ) {
-        assertFragmentSqlEqual(TestClass.columns.parameterizedF, "?,?,?,? ")
+        assertFragmentSqlEqual(TestClass.columns.parameterized, "?,?,?,? ")
       },
       test(
         "'parameterizedWithParenStr' is similar to 'parameterized' but the output is additionally surrounded by parenthesis",
@@ -73,9 +73,9 @@ object TableColumnsSpec extends DefaultRunnableSpec {
         assertStringEqual(TestClass.columns.parameterizedWithParenStr, "(?,?,?,?)")
       },
       test(
-        "'parameterizedWithParenF' is similar to 'parameterized' but the output is additionally surrounded by parenthesis",
+        "'parameterizedWithParen' is similar to 'parameterized' but the output is additionally surrounded by parenthesis",
       ) {
-        assertFragmentSqlEqual(TestClass.columns.parameterizedWithParenF, "(?,?,?,?) ")
+        assertFragmentSqlEqual(TestClass.columns.parameterizedWithParen, "(?,?,?,?) ")
       },
       test(
         "'fromFieldStr' returns the column name for an existing field",
@@ -88,16 +88,16 @@ object TableColumnsSpec extends DefaultRunnableSpec {
         assert(TestClass.columns.fromFieldStr("notAField"))(isLeft(equalTo(NoSuchField())))
       },
       test(
-        "'fromFieldF' returns the column name fragment for an existing field",
+        "'fromField' returns the column name fragment for an existing field",
       ) {
-        assert(TestClass.columns.fromFieldF("PascalCase").map(_.query.sql))(
+        assert(TestClass.columns.fromField("PascalCase").map(_.query.sql))(
           isRight(equalTo("pascal_case ")),
         )
       },
       test(
-        "'fromFieldF' returns an error for a non existing field",
+        "'fromField' returns an error for a non existing field",
       ) {
-        assert(TestClass.columns.fromFieldF("notAField"))(isLeft(equalTo(NoSuchField())))
+        assert(TestClass.columns.fromField("notAField"))(isLeft(equalTo(NoSuchField())))
       },
       test(
         "joinMap",

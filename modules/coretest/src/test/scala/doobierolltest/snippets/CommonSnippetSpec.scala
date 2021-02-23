@@ -26,7 +26,7 @@ object CommonSnippetSpec extends DefaultRunnableSpec {
           "Outputs 'SELECT' followed by the provided fragment when a single fragment is provided",
         ) {
           val result = selectColumns(
-            TwoField.columns.prefixedF("p"),
+            TwoField.columns.prefixed("p"),
           )
           assertFragmentSqlEqual(result, "SELECT p.f1,p.f2 ")
         },
@@ -34,8 +34,8 @@ object CommonSnippetSpec extends DefaultRunnableSpec {
           "Outputs 'SELECT' followed by the provided fragments joined by ',' when provided with multiple fragments",
         ) {
           val result = selectColumns(
-            OneField.columns.listF,
-            TwoField.columns.prefixedF("p"),
+            OneField.columns.list,
+            TwoField.columns.prefixed("p"),
           )
           assertFragmentSqlEqual(result, "SELECT f1 ,p.f1,p.f2 ")
         },

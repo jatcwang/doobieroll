@@ -68,9 +68,9 @@ object DbCompany {
 ```scala mdoc
 val qq: Fragment = fr"""
   |INSERT INTO company
-  |${DbCompany.columns.listWithParenF}
+  |${DbCompany.columns.listWithParen}
   |VALUES
-  |${DbCompany.columns.parameterizedWithParenF}
+  |${DbCompany.columns.parameterizedWithParen}
   |ON CONFLICT (id) DO UPDATE SET
   |${updateAllNonKeyColumns(DbCompany.columns)}
 """.stripMargin
@@ -98,7 +98,7 @@ import doobieroll.TableColumns.NoSuchField
 
 ```scala mdoc
 def sortCompanies(sortingField: String): Either[NoSuchField, Fragment] =
-  DbCompany.columns.fromFieldF(sortingField).map { sortingColumnFr =>
+  DbCompany.columns.fromField(sortingField).map { sortingColumnFr =>
     fr"""
       |SELECT ${DbCompany.columns.listStr} FROM company
       |ORDER BY $sortingColumnFr ASC
