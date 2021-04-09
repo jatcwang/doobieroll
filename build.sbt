@@ -30,7 +30,7 @@ lazy val core = Project("core", file("modules/core"))
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % "2.5.0",
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.3",
-      "com.chuusai" %% "shapeless" % "2.3.3",
+      "com.chuusai" %% "shapeless" % "2.3.4",
       "org.tpolecat" %% "doobie-core" % doobieVersion,
     ),
   )
