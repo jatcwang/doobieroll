@@ -1,4 +1,4 @@
-val zioVersion = "1.0.5"
+val zioVersion = "1.0.6"
 val circeVersion = "0.13.0"
 val doobieVersion = "0.12.1"
 val scala213 = "2.13.4"
@@ -30,7 +30,7 @@ lazy val core = Project("core", file("modules/core"))
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % "2.5.0",
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.3",
-      "com.chuusai" %% "shapeless" % "2.3.3",
+      "com.chuusai" %% "shapeless" % "2.3.4",
       "org.tpolecat" %% "doobie-core" % doobieVersion,
     ),
   )
@@ -41,8 +41,8 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
   .settings(noPublishSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "pprint" % "0.6.3",
-      "org.flywaydb" % "flyway-core" % "7.7.1",
+      "com.lihaoyi" %% "pprint" % "0.6.4",
+      "org.flywaydb" % "flyway-core" % "7.8.1",
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
@@ -71,9 +71,9 @@ lazy val bench = Project("bench", file("modules/bench"))
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
-      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.7.0",
-      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.7.0" % "provided",
-      "org.tpolecat" %% "skunk-core" % "0.1.0",
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.7.2",
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.7.2" % "provided",
+      "org.tpolecat" %% "skunk-core" % "0.0.25",
     ),
   )
 
