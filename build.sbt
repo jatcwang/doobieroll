@@ -1,6 +1,6 @@
-val zioVersion = "1.0.6"
+val zioVersion = "1.0.7"
 val circeVersion = "0.13.0"
-val doobieVersion = "0.12.1"
+val doobieVersion = "0.13.1"
 val scala213 = "2.13.4"
 val scala212 = "2.12.13"
 
@@ -28,7 +28,7 @@ lazy val core = Project("core", file("modules/core"))
     name := "doobieroll",
 //    mimaPreviousArtifacts := Set("com.github.jatcwang" %% "doobieroll" % "0.1.6"),
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-core" % "2.5.0",
+      "org.typelevel" %% "cats-core" % "2.6.0",
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.3",
       "com.chuusai" %% "shapeless" % "2.3.4",
       "org.tpolecat" %% "doobie-core" % doobieVersion,
@@ -41,21 +41,21 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
   .settings(noPublishSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "pprint" % "0.6.4",
-      "org.flywaydb" % "flyway-core" % "7.8.1",
+      "com.lihaoyi" %% "pprint" % "0.6.5",
+      "org.flywaydb" % "flyway-core" % "7.8.2",
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
       "dev.zio" %% "zio-test" % zioVersion,
       "dev.zio" %% "zio-test-sbt" % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
-      "dev.zio" %% "zio-interop-cats" % "2.4.0.0",
+      "dev.zio" %% "zio-interop-cats" % "2.4.1.0",
       "javax.activation" % "activation" % "1.1.1", // Reuqired for DataSource class in JDK 9+
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
-      "org.postgresql" % "postgresql" % "42.2.19",
-      "com.softwaremill.quicklens" %% "quicklens" % "1.6.1",
+      "org.postgresql" % "postgresql" % "42.2.20",
+      "com.softwaremill.quicklens" %% "quicklens" % "1.7.1",
       "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.9" % "test",
     ),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
@@ -71,9 +71,9 @@ lazy val bench = Project("bench", file("modules/bench"))
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
-      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.7.2",
-      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.7.2" % "provided",
-      "org.tpolecat" %% "skunk-core" % "0.1.0",
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.7.3",
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.7.3" % "provided",
+      "org.tpolecat" %% "skunk-core" % "0.0.25",
     ),
   )
 
