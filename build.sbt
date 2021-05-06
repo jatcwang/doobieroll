@@ -30,7 +30,7 @@ lazy val core = Project("core", file("modules/core"))
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % "2.6.0",
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.3",
-      "com.chuusai" %% "shapeless" % "2.3.4",
+      "com.chuusai" %% "shapeless" % "2.3.5",
       "org.tpolecat" %% "doobie-core" % doobieVersion,
     ),
   )
@@ -71,9 +71,9 @@ lazy val bench = Project("bench", file("modules/bench"))
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
-      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.7.3",
-      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.7.3" % "provided",
-      "org.tpolecat" %% "skunk-core" % "0.1.1",
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.8.0",
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.8.0" % "provided",
+      "org.tpolecat" %% "skunk-core" % "0.0.26",
     ),
   )
 
