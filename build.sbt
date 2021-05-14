@@ -29,7 +29,7 @@ lazy val core = Project("core", file("modules/core"))
 //    mimaPreviousArtifacts := Set("com.github.jatcwang" %% "doobieroll" % "0.1.6"),
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % "2.6.1",
-      "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.3",
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4",
       "com.chuusai" %% "shapeless" % "2.3.6",
       "org.tpolecat" %% "doobie-core" % doobieVersion,
     ),
