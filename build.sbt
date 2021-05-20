@@ -1,7 +1,7 @@
-val zioVersion = "1.0.7"
+val zioVersion = "1.0.8"
 val circeVersion = "0.13.0"
 val doobieVersion = "0.13.3"
-val scala213 = "2.13.4"
+val scala213 = "2.13.6"
 val scala212 = "2.12.13"
 
 inThisBuild(
@@ -42,20 +42,20 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
   .settings(
     libraryDependencies ++= Seq(
       "com.lihaoyi" %% "pprint" % "0.6.6",
-      "org.flywaydb" % "flyway-core" % "7.9.0",
+      "org.flywaydb" % "flyway-core" % "7.9.1",
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
       "dev.zio" %% "zio-test" % zioVersion,
       "dev.zio" %% "zio-test-sbt" % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
-      "dev.zio" %% "zio-interop-cats" % "2.4.1.0",
+      "dev.zio" %% "zio-interop-cats" % "2.5.1.0",
       "javax.activation" % "activation" % "1.1.1", // Reuqired for DataSource class in JDK 9+
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
       "org.postgresql" % "postgresql" % "42.2.20",
-      "com.softwaremill.quicklens" %% "quicklens" % "1.7.2",
+      "com.softwaremill.quicklens" %% "quicklens" % "1.7.3",
       "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.9" % "test",
     ),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
@@ -71,9 +71,9 @@ lazy val bench = Project("bench", file("modules/bench"))
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
-      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.8.1",
-      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.8.1" % "provided",
-      "org.tpolecat" %% "skunk-core" % "0.1.2",
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.8.2",
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.8.2" % "provided",
+      "org.tpolecat" %% "skunk-core" % "0.0.28",
     ),
   )
 
