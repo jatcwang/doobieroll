@@ -1,5 +1,5 @@
 val zioVersion = "1.0.9"
-val circeVersion = "0.14.0"
+val circeVersion = "0.14.1"
 val doobieVersion = "0.13.4"
 val scala213 = "2.13.6"
 val scala212 = "2.12.13"
@@ -54,8 +54,8 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
-      "org.postgresql" % "postgresql" % "42.2.20",
-      "com.softwaremill.quicklens" %% "quicklens" % "1.7.4",
+      "org.postgresql" % "postgresql" % "42.2.22",
+      "com.softwaremill.quicklens" %% "quicklens" % "1.7.3",
       "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.9" % "test",
     ),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
