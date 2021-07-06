@@ -54,7 +54,7 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
-      "org.postgresql" % "postgresql" % "42.2.22",
+      "org.postgresql" % "postgresql" % "42.2.23",
       "com.softwaremill.quicklens" %% "quicklens" % "1.7.4",
       "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.9" % "test",
     ),
