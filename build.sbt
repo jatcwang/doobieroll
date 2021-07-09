@@ -2,7 +2,7 @@ val zioVersion = "1.0.9"
 val circeVersion = "0.14.1"
 val doobieVersion = "0.13.4"
 val scala213 = "2.13.6"
-val scala212 = "2.12.13"
+val scala212 = "2.12.14"
 
 inThisBuild(
   List(
