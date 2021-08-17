@@ -1,4 +1,4 @@
-val zioVersion = "1.0.9"
+val zioVersion = "1.0.10"
 val circeVersion = "0.14.1"
 val doobieVersion = "0.13.4"
 val scala213 = "2.13.6"
@@ -42,7 +42,7 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
   .settings(
     libraryDependencies ++= Seq(
       "com.lihaoyi" %% "pprint" % "0.6.6",
-      "org.flywaydb" % "flyway-core" % "7.9.1",
+      "org.flywaydb" % "flyway-core" % "7.14.0",
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
