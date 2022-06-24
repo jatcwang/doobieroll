@@ -3,15 +3,15 @@ package doobierolltest
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import scala.concurrent.ExecutionContext
-
 import cats.data.{NonEmptyList, NonEmptyVector}
-import cats.effect.{Blocker, ContextShift, IO}
+import cats.effect.{IO, Resource}
+import cats.effect.unsafe.IORuntime
 import cats.kernel.Eq
 import cats.syntax.traverse._
+import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import doobie.hikari.HikariTransactor
-import doobie.implicits.AsyncConnectionIO
+import doobie.implicits.WeakAsyncConnectionIO
 import doobie.syntax.connectionio._
 import doobie.syntax.stream._
 import doobie.util.{Get, Read}
@@ -34,7 +34,8 @@ object SQLComparisonBench {
   private implicit val eqDbDepartment: Eq[DbDepartment] = Eq.fromUniversalEquals
 
   private implicit val decoderEmployee: Decoder[Employee] = io.circe.generic.semiauto.deriveDecoder
-  private implicit val decoderDepartment: Decoder[Department] = io.circe.generic.semiauto.deriveDecoder
+  private implicit val decoderDepartment: Decoder[Department] =
+    io.circe.generic.semiauto.deriveDecoder
   private implicit val decoderCompany: Decoder[Company] = io.circe.generic.semiauto.deriveDecoder
 
   private val sql = """
@@ -55,7 +56,7 @@ object SQLComparisonBench {
   """
   private val query = Query0[DbCompany :: DbDepartment :: DbEmployee :: HNil](sql)
   private val queryOrdered = Query0[DbCompany :: DbDepartment :: DbEmployee :: HNil](
-    sql concat " ORDER BY company_id, department_id, employee_id"
+    sql concat " ORDER BY company_id, department_id, employee_id",
   )
 
   private val sqlCompany = {
@@ -99,8 +100,9 @@ object SQLComparisonBench {
     val decoderDbCompany = (uuid ~ text).gimap[DbCompany]
     val decoderDbDepartment = (uuid ~ uuid ~ text).gimap[DbDepartment]
     val decoderDbEmployee = (uuid ~ uuid ~ text).gimap[DbEmployee]
-    val decoder = (decoderDbCompany ~ decoderDbDepartment ~ decoderDbEmployee).map { case ((c, d), e) =>
-      c :: d :: e :: HNil
+    val decoder = (decoderDbCompany ~ decoderDbDepartment ~ decoderDbEmployee).map {
+      case ((c, d), e) =>
+        c :: d :: e :: HNil
     }
 
     val fragment: skunk.Fragment[skunk.Void] = sql"""
@@ -157,12 +159,14 @@ object SQLComparisonBench {
 
     val codec: JsonValueCodec[Company] = JsonCodecMaker.make
 
-    val get = Get.Advanced.other[org.postgresql.util.PGobject](
-      NonEmptyList.of("jsonb")
-    ).map { o =>
-      val bytes = o.getValue.getBytes(StandardCharsets.UTF_8)
-      readFromArray(bytes)(codec)
-    }
+    val get = Get.Advanced
+      .other[org.postgresql.util.PGobject](
+        NonEmptyList.of("jsonb"),
+      )
+      .map { o =>
+        val bytes = o.getValue.getBytes(StandardCharsets.UTF_8)
+        readFromArray(bytes)(codec)
+      }
     val read = Read.fromGet(get)
     Query0(sqlJSON)(read)
   }
@@ -174,6 +178,8 @@ object SQLComparisonBench {
 class SQLComparisonBench {
   import SQLComparisonBench._
 
+  implicit val ioRuntime: IORuntime = IORuntime.global
+
   private val port = 5432
   private val database = "doobieroll"
   private val user = "postgres"
@@ -181,22 +187,24 @@ class SQLComparisonBench {
 
   private val (transactor, _) = {
     val ec = ExecutionContext.global
-    implicit val cs: ContextShift[IO] = IO.contextShift(ec)
 
-    HikariTransactor.newHikariTransactor[IO](
-      driverClassName = "org.postgresql.Driver",
-      url = s"jdbc:postgresql://localhost:$port/$database",
-      user = user,
-      pass = pass,
+    for {
+      dataSource <- Resource.fromAutoCloseable(IO {
+        val hikariConfig = new HikariConfig()
+        hikariConfig.setDriverClassName("org.postgresql.Driver")
+        hikariConfig.setJdbcUrl(s"jdbc:postgresql://localhost:$port/$database")
+        hikariConfig.setUsername(user)
+        hikariConfig.setPassword(pass)
+        new HikariDataSource(hikariConfig)
+      })
+    } yield HikariTransactor[IO](
+      dataSource,
       ec,
-      Blocker.liftExecutionContext(ec)
     )
   }.allocated.unsafeRunSync()
 
   private val (session, _) = {
     import natchez.Trace.Implicits.noop
-    val ec = ExecutionContext.global
-    implicit val cs: ContextShift[IO] = IO.contextShift(ec)
 
     Session.pooled[IO](
       host = "localhost",
@@ -226,13 +234,19 @@ class SQLComparisonBench {
 
   @Benchmark
   def fs2: Vector[Company] = {
-    val stream = queryOrdered.stream.transact(transactor)
+    val stream = queryOrdered.stream
+      .transact(transactor)
       .groupAdjacentBy(_.head)
       .map { case (company, chunk) =>
-        val departments = Stream.chunk(chunk).groupAdjacentBy(_.tail.head).map { case (department, chunk) =>
-          val employees = chunk.map(t => Employee.fromDb(t.tail.tail.head))
-          Department.fromDb(department, employees.toVector)
-        }.compile.toVector
+        val departments = Stream
+          .chunk(chunk)
+          .groupAdjacentBy(_.tail.head)
+          .map { case (department, chunk) =>
+            val employees = chunk.map(t => Employee.fromDb(t.tail.tail.head))
+            Department.fromDb(department, employees.toVector)
+          }
+          .compile
+          .toVector
         Company.fromDb(company, departments)
       }
     stream.compile.toVector.unsafeRunSync()
@@ -275,12 +289,14 @@ class SQLComparisonBench {
   }
 
   @Benchmark
-  def skunkNaive: Iterable[Company] = {
-    session.use { s =>
-      s.execute(querySkunk)
-    }.map { results =>
-      Naive.assembleUngrouped(results.toVector)
-    }.unsafeRunSync()
-  }
+  def skunkNaive: Iterable[Company] =
+    session
+      .use { s =>
+        s.execute(querySkunk)
+      }
+      .map { results =>
+        Naive.assembleUngrouped(results.toVector)
+      }
+      .unsafeRunSync()
 
 }

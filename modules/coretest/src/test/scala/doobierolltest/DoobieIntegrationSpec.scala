@@ -1,7 +1,6 @@
 package doobierolltest
 
 import java.util.concurrent.Executors
-import cats.effect.Blocker
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.whisk.docker.DockerReadyChecker.LogLineContains
 import com.whisk.docker.{DockerContainer, DockerContainerManager}
@@ -16,14 +15,15 @@ import shapeless.{::, HNil}
 
 import scala.concurrent.ExecutionContext
 import doobie.postgres.implicits._
-import doobie.Transactor
 import doobie.implicits._
 import doobie.util.update.Update
 import doobierolltest.model.{Company, DbCompany, DbDepartment, DbEmployee, DbInvoice}
 import TestDataHelpers._
+import doobie.hikari.HikariTransactor
 import doobie.util.Read
 import doobie.util.query.Query0
 import doobierolltest.db._
+import zio.interop.catz.implicits.rts
 
 import scala.concurrent.duration._
 
@@ -59,7 +59,7 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
 
   def containerLayer(
     containers: List[DockerContainer],
-  ): ZLayer[Any, Nothing, Has[Transactor[Task]]] = {
+  ): ZLayer[Any, Nothing, Has[HikariTransactor[Task]]] = {
     val steps = for {
       executorService <-
         ZManaged
@@ -88,7 +88,8 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
         new DockerContainerManager(containers, docker.createExecutor())(executorService)
       }
       _ <- ZManaged.make(ZIO.fromFuture { _ =>
-        manager.initReadyAll(2.minutes)
+        manager.pullImages()
+        manager.initReadyAll(3.minutes)
       }.orDie)(_ =>
         ZIO.fromFuture { _ =>
           manager.stopRmAll()
@@ -108,15 +109,10 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
             new HikariDataSource(hikariConfig)
           })
           .map(datasource =>
-            Transactor
-              .fromDataSource[Task]
-              .apply(
-                datasource,
-                dbExecutorService,
-                Blocker.liftExecutionContext(dbExecutorService),
-              ): Transactor[
-              Task,
-            ],
+            HikariTransactor[Task](
+              datasource,
+              dbExecutorService,
+            )
           )
           .asService
     } yield transactor
@@ -124,7 +120,7 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
     ZLayer(steps)
   }
 
-  val postgresContainerLayer: ZLayer[Any, Nothing, Has[Transactor[Task]]] = containerLayer(
+  val postgresContainerLayer: ZLayer[Any, Nothing, Has[HikariTransactor[Task]]] = containerLayer(
     List(
       DockerContainer("postgres:12.3-alpine")
         .withEnv("POSTGRES_PASSWORD=postgres")
@@ -135,8 +131,8 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
     ),
   )
 
-  val withTestTables: URLayer[Has[Transactor[Task]], Db] = {
-    val servLayer: URLayer[Has[Transactor[Task]], Db] =
+  val withTestTables: URLayer[Has[HikariTransactor[Task]], Db] = {
+    val servLayer: URLayer[Has[HikariTransactor[Task]], Db] =
       ZLayer.fromFunction(tran => new Db.Service(tran.get))
 
     ZLayer(for {
