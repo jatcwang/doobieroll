@@ -10,10 +10,13 @@ import zio.test.Assertion._
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, _}
 import com.softwaremill.quicklens._
+import zio.duration._
 
 object AssemblerSpec extends DefaultRunnableSpec {
 
   import shapeless.syntax.std.tuple._
+  override def aspects: List[TestAspect[Nothing, TestEnvironment, Nothing, Any]] =
+    List(TestAspect.timeoutWarning(300.seconds))
 
   override def spec: ZSpec[TestEnvironment, Nothing] =
     suite("AssemblerSpec")(
