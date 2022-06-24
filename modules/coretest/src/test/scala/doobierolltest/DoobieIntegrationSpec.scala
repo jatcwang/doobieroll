@@ -15,12 +15,10 @@ import shapeless.{::, HNil}
 
 import scala.concurrent.ExecutionContext
 import doobie.postgres.implicits._
-import doobie.Transactor
 import doobie.implicits._
 import doobie.util.update.Update
 import doobierolltest.model.{Company, DbCompany, DbDepartment, DbEmployee, DbInvoice}
 import TestDataHelpers._
-import cats.effect.IO
 import doobie.hikari.HikariTransactor
 import doobie.util.Read
 import doobie.util.query.Query0
