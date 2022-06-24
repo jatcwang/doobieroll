@@ -41,7 +41,7 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
   .settings(noPublishSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "pprint" % "0.7.3",
+      "com.lihaoyi" %% "pprint" % "0.6.6",
       "org.flywaydb" % "flyway-core" % "8.5.12",
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
@@ -50,7 +50,7 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "dev.zio" %% "zio-test-sbt" % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
       "dev.zio" %% "zio-interop-cats" % "3.2.9.1",
-      "javax.activation" % "activation" % "1.1.1", // Reuqired for DataSource class in JDK 9+
+      "javax.activation" % "activation" % "1.1.1", // Required for DataSource class in JDK 9+
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
