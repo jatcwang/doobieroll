@@ -3,10 +3,10 @@ package doobieroll.syntax
 import cats.Monad
 import cats.syntax.all._
 import doobieroll.impl._
-import doobieroll.{Assembler, LeafDef, ParentAssembler, ParentDef}
+import doobieroll.{Assembler, ParentDef, LeafDef, ParentAssembler}
 import shapeless._
 
-import scala.annotation.{nowarn, tailrec}
+import scala.annotation.{tailrec, nowarn}
 
 trait ToAssemblerSyntax {
 
@@ -33,7 +33,7 @@ trait ToAssemblerSyntax {
   final type Flattener[HL <: HList, Out <: HList] = FlatMapper.Aux[HListIdentity.type, HL, Out]
 
   object HListIdentity extends Poly1 {
-    implicit def caseHList[HL <: HList] = at[HL](identity)
+    implicit def caseHList[HL <: HList]: HListIdentity.Case.Aux[HL, HL] = at[HL](identity)
   }
 
   private def mkParent[F[_], A, ADb, CDbs <: HList, CDbsFlattened <: HList](

@@ -12,6 +12,6 @@ case class Wrapper(c: DbCompany, d: DbDepartment, e: DbEmployee) {
 object Wrapper {
   private implicit val employeeCodec: Codec.AsObject[DbEmployee] = deriveCodec[DbEmployee]
   private implicit val departmentCodec: Codec.AsObject[DbDepartment] = deriveCodec[DbDepartment]
-  private implicit val companyCodec = deriveCodec[DbCompany]
+  private implicit val companyCodec: Codec.AsObject[DbCompany] = deriveCodec[DbCompany]
   implicit val wrapperCodec: Codec.AsObject[Wrapper] = deriveCodec[Wrapper]
 }

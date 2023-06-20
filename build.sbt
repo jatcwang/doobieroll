@@ -1,8 +1,8 @@
 val zioVersion = "1.0.15"
-val circeVersion = "0.14.2"
-val doobieVersion = "1.0.0-RC2"
-val scala213 = "2.13.8"
-val scala212 = "2.12.13"
+val circeVersion = "0.14.5"
+val doobieVersion = "1.0.0-RC3"
+val scala213 = "2.13.11"
+val scala212 = "2.12.18"
 
 inThisBuild(
   List(
@@ -41,8 +41,7 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
   .settings(noPublishSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "pprint" % "0.6.6",
-      "org.flywaydb" % "flyway-core" % "8.5.12",
+      "org.flywaydb" % "flyway-core" % "9.19.4",
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
@@ -54,7 +53,7 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
-      "org.postgresql" % "postgresql" % "42.3.6",
+      "org.postgresql" % "postgresql" % "42.6.0",
       "com.softwaremill.quicklens" %% "quicklens" % "1.8.8",
       "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.9" % "test",
     ),
@@ -158,7 +157,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 
 val setupJekyllSteps = Seq(
   WorkflowStep.Use(
-    UseRef.Public("actions", "setup-ruby", "v1"),
+    UseRef.Public("ruby", "setup-ruby", "v1"),
     name = Some("Setup ruby"),
     params = Map("ruby-version" -> "2.7"),
   ),
