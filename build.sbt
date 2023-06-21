@@ -1,6 +1,6 @@
 val zioVersion = "1.0.15"
 val circeVersion = "0.14.5"
-val doobieVersion = "1.0.0-RC3"
+val doobieVersion = "1.0.0-RC4"
 val scala213 = "2.13.11"
 val scala212 = "2.12.18"
 
