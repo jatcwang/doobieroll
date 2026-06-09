@@ -3,10 +3,10 @@ package doobieroll.syntax
 import cats.Monad
 import cats.syntax.all._
 import doobieroll.impl._
-import doobieroll.{Assembler, ParentDef, LeafDef, ParentAssembler}
+import doobieroll.{Assembler, LeafDef, ParentAssembler, ParentDef}
 import shapeless._
 
-import scala.annotation.{tailrec, nowarn}
+import scala.annotation.{nowarn, tailrec}
 
 trait ToAssemblerSyntax {
 
