@@ -109,7 +109,20 @@ lazy val docs = project
     scalacOptions ~= { opts =>
       val extraOpts = Seq("-Wconf:msg=\".*method any2stringadd.*\":i")
 
-      val removes = Set("-Wdead-code", "-Ywarn-dead-code") // we use ??? in various places
+      val removes = Set(
+        "-Wdead-code",
+        "-Ywarn-dead-code",
+        "-Wunused:imports",
+        "-Wunused:privates",
+        "-Wunused:locals",
+        "-Wunused:explicits",
+        "-Wunused:implicits",
+        "-Wunused:params",
+        "-Wunused:patvars",
+        "-Wunused:nowarn",
+        "-Wvalue-discard",
+        "-Wnonunit-statement",
+      ) // docs use ??? and mdoc emits values for rendered examples
 
       (opts ++ extraOpts).filterNot(removes)
     },
@@ -164,10 +177,10 @@ val setupJekyllSteps = Seq(
   WorkflowStep.Use(
     UseRef.Public("ruby", "setup-ruby", "v1"),
     name = Some("Setup ruby"),
-    params = Map("ruby-version" -> "2.7"),
+    params = Map("ruby-version" -> "3.3"),
   ),
   WorkflowStep.Run(
-    List("gem install jekyll -v 4.1.1"),
+    List("gem install jekyll -v 4.4.1"),
     name = Some("Install Jekyll (to build microsite)"),
   ),
 )

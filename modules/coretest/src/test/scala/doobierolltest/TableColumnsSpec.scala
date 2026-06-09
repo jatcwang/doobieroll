@@ -113,8 +113,6 @@ object TableColumnsSpec extends ZIOSpecDefault {
       },
     )
 
-  private final case class Empty()
-
   private final case class TestClass(
     a: Int,
     strField: String,
