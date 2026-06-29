@@ -18,12 +18,16 @@ import doobie.util.{Get, Read}
 import doobie.util.query.Query0
 import doobierolltest.TestDataInstances.Infallible
 import doobierolltest.model._
+import doobierolltest.DoobieRowInstances._
 import fs2.Stream
 import io.circe.Decoder
 import org.openjdk.jmh.annotations._
+import org.typelevel.otel4s.metrics.Meter
+import org.typelevel.otel4s.trace.Tracer
+import org.typelevel.twiddles.syntax._
+import skunk.Session
 import shapeless.::
 import shapeless.HNil
-import skunk.Session
 
 // docker run --rm -p 5432:5432 -e POSTGRES_PASSWORD=password -e POSTGRES_DB=doobieroll -v "$(pwd)/modules/bench/src/main/resources/sql/tables.sql:/docker-entrypoint-initdb.d/01-tables.sql" -v "$(pwd)/modules/bench/src/main/resources/sql/data.sql:/docker-entrypoint-initdb.d/02-data.sql" postgres:12
 
@@ -97,11 +101,11 @@ object SQLComparisonBench {
     import skunk.codec.all._
     import skunk.syntax.stringcontext._
 
-    val decoderDbCompany = (uuid ~ text).gimap[DbCompany]
-    val decoderDbDepartment = (uuid ~ uuid ~ text).gimap[DbDepartment]
-    val decoderDbEmployee = (uuid ~ uuid ~ text).gimap[DbEmployee]
-    val decoder = (decoderDbCompany ~ decoderDbDepartment ~ decoderDbEmployee).map {
-      case ((c, d), e) =>
+    val decoderDbCompany = (uuid *: text).to[DbCompany]
+    val decoderDbDepartment = (uuid *: uuid *: text).to[DbDepartment]
+    val decoderDbEmployee = (uuid *: uuid *: text).to[DbEmployee]
+    val decoder = (decoderDbCompany *: decoderDbDepartment *: decoderDbEmployee).map {
+      case c :: d :: e :: HNil =>
         c :: d :: e :: HNil
     }
 
@@ -204,16 +208,15 @@ class SQLComparisonBench {
   }.allocated.unsafeRunSync()
 
   private val (session, _) = {
-    import natchez.Trace.Implicits.noop
+    val tracer: Tracer[IO] = Tracer.noop[IO]
+    implicit val meter: Meter[IO] = Meter.noop[IO]
 
-    Session.pooled[IO](
-      host = "localhost",
-      port = port,
-      database = database,
-      user = user,
-      password = Some(pass),
-      max = 5,
-    )
+    Session.Builder[IO]
+      .withUserAndPassword(user, pass)
+      .withHost("localhost")
+      .withPort(port)
+      .withDatabase(database)
+      .pooled(max = 5)(tracer)
   }.allocated.unsafeRunSync()
 
   @Benchmark

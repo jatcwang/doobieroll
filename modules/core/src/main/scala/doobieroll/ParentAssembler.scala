@@ -56,14 +56,13 @@ object ParentAssembler {
     val arr = mutable.ArrayBuffer.empty[Any]
 
     @scala.annotation.tailrec
-    def impl(h: HList): Unit = {
+    def impl(h: HList): Unit =
       h match {
         case x :: r =>
           arr += x
           impl(r)
         case HNil => ()
       }
-    }
 
     impl(h)
     arr.toVector

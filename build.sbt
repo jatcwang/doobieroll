@@ -1,13 +1,16 @@
-val zioVersion = "1.0.15"
-val circeVersion = "0.14.5"
-val doobieVersion = "1.0.0-RC4"
-val scala213 = "2.13.11"
-val scala212 = "2.12.18"
+val zioVersion = "2.1.26"
+val circeVersion = "0.14.15"
+val doobieVersion = "1.0.0-RC12"
+val flywayVersion = "12.8.1"
+val jsoniterScalaVersion = "2.38.14"
+val scala213 = "2.13.18"
+val skunkVersion = "1.1.0-RC1"
 
 inThisBuild(
   List(
-    scalaVersion := scala212,
-    crossScalaVersions := Seq(scala213, scala212),
+    scalaVersion := scala213,
+    crossScalaVersions := Seq(scala213),
+    com.github.sbt.git.SbtGit.useReadableConsoleGit,
     organization := "com.github.jatcwang",
     homepage := Some(url("https://github.com/jatcwang/doobieroll")),
     licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
@@ -28,9 +31,9 @@ lazy val core = Project("core", file("modules/core"))
     name := "doobieroll",
 //    mimaPreviousArtifacts := Set("com.github.jatcwang" %% "doobieroll" % "0.1.6"),
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-core" % "2.7.0",
-      "org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0",
-      "com.chuusai" %% "shapeless" % "2.3.9",
+      "org.typelevel" %% "cats-core" % "2.13.0",
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.14.0",
+      "com.chuusai" %% "shapeless" % "2.3.13",
       "org.tpolecat" %% "doobie-core" % doobieVersion,
     ),
   )
@@ -41,21 +44,23 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
   .settings(noPublishSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "org.flywaydb" % "flyway-core" % "9.19.4",
+      "org.flywaydb" % "flyway-core" % flywayVersion,
+      "org.flywaydb" % "flyway-database-hsqldb" % flywayVersion,
+      "org.flywaydb" % "flyway-database-postgresql" % flywayVersion,
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
       "dev.zio" %% "zio-test" % zioVersion,
       "dev.zio" %% "zio-test-sbt" % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
-      "dev.zio" %% "zio-interop-cats" % "3.2.9.1",
+      "dev.zio" %% "zio-interop-cats" % "23.1.0.13",
       "javax.activation" % "activation" % "1.1.1", // Required for DataSource class in JDK 9+
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
-      "org.postgresql" % "postgresql" % "42.6.0",
-      "com.softwaremill.quicklens" %% "quicklens" % "1.8.8",
-      "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.9" % "test",
+      "org.postgresql" % "postgresql" % "42.7.11",
+      "com.softwaremill.quicklens" %% "quicklens" % "1.9.12",
+      "com.whisk" %% "docker-testkit-impl-docker-java" % "0.11.0-beta1" % "test",
     ),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
   )
@@ -70,9 +75,9 @@ lazy val bench = Project("bench", file("modules/bench"))
       "org.tpolecat" %% "doobie-postgres" % doobieVersion,
       "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
       "org.tpolecat" %% "doobie-hikari" % doobieVersion,
-      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.13.30",
-      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.13.30" % "provided",
-      "org.tpolecat" %% "skunk-core" % "0.3.1",
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % jsoniterScalaVersion,
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % jsoniterScalaVersion % "provided",
+      "org.tpolecat" %% "skunk-core" % skunkVersion,
     ),
   )
 
@@ -130,7 +135,7 @@ lazy val commonSettings = Seq(
       Seq("-Xfatal-warnings")
     }
   },
-  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
+  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.4" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
 )
 
@@ -138,7 +143,7 @@ lazy val noPublishSettings = Seq(
   publish / skip := true,
 )
 
-ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.11")
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("11"))
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches :=
   Seq(RefPredicate.StartsWith(Ref.Tag("v")))

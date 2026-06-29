@@ -6,33 +6,30 @@ import com.whisk.docker.DockerReadyChecker.LogLineContains
 import com.whisk.docker.{DockerContainer, DockerContainerManager}
 import com.whisk.docker.impl.dockerjava.{Docker, DockerJavaExecutorFactory}
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
-import zio._
-import zio.test.environment.TestEnvironment
+import zio.{Task, URIO, ZIO, ZLayer}
 import zio.test._
 import zio.test.Assertion._
 import zio.interop.catz._
 import shapeless.{::, HNil}
 
 import scala.concurrent.ExecutionContext
-import doobie.postgres.implicits._
 import doobie.implicits._
 import doobie.util.update.Update
 import doobierolltest.model.{Company, DbCompany, DbDepartment, DbEmployee, DbInvoice}
 import TestDataHelpers._
+import DoobieRowInstances._
 import doobie.hikari.HikariTransactor
 import doobie.util.Read
 import doobie.util.query.Query0
 import doobierolltest.db._
-import zio.interop.catz.implicits.rts
 
-import scala.concurrent.duration._
+object DoobieIntegrationSpec extends ZIOSpecDefault {
+  private val dockerTimeout = scala.concurrent.duration.DurationInt(3).minutes
 
-object DoobieIntegrationSpec extends DefaultRunnableSpec {
-
-  override def spec: ZSpec[TestEnvironment, Nothing] =
+  override def spec =
     suite("DoobieIntegrationSpec")(
       suite("Assembler")(
-        testM("roundtrip with small test data (inner join)") {
+        test("roundtrip with small test data (inner join)") {
           val orig = TestData.expectedCompanies
           (for {
             _ <- insertDbData(orig)
@@ -42,7 +39,7 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
             assert(normalizeCompanies(result))(equalTo(orig))
           }).ensuring(cleanupTables)
         },
-        testM("roundtrip with small test data (left join)") {
+        test("roundtrip with small test data (left join)") {
           val orig = TestData.expectedCompaniesWithSomeEmptyChildren
           (for {
             _ <- insertDbData(orig)
@@ -53,17 +50,15 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
           }).ensuring(cleanupTables)
         },
       ),
-    ).provideSomeLayerShared(
-      postgresContainerLayer.to(withTestTables).and(zio.console.Console.live),
-    ) @@ TestAspect.sequential
+    ).provideShared(postgresContainerLayer >>> withTestTables) @@ TestAspect.sequential
 
   def containerLayer(
     containers: List[DockerContainer],
-  ): ZLayer[Any, Nothing, Has[HikariTransactor[Task]]] = {
-    val steps = for {
-      executorService <-
-        ZManaged
-          .make(
+  ): ZLayer[Any, Nothing, HikariTransactor[Task]] =
+    ZLayer.scoped {
+      for {
+        executorService <-
+          ZIO.acquireRelease(
             ZIO.succeed {
               ExecutionContext
                 .fromExecutorService(
@@ -71,9 +66,8 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
                 )
             },
           )(e => ZIO.succeed(e.shutdown()))
-      dbExecutorService <-
-        ZManaged
-          .make(
+        dbExecutorService <-
+          ZIO.acquireRelease(
             ZIO.succeed {
               ExecutionContext
                 .fromExecutorService(
@@ -81,46 +75,46 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
                 )
             },
           )(e => ZIO.succeed(e.shutdown()))
-      manager = {
-        val docker = new DockerJavaExecutorFactory(
-          new Docker(DefaultDockerClientConfig.createDefaultConfigBuilder().build()),
-        )
-        new DockerContainerManager(containers, docker.createExecutor())(executorService)
-      }
-      _ <- ZManaged.make(ZIO.fromFuture { _ =>
-        manager.pullImages()
-        manager.initReadyAll(3.minutes)
-      }.orDie)(_ =>
-        ZIO.fromFuture { _ =>
-          manager.stopRmAll()
-        }.orDie,
-      )
-      transactor <-
-        ZManaged
-          .fromAutoCloseable(ZIO.succeed {
-            Thread.sleep(500)
-            val hikariConfig = new HikariConfig()
-            hikariConfig.setDriverClassName("org.postgresql.Driver")
-            hikariConfig.setJdbcUrl("jdbc:postgresql://localhost:5432/postgres")
-            hikariConfig.setUsername("postgres")
-            hikariConfig.setPassword("postgres")
-            hikariConfig.setMaximumPoolSize(4)
-            hikariConfig.setConnectionTimeout(1000)
-            new HikariDataSource(hikariConfig)
-          })
-          .map(datasource =>
-            HikariTransactor[Task](
-              datasource,
-              dbExecutorService,
-            )
+        manager = {
+          val docker = new DockerJavaExecutorFactory(
+            new Docker(DefaultDockerClientConfig.createDefaultConfigBuilder().build()),
           )
-          .asService
-    } yield transactor
+          new DockerContainerManager(containers, docker.createExecutor())(executorService)
+        }
+        _ <- ZIO.acquireRelease(
+          ZIO.fromFuture { implicit ec =>
+            manager.pullImages(dockerTimeout).flatMap(_ => manager.initReadyAll(dockerTimeout))
+          }.orDie,
+        )(_ =>
+          ZIO.fromFuture { _ =>
+            manager.stopRmAll(dockerTimeout)
+          }.orDie,
+        )
+        transactor <-
+          ZIO
+            .acquireRelease(
+              ZIO.succeed {
+                Thread.sleep(500)
+                val hikariConfig = new HikariConfig()
+                hikariConfig.setDriverClassName("org.postgresql.Driver")
+                hikariConfig.setJdbcUrl("jdbc:postgresql://localhost:5432/postgres")
+                hikariConfig.setUsername("postgres")
+                hikariConfig.setPassword("postgres")
+                hikariConfig.setMaximumPoolSize(4)
+                hikariConfig.setConnectionTimeout(1000)
+                new HikariDataSource(hikariConfig)
+              },
+            )(datasource => ZIO.succeed(datasource.close()))
+            .map(datasource =>
+              HikariTransactor[Task](
+                datasource,
+                dbExecutorService,
+              ),
+            )
+      } yield transactor
+    }
 
-    ZLayer(steps)
-  }
-
-  val postgresContainerLayer: ZLayer[Any, Nothing, Has[HikariTransactor[Task]]] = containerLayer(
+  val postgresContainerLayer: ZLayer[Any, Nothing, HikariTransactor[Task]] = containerLayer(
     List(
       DockerContainer("postgres:12.3-alpine")
         .withEnv("POSTGRES_PASSWORD=postgres")
@@ -131,13 +125,12 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
     ),
   )
 
-  val withTestTables: URLayer[Has[HikariTransactor[Task]], Db] = {
-    val servLayer: URLayer[Has[HikariTransactor[Task]], Db] =
-      ZLayer.fromFunction(tran => new Db.Service(tran.get))
-
-    ZLayer(for {
-      service <- servLayer.build.map(_.get)
-      _ <- ZManaged.fromEffect(service.runSql(fr"""
+  val withTestTables: ZLayer[HikariTransactor[Task], Nothing, Db] =
+    ZLayer.fromZIO {
+      for {
+        transactor <- ZIO.service[HikariTransactor[Task]]
+        service = new Db.Service(transactor)
+        _ <- service.runSql(fr"""
             CREATE TABLE company(
               id UUID PRIMARY KEY,
               name TEXT NOT NULL
@@ -159,14 +152,13 @@ object DoobieIntegrationSpec extends DefaultRunnableSpec {
               id UUID PRIMARY KEY,
               amount INT NOT NULL
             );
-          """.update.run.map(_ => ())))
-    } yield Has(service))
-
-  }
+          """.update.run.map(_ => ()))
+      } yield service
+    }
 
   def insertDbCompany: Update[DbCompany] = {
     val cols = DbCompany.columns
-    Update(
+    Update[DbCompany](
       s"INSERT INTO ${cols.tableNameStr} ${cols.listWithParenStr} VALUES ${cols.parameterizedWithParenStr}",
     )
   }

@@ -6,19 +6,16 @@ import doobierolltest.TestDataInstances._
 import doobierolltest.TestDataHelpers._
 import doobierolltest.model._
 import shapeless.{test => _, _}
+import zio.Random
 import zio.test.Assertion._
-import zio.test.environment.TestEnvironment
-import zio.test.{DefaultRunnableSpec, ZSpec, _}
+import zio.test._
 import com.softwaremill.quicklens._
-import zio.duration._
 
-object AssemblerSpec extends DefaultRunnableSpec {
+object AssemblerSpec extends ZIOSpecDefault {
 
   import shapeless.syntax.std.tuple._
-  override def aspects: List[TestAspect[Nothing, TestEnvironment, Nothing, Any]] =
-    List(TestAspect.timeoutWarning(300.seconds))
 
-  override def spec: ZSpec[TestEnvironment, Nothing] =
+  override def spec =
     suite("AssemblerSpec")(
       test("all non-nullable columns") {
         val dbRowsHList: Vector[DbCompany :: DbDepartment :: DbEmployee :: HNil] =
@@ -85,7 +82,7 @@ object AssemblerSpec extends DefaultRunnableSpec {
 
         assert(result)(isLeft(equalTo(Err("invoice 0"))))
       },
-      testM("Property: Roundtrip conversion from List[Company] <=> Db rows") {
+      test("Property: Roundtrip conversion from List[Company] <=> Db rows") {
         check(Gen.listOf(genNonEmptyCompany).map(_.toVector)) { original =>
           val rows = original
             .flatMap(companyToDbRows)
@@ -95,9 +92,9 @@ object AssemblerSpec extends DefaultRunnableSpec {
           assert(result)(equalTo(original))
         }
       },
-      testM("Property: (Shuffled) Roundtrip conversion from List[Company] <=> Db rows") {
-        checkM(Gen.listOf(genNonEmptyCompany).map(_.toVector)) { original =>
-          zio.random
+      test("Property: (Shuffled) Roundtrip conversion from List[Company] <=> Db rows") {
+        check(Gen.listOf(genNonEmptyCompany).map(_.toVector)) { original =>
+          Random
             .shuffle(
               original.flatMap(companyToDbRows).map(_.productElements).toList,
             )
@@ -109,11 +106,11 @@ object AssemblerSpec extends DefaultRunnableSpec {
             }
         }
       },
-      testM(
+      test(
         "Property: Roundtrip conversion from List[Company] <=> Db rows (with potentially empty department/employee list)",
       ) {
-        checkM(Gen.listOf(genCompany).map(_.toVector)) { original =>
-          zio.random
+        check(Gen.listOf(genCompany).map(_.toVector)) { original =>
+          Random
             .shuffle(
               original.flatMap(companyToOptDbRows).map(_.productElements).toList,
             )
@@ -125,9 +122,9 @@ object AssemblerSpec extends DefaultRunnableSpec {
             }
         }
       },
-      testM("Property: Roundtrip for Parent with multiple children") {
-        checkM(Gen.listOf(genNonEmptyEnterprise).map(_.toVector)) { original =>
-          zio.random
+      test("Property: Roundtrip for Parent with multiple children") {
+        check(Gen.listOf(genNonEmptyEnterprise).map(_.toVector)) { original =>
+          Random
             .shuffle(
               original.flatMap(enterpriseToDbRows).map(_.productElements).toList,
             )
@@ -139,6 +136,6 @@ object AssemblerSpec extends DefaultRunnableSpec {
             }
         }
       },
-    )
+    ) @@ TestAspect.timeoutWarning(zio.Duration.fromSeconds(300))
 
 }

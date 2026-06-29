@@ -1,12 +1,12 @@
 package doobierolltest
 
-import zio.{Has, Task, UIO, ZIO}
+import zio.{Task, UIO, ZIO}
 import doobie._
 import doobie.implicits._
 import zio.interop.catz._
 
 package object db {
-  type Db = Has[Db.Service]
+  type Db = Db.Service
 
   object Db {
     class Service(transactor: Transactor[Task]) {
@@ -16,5 +16,5 @@ package object db {
   }
 
   def runSql[A](conn: ConnectionIO[A]): ZIO[Db, Nothing, A] =
-    ZIO.accessM(_.get.runSql(conn))
+    ZIO.serviceWithZIO[Db](_.runSql(conn))
 }

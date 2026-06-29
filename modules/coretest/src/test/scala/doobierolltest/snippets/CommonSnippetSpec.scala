@@ -1,12 +1,12 @@
 package doobierolltest.snippets
 
 import doobieroll.TableColumns
-import zio.test.DefaultRunnableSpec
+import zio.test._
 import doobieroll.snippets._
 import doobierolltest.testutils.FragmentAssertions._
 
-object CommonSnippetSpec extends DefaultRunnableSpec {
-  def spec =
+object CommonSnippetSpec extends ZIOSpecDefault {
+  override def spec =
     suite("CommonSnippetSpec")(
       suite("selectColumnsFrom")(
         test("Outputs 'SELECT col1,col2,.. FROM mytable'") {

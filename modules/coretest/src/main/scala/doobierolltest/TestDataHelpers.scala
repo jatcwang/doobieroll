@@ -1,7 +1,6 @@
 package doobierolltest
 
 import shapeless.{::, HNil}
-import zio.random.Random
 import zio.test.{Gen, Sized}
 import zio.test.magnolia.DeriveGen
 import model._
@@ -27,18 +26,18 @@ object TestDataHelpers {
     DeriveGen.instance(Gen.vectorOfBounded(1, 10)(g))
   }
 
-  val genNonEmptyCompany: Gen[Random with Sized, Company] = {
+  val genNonEmptyCompany: Gen[Sized, Company] = {
     implicit val dep = genNelDepartment
     DeriveGen[Company]
   }
 
-  val genNonEmptyEnterprise: Gen[Random with Sized, Enterprise] = {
+  val genNonEmptyEnterprise: Gen[Sized, Enterprise] = {
     implicit val dep = genNelDepartment
     implicit val inv = genNelInvoice
     DeriveGen[Enterprise]
   }
 
-  val genCompany: Gen[Random with Sized, Company] =
+  val genCompany: Gen[Sized, Company] =
     DeriveGen[Company]
 
   def normalizeDepartments(departments: Vector[Department]): Vector[Department] = {

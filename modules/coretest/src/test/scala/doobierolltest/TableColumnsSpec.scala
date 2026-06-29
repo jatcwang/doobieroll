@@ -7,9 +7,9 @@ import zio.test._
 import zio.test.Assertion._
 import testutils.FragmentAssertions._
 
-object TableColumnsSpec extends DefaultRunnableSpec {
+object TableColumnsSpec extends ZIOSpecDefault {
 
-  def spec =
+  override def spec =
     suite("TableColumnSpec")(
       test("'listStr' returns comma separate column names") {
         assertStringEqual(TestClass.columns.listStr, "a,str_field,snake_case,pascal_case")
@@ -90,7 +90,7 @@ object TableColumnsSpec extends DefaultRunnableSpec {
       test(
         "'fromField' returns the column name fragment for an existing field",
       ) {
-        assert(TestClass.columns.fromField("PascalCase").map(_.query.sql))(
+        assert(TestClass.columns.fromField("PascalCase").map(_.internals.sql))(
           isRight(equalTo("pascal_case ")),
         )
       },
