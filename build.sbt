@@ -1,3 +1,5 @@
+import org.typelevel.sbt.tpolecat.{CiMode, DevMode}
+
 val zioVersion = "2.1.26"
 val circeVersion = "0.14.15"
 val doobieVersion = "1.0.0-RC12"
@@ -24,6 +26,8 @@ inThisBuild(
     ),
   ),
 )
+
+ThisBuild / tpolecatDefaultOptionsMode := (if (sys.env.contains("CI")) CiMode else DevMode)
 
 lazy val core = Project("core", file("modules/core"))
   .settings(commonSettings)
@@ -140,14 +144,6 @@ lazy val commonSettings = Seq(
     "-Ywarn-macros:after",
   ),
   versionScheme := Some("early-semver"),
-  doc / scalacOptions --= Seq("-Xfatal-warnings"),
-  scalacOptions --= {
-    if (sys.env.contains("CI")) {
-      Seq.empty
-    } else {
-      Seq("-Xfatal-warnings")
-    }
-  },
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.4" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
 )
