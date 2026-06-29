@@ -46,10 +46,10 @@ jobs:
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.7
+          ruby-version: 3.3
 
       - name: Install Jekyll (to build microsite)
-        run: gem install jekyll -v 4.1.1
+        run: gem install jekyll -v 4.4.1
 
       - name: Pull Postgres image for integration tests
         run: 'docker pull postgres:12.3-alpine'
@@ -109,10 +109,10 @@ jobs:
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.7
+          ruby-version: 3.3
 
       - name: Install Jekyll (to build microsite)
-        run: gem install jekyll -v 4.1.1
+        run: gem install jekyll -v 4.4.1
 
       - env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
