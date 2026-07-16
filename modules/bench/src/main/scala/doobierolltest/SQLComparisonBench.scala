@@ -10,12 +10,12 @@ import cats.effect.unsafe.IORuntime
 import cats.kernel.Eq
 import cats.syntax.traverse._
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
-import doobie.hikari.HikariTransactor
-import doobie.implicits.WeakAsyncConnectionIO
-import doobie.syntax.connectionio._
-import doobie.syntax.stream._
-import doobie.util.{Get, Read}
-import doobie.util.query.Query0
+import org.typelevel.doobie.hikari.HikariTransactor
+import org.typelevel.doobie.implicits.WeakAsyncConnectionIO
+import org.typelevel.doobie.syntax.connectionio._
+import org.typelevel.doobie.syntax.stream._
+import org.typelevel.doobie.util.{Get, Read}
+import org.typelevel.doobie.util.query.Query0
 import doobierolltest.TestDataInstances.Infallible
 import doobierolltest.model._
 import doobierolltest.DoobieRowInstances._
@@ -32,7 +32,7 @@ import shapeless.HNil
 // docker run --rm -p 5432:5432 -e POSTGRES_PASSWORD=password -e POSTGRES_DB=doobieroll -v "$(pwd)/modules/bench/src/main/resources/sql/tables.sql:/docker-entrypoint-initdb.d/01-tables.sql" -v "$(pwd)/modules/bench/src/main/resources/sql/data.sql:/docker-entrypoint-initdb.d/02-data.sql" postgres:12
 
 object SQLComparisonBench {
-  import doobie.postgres.implicits.UuidType
+  import org.typelevel.doobie.postgres.implicits.UuidType
 
   private implicit val eqDbCompany: Eq[DbCompany] = Eq.fromUniversalEquals
   private implicit val eqDbDepartment: Eq[DbDepartment] = Eq.fromUniversalEquals
@@ -64,7 +64,7 @@ object SQLComparisonBench {
   )
 
   private val sqlCompany = {
-    import doobie.syntax.string._
+    import org.typelevel.doobie.syntax.string._
     fr"""
       SELECT
         company_id,
@@ -73,7 +73,7 @@ object SQLComparisonBench {
     """.query[DbCompany]
   }
   private def sqlDepartment(companyIds: NonEmptyVector[UUID]) = {
-    import doobie.syntax.string._
+    import org.typelevel.doobie.syntax.string._
 
     fr"""
       SELECT
@@ -81,11 +81,11 @@ object SQLComparisonBench {
         company_id,
         department.name
       FROM department
-      WHERE ${doobie.util.fragments.in(fr"company_id", companyIds)}
+      WHERE ${org.typelevel.doobie.util.fragments.in(fr"company_id", companyIds)}
     """.query[DbDepartment]
   }
   private def sqlEmployee(departmentIds: NonEmptyVector[UUID]) = {
-    import doobie.syntax.string._
+    import org.typelevel.doobie.syntax.string._
 
     fr"""
       SELECT
@@ -93,7 +93,7 @@ object SQLComparisonBench {
         department_id,
         employee.name
       FROM employee
-      WHERE ${doobie.util.fragments.in(fr"department_id", departmentIds)}
+      WHERE ${org.typelevel.doobie.util.fragments.in(fr"department_id", departmentIds)}
     """.query[DbEmployee]
   }
 
@@ -153,7 +153,7 @@ object SQLComparisonBench {
     FROM company
   """
   private val queryJSON = {
-    import doobie.postgres.circe.jsonb.implicits._
+    import org.typelevel.doobie.postgres.circe.jsonb.implicits._
     val read = Read.fromGet(pgDecoderGetT[Company])
     Query0(sqlJSON)(read)
   }
@@ -211,7 +211,8 @@ class SQLComparisonBench {
     val tracer: Tracer[IO] = Tracer.noop[IO]
     implicit val meter: Meter[IO] = Meter.noop[IO]
 
-    Session.Builder[IO]
+    Session
+      .Builder[IO]
       .withUserAndPassword(user, pass)
       .withHost("localhost")
       .withPort(port)

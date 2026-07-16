@@ -1,8 +1,8 @@
 package doobierolltest
 
 import zio.{Task, UIO, ZIO}
-import doobie._
-import doobie.implicits._
+import org.typelevel.doobie._
+import org.typelevel.doobie.implicits._
 import zio.interop.catz._
 
 package object db {
