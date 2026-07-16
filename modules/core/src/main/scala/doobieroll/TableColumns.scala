@@ -6,7 +6,7 @@ import shapeless._
 import shapeless.ops.hlist.{Mapper, ToTraversable}
 import shapeless.ops.record.Keys
 import shapeless.tag.Tagged
-import doobie.Fragment
+import org.typelevel.doobie.Fragment
 import doobieroll.TableColumns.NoSuchField
 
 import scala.annotation.implicitNotFound

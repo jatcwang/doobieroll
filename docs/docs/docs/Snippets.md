@@ -18,7 +18,7 @@ Let's define some [TableColumns](tablecolumns) first and see how we can create c
 
 ```scala mdoc:invisible
 import java.util.UUID
-import doobie.implicits._
+import org.typelevel.doobie.implicits._
 ```
 
 ```scala mdoc:silent

@@ -1,5 +1,5 @@
 package doobieroll.snippets
-import doobie.util.fragment.Fragment
+import org.typelevel.doobie.util.fragment.Fragment
 import doobieroll.TableColumns
 import cats.syntax.all._
 

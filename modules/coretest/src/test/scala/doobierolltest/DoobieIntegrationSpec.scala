@@ -13,14 +13,14 @@ import zio.interop.catz._
 import shapeless.{::, HNil}
 
 import scala.concurrent.ExecutionContext
-import doobie.implicits._
-import doobie.util.update.Update
+import org.typelevel.doobie.implicits._
+import org.typelevel.doobie.util.update.Update
 import doobierolltest.model.{Company, DbCompany, DbDepartment, DbEmployee, DbInvoice}
 import TestDataHelpers._
 import DoobieRowInstances._
-import doobie.hikari.HikariTransactor
-import doobie.util.Read
-import doobie.util.query.Query0
+import org.typelevel.doobie.hikari.HikariTransactor
+import org.typelevel.doobie.util.Read
+import org.typelevel.doobie.util.query.Query0
 import doobierolltest.db._
 
 object DoobieIntegrationSpec extends ZIOSpecDefault {
