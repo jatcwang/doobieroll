@@ -2,8 +2,8 @@ package doobierolltest
 
 import java.util.UUID
 
-import doobie.postgres.implicits.UuidType
-import doobie.util.{Read, Write}
+import org.typelevel.doobie.postgres.implicits.UuidType
+import org.typelevel.doobie.util.{Read, Write}
 import doobierolltest.model.{DbCompany, DbDepartment, DbEmployee, DbInvoice}
 
 object DoobieRowInstances {

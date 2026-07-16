@@ -162,11 +162,11 @@ Let's say we want to find towns, with the schools in those towns and the student
 The code you'll write with doobie to retrieve this information will probably look like 
 
 ```scala mdoc:invisible
-import doobie.postgres.implicits._
+import org.typelevel.doobie.postgres.implicits._
 ```
 
 ```scala mdoc:silent
-import doobie.implicits._ 
+import org.typelevel.doobie.implicits._
 import shapeless.{::, HNil}
 
 val townsQuery = fr"""
@@ -310,8 +310,8 @@ straight through Assembler.
 
 ```scala mdoc:compile-only
 import cats.effect.IO
-import doobie.{ConnectionIO, Transactor}
-import doobie.implicits._
+import org.typelevel.doobie.{ConnectionIO, Transactor}
+import org.typelevel.doobie.implicits._
 
 // Your SQL query to perform
 // (...however you create your Doobie transactor)

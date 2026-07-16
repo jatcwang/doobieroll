@@ -13,12 +13,12 @@ Take this postgres upsert query, for example:
 
 ```scala mdoc:invisible
 import java.util.UUID
-import doobie.postgres.implicits._ // for Write[UUID]
+import org.typelevel.doobie.postgres.implicits._ // for Write[UUID]
 ```
 
 ```scala mdoc:silent
-import doobie.Update
-import doobie.implicits._
+import org.typelevel.doobie.Update
+import org.typelevel.doobie.implicits._
 
 val q: Update[DbCompany] = Update[DbCompany]("""
 INSERT INTO company (
@@ -54,7 +54,7 @@ There is a lot of repetition here!
 Let's use `TableColumns` to "DRY" up the example above:
 
 ```scala mdoc:invisible
-import doobie.Fragment
+import org.typelevel.doobie.Fragment
 ```
 
 ```scala mdoc:silent

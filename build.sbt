@@ -2,7 +2,7 @@ import org.typelevel.sbt.tpolecat.{CiMode, DevMode}
 
 val zioVersion = "2.1.26"
 val circeVersion = "0.14.15"
-val doobieVersion = "1.0.0-RC12"
+val doobieVersion = "1.0.0-RC13"
 val flywayVersion = "12.8.1"
 val jsoniterScalaVersion = "2.38.14"
 val scala213 = "2.13.18"
@@ -38,7 +38,7 @@ lazy val core = Project("core", file("modules/core"))
       "org.typelevel" %% "cats-core" % "2.13.0",
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.14.0",
       "com.chuusai" %% "shapeless" % "2.3.13",
-      "org.tpolecat" %% "doobie-core" % doobieVersion,
+      "org.typelevel" %% "doobie-core" % doobieVersion,
     ),
   )
 
@@ -59,9 +59,9 @@ lazy val coretest = Project("coretest", file("modules/coretest"))
       "dev.zio" %% "zio-test-magnolia" % zioVersion,
       "dev.zio" %% "zio-interop-cats" % "23.1.0.13",
       "javax.activation" % "activation" % "1.1.1", // Required for DataSource class in JDK 9+
-      "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-      "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
-      "org.tpolecat" %% "doobie-hikari" % doobieVersion,
+      "org.typelevel" %% "doobie-postgres" % doobieVersion,
+      "org.typelevel" %% "doobie-postgres-circe" % doobieVersion,
+      "org.typelevel" %% "doobie-hikari" % doobieVersion,
       "org.postgresql" % "postgresql" % "42.7.11",
       "com.softwaremill.quicklens" %% "quicklens" % "1.9.12",
       "com.whisk" %% "docker-testkit-impl-docker-java" % "0.11.0-beta1" % "test",
@@ -76,9 +76,9 @@ lazy val bench = Project("bench", file("modules/bench"))
   .settings(noPublishSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-      "org.tpolecat" %% "doobie-postgres-circe" % doobieVersion,
-      "org.tpolecat" %% "doobie-hikari" % doobieVersion,
+      "org.typelevel" %% "doobie-postgres" % doobieVersion,
+      "org.typelevel" %% "doobie-postgres-circe" % doobieVersion,
+      "org.typelevel" %% "doobie-hikari" % doobieVersion,
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % jsoniterScalaVersion,
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % jsoniterScalaVersion % "provided",
       "org.tpolecat" %% "skunk-core" % skunkVersion,

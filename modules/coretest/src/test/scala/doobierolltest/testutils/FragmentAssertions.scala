@@ -2,7 +2,7 @@ package doobierolltest.testutils
 
 import zio.test.Assertion.equalTo
 import zio.test.{assert, TestResult}
-import doobie.util.fragment.Fragment
+import org.typelevel.doobie.util.fragment.Fragment
 
 object FragmentAssertions {
 
